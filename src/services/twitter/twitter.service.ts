@@ -86,7 +86,6 @@ export class TwitterService {
 		if (!sessionData || sessionData.state !== state) {
 			throw new BadRequestException('Invalid or expired state parameter.');
 		}
-
 		const { codeVerifier } = sessionData;
 		const redirectUri = this.twitterCallBack;
 

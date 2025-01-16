@@ -49,7 +49,6 @@ export class LinkedinService {
 		const clientId = this.linkedinClientID;
 		const scope = this.linkedinScope;
 		// const scope = 'r_liteprofile r_emailaddress w_member_social';
-		
 		const redirectUri = this.linkedinCallBack;
 
 		return `${LINKEDIN_CONST.AUTH_ENDPOINT}/authorization?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scope)}`;
