@@ -1,0 +1,5 @@
+localhost:8993 {
+   handle_path /b/* {
+		reverse_proxy localhost:3000
+    }
+}

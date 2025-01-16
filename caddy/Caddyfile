@@ -1,0 +1,6 @@
+dev.backend.postreach.ai, dev.backend.postreachai.com {
+
+    handle_path /b/* {
+		reverse_proxy localhost:3000
+	}
+}

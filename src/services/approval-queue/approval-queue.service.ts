@@ -1,0 +1,146 @@
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { PaginationParamDto } from 'src/dtos/params/pagination-param.dto';
+import { UpdatePostTaskStatusDTO } from 'src/dtos/params/update-post-task-status.dto';
+import { PaginatedResponseDto } from 'src/dtos/response/pagination-response.dto';
+import { RejectReasonResponseDTO } from 'src/dtos/response/reject-reason-response.dto';
+import { PostTask } from 'src/entities/post-task.entity';
+import { RejectReason } from 'src/entities/reject-reason.entity';
+import { ApprovalQueueRepository } from 'src/repositories/approval-queue-repository';
+import { RejectReasonRepository } from 'src/repositories/reject-reason-repository';
+import { UnitOfWork } from 'src/unitofwork/unitofwork';
+import { PostService } from '../schedule-post/schedule-post.service';
+import { EmailService } from '../email/email.service';
+
+@Injectable()
+export class ApprovalQueueService {
+    constructor(
+        private readonly unitOfWork: UnitOfWork,
+        @Inject(forwardRef(() => PostService)) // Use forwardRef here
+        private readonly schedulePostService: PostService,
+        private readonly emailService: EmailService,
+    ) { }
+
+    async getApprovalQueueList(
+        paginatedParams: PaginationParamDto,
+    ): Promise<PaginatedResponseDto> {
+        const approvalQueueRepository = this.unitOfWork.getRepository(
+            ApprovalQueueRepository,
+            PostTask,
+            false,
+        );
+        const data =
+            await approvalQueueRepository.getApprovalQueueList(paginatedParams);
+        return data;
+    }
+
+    async updateStatus(
+        updateStatusParam: UpdatePostTaskStatusDTO,
+    ): Promise<any> {
+        try {
+
+            await this.unitOfWork.startTransaction();
+            const approvalQueueRepository = this.unitOfWork.getRepository(
+                ApprovalQueueRepository,
+                PostTask,
+                true,
+            );
+            for (const id of updateStatusParam.id) {
+                const record = await approvalQueueRepository.findOne(id);
+                if (!record) {
+                    continue;
+                }
+                //if approved true then if block will executed.
+                if (updateStatusParam.isApproved == true) {
+                    //updated the status to scheduled
+                    record.status = 'Scheduled';
+                    await approvalQueueRepository.update(id, record);
+                    // scheduled the post.
+                    const data =
+                        await approvalQueueRepository.getScheduledPostByPostTaskID(
+                            id,
+                        );
+
+                    await this.schedulePostService.schedulePost(
+                        data.id,
+                        data.channel,
+                        data.postId,
+                        data.accessToken,
+                        data.content,
+                        data.scheduled_at,
+                        data.hashtags,
+                        data.image,
+                        data.pageId,
+                        data.social_media_user_id,
+                        data.token_type,
+                        data.instagramId,
+                        data.userId,
+                        data.post_created_at
+                    );
+                }
+                // if approved false then else if block executed.
+                else if (updateStatusParam.isApproved == false) {
+
+                    record.status = 'Rejected';
+                    record.rejectReason = updateStatusParam.rejectReason;
+                    const rejectReasonRepository =
+                        this.unitOfWork.getRepository(
+                            RejectReasonRepository,
+                            RejectReason,
+                            false,
+                        );
+                    const rejectReason = await rejectReasonRepository.findOne(
+                        updateStatusParam.rejectreasonId,
+                    );
+                    if (!rejectReason) {
+                        continue;
+                    }
+
+                    record.RejectReason = rejectReason;
+
+                    await approvalQueueRepository.update(id, record);
+                }
+            }
+            await this.unitOfWork.completeTransaction();
+            if (updateStatusParam.isApproved == true) {
+                return true;
+            } else if (updateStatusParam.isApproved == false) {
+                return false;
+            }
+        } catch (error) {
+            await this.unitOfWork.rollbackTransaction();
+            throw error;
+        }
+    }
+
+    RejectReasonList(): Promise<RejectReasonResponseDTO[]> {
+        const rejectReasonRepository = this.unitOfWork.getRepository(
+            RejectReasonRepository,
+            RejectReason,
+            false,
+        );
+        const data = rejectReasonRepository.findAll();
+        return data;
+    }
+
+    // update the status for post execution success or failure.
+    async updateStatusAfterPostExecution(id: number, status: string) {
+        try {
+            await this.unitOfWork.startTransaction();
+            const approvalQueueRepository = this.unitOfWork.getRepository(
+                ApprovalQueueRepository,
+                PostTask,
+                true,
+            );
+            const record = await approvalQueueRepository.findOne(id);
+            record.status = status;
+            await approvalQueueRepository.update(id, record);
+
+            // await this.emailService.sendEmail(record.user.email, 'Post Posted', 'post_success');
+
+            await this.unitOfWork.completeTransaction();
+        } catch (error) {
+            await this.unitOfWork.rollbackTransaction();
+            throw error;
+        }
+    }
+}

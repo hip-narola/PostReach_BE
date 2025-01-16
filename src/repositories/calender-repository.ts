@@ -1,0 +1,65 @@
+import { Injectable } from '@nestjs/common';
+import { Repository } from 'typeorm';
+import { GenericRepository } from './generic-repository';
+import { PostTask } from 'src/entities/post-task.entity';
+import { PaginationParamDto } from 'src/dtos/params/pagination-param.dto';
+import { PaginatedResponseDto } from 'src/dtos/response/pagination-response.dto';
+import { CalenderParamDto } from 'src/dtos/params/calender-param.dto';
+import { SocialMediaPlatformNames } from 'src/shared/constants/social-media.constants';
+
+@Injectable()
+export class CalenderRepository extends GenericRepository<PostTask> {
+    constructor(repository: Repository<PostTask>) {
+        super(repository);
+    }
+
+    async getCalenderList(paginatedParams: CalenderParamDto): Promise<any> {
+        try {
+
+            const postTasks = await this.repository.createQueryBuilder('pt')
+                .select([
+                    'pt.id AS post_task_id',
+                    'a.url AS image',
+                    'p.content AS content',
+                    'sm.platform AS socialimage',
+                    'pt.scheduled_at AS start',
+                    'pt.scheduled_at AS end',
+                    "TO_CHAR(pt.scheduled_at, 'HH:MI AM') AS time",
+                    'sm.user_name AS user',
+                    'sm.user_profile AS profileimage',
+                ])
+                .leftJoin('pt.post', 'p')
+                .leftJoin('p.assets', 'a', 'a.type = :type', { type: 'image' })
+                .leftJoin('pt.socialMediaAccount', 'sm')
+                .leftJoin('pt.user', 'ur')
+                .where('pt.status IN (:...statuses)', { statuses: ['Execute_Success', 'Scheduled'] })
+                .andWhere('pt.user_id = :userid', { userid: paginatedParams.userId })
+                .andWhere('DATE(pt.scheduled_at) BETWEEN :startDate AND :endDate', {
+                    startDate: paginatedParams.startWeekDate,
+                    endDate: paginatedParams.endWeekDate,
+                })
+                .orderBy('pt.scheduled_at', 'DESC')
+                .getRawMany();
+
+
+            const data = postTasks.map(queryResult => ({
+                id: queryResult.post_task_id,
+                channel: Object.keys(SocialMediaPlatformNames).find(key => SocialMediaPlatformNames[key] == queryResult.socialimage),
+                start: queryResult.start,
+                end: queryResult.end,
+                time: queryResult.time,
+                user: queryResult.user,
+                profileImage: queryResult.profileimage,
+                content: queryResult.content,
+                image: queryResult.image,
+            }));
+            
+            return data;
+        }
+        catch (error) {
+            throw error;
+        }
+
+    }
+
+}

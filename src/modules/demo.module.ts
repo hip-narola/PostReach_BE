@@ -1,0 +1,21 @@
+
+import { AuthModule } from './auth/auth.module';
+import { UserModule } from './user/user.module';
+import { SupabaseModule } from './supabase/supabase.module';
+import { LinkPageModule } from './link-page/link-page.module';
+import { SocialMediaAccountModule } from './social-media-account/social-media-account.module';
+import { TwitterModule } from './twitter/twitter.module';
+import { LinkedinModule } from './linkedin/linkedin.module';
+import { OnboardingModule } from './onboarding/onboarding.module';
+import { QuestionnaireModule } from './questionnaire/questionnaire.module';
+import { ApprovalQueueModule } from './approval-queue/approval-queue.module';
+import { CalenderModule } from './calender/calender.module';
+import { PostHistoryModule } from './post-history/post-history.module';
+import { SchedulePostModule } from './schedule-post/schedule-post.module';
+import { DashboardInsightsModule } from './dashboard-insights/dashboard-insights.module';
+import { SocialMediaInsightsModule } from './social-media-insights/social-media-insights.module';
+import { NotificationModule } from './notification/notification.module';
+import { PaymentModule } from './payment/payment.module';
+import { CheckUserSubscriptionModule } from './check-user-subscription/check-user-subscription.module';
+import { FacebookModule } from './facebook/facebook.module';
+import { AwsSecretsServiceModule } from './aws-secrets-service/aws-secrets-service.module';

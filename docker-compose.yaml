@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  api:
+    image: ${DOCKER_REGISTRY}:latest
+    ports:
+      - '${PORT}:${PORT}'
+    depends_on:
+      - redis
+    environment:
+      - NODE_OPTIONS=--max-old-space-size=4096
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+    command: npm run start:prod
+    restart: unless-stopped
+    networks:
+      - app-network
+  redis:
+    image: redis:alpine
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis_data:/data
+    command: redis-server --requirepass ${REDIS_PASSWORD}
+    restart: unless-stopped
+    networks:
+      - app-network
+
+volumes:
+  redis_data:
+
+networks:
+  app-network:
+    driver: bridge
