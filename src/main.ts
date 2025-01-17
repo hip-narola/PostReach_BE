@@ -21,7 +21,7 @@ async function bootstrap() {
       resave: false,
       saveUninitialized: false,
       cookie: {
-		domain: configService.get<string>('APP_URL_FRONTEND'),
+		domain: configService.get<string>('COOKIEDOMAIN'),
         secure: isProduction, // Set to true in production for HTTPS
         httpOnly: true, // Prevent client-side JavaScript access
         sameSite: isProduction ? 'none' : 'lax', // Use 'None' for cross-origin, 'Lax' otherwise
