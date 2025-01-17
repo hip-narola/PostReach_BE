@@ -4,61 +4,71 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import * as cookieParser from 'cookie-parser';
 import * as session from 'express-session';
 import { AllExceptionsFilter } from './filters/all-exceptions.filter';
-import * as bodyParser from 'body-parser'; // Correctly imported
+import * as bodyParser from 'body-parser';
 import { ConfigService } from '@nestjs/config';
 
 async function bootstrap() {
-	const app = await NestFactory.create(AppModule);
-	const configService = app.get(ConfigService);
-	// Configure sessions
-	app.use(
-		session({
-			secret: 'your-secret-key',
-			resave: false,
-			saveUninitialized: false,
-			cookie: { secure: false },
-		}),
-	);
+  const app = await NestFactory.create(AppModule);
+  const configService = app.get(ConfigService);
 
-	// Middleware for handling raw body for Stripe webhook
-	app.use('/payment/webhook', bodyParser.raw({ type: 'application/json' }));
+  // Environment-based configurations
+  const isProduction = configService.get<string>('NODE_ENV') === 'production';
 
-	// Other middlewares
-	app.use(cookieParser());
-	// Replace the corsOptions with this:
-	const corsOptions = {
-		origin: [
-			'http://localhost:3001',
-			'https://postreach-ai-client-edricgsh-edricgshs-projects.vercel.app',
-			'https://post-reach-fe.vercel.app'
-		],
-		credentials: true,
-		methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
-		allowedHeaders: ['Content-Type', 'Accept', 'Authorization'],
-		exposedHeaders: ['set-cookie'],
-	};
-	app.enableCors(corsOptions);
+  // Configure sessions
+  app.use(
+    session({
+      secret: configService.get<string>('SESSION_SECRET') || 'your-default-secret',
+      resave: false,
+      saveUninitialized: false,
+      cookie: {
+        secure: isProduction, // Set to true in production for HTTPS
+        httpOnly: true, // Prevent client-side JavaScript access
+        sameSite: isProduction ? 'none' : 'lax', // Use 'None' for cross-origin, 'Lax' otherwise
+        maxAge: 24 * 60 * 60 * 1000, // 1 day in milliseconds
+      },
+    }),
+  );
 
-	// Swagger configuration
-	const config = new DocumentBuilder()
-		.setTitle('Post Reach AI')
-		.setDescription('The Post Reach AI API description')
-		.setVersion('1.0')
-		.addBearerAuth()
-		.build();
+  // Middleware for handling raw body for Stripe webhook
+  app.use('/payment/webhook', bodyParser.raw({ type: 'application/json' }));
 
-	const document = SwaggerModule.createDocument(app, config);
-	SwaggerModule.setup('api', app, document);
+  // Cookie parser middleware
+  app.use(cookieParser());
 
-	// Exception handling
-	const httpAdapter = app.get(HttpAdapterHost);
-	app.useGlobalFilters(new AllExceptionsFilter(httpAdapter));
+  // Configure CORS
+  const allowedOrigins = [
+    'http://localhost:3001',
+    'https://postreach-ai-client-edricgsh-edricgshs-projects.vercel.app',
+    'https://post-reach-fe.vercel.app',
+  ];
+  app.enableCors({
+    origin: allowedOrigins,
+    credentials: true,
+    methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Accept', 'Authorization'],
+    exposedHeaders: ['set-cookie'],
+  });
 
-	// Start listening
-	const port = configService.get<string>('PORT') || 3000;
-	await app.listen(port, () => {
-		console.log(`Server is running on http://localhost:${port}`);
-	});
+  // Swagger setup
+  const swaggerConfig = new DocumentBuilder()
+    .setTitle('Post Reach AI')
+    .setDescription('The Post Reach AI API description')
+    .setVersion('1.0')
+    .addBearerAuth()
+    .build();
+
+  const document = SwaggerModule.createDocument(app, swaggerConfig);
+  SwaggerModule.setup('api', app, document);
+
+  // Exception handling
+  const httpAdapter = app.get(HttpAdapterHost);
+  app.useGlobalFilters(new AllExceptionsFilter(httpAdapter));
+
+  // Start listening
+  const port = configService.get<number>('PORT') || 3000;
+  await app.listen(port, () => {
+    console.log(`Server is running on http://localhost:${port}`);
+  });
 }
 
 bootstrap();
