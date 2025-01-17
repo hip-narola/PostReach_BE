@@ -41,6 +41,7 @@ async function bootstrap() {
     'http://localhost:3001',
     'https://postreach-ai-client-edricgsh-edricgshs-projects.vercel.app',
     'https://post-reach-fe.vercel.app',
+	'.post-reach-fe.vercel.app'
   ];
   app.enableCors({
     origin: allowedOrigins,
