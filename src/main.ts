@@ -30,6 +30,7 @@ async function bootstrap() {
 		origin: [
 			'http://localhost:3001',
 			'https://postreach-ai-client-edricgsh-edricgshs-projects.vercel.app',
+			'https://post-reach-fe.vercel.app'
 		],
 		credentials: true,
 		methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
