@@ -24,14 +24,14 @@ async function bootstrap() {
 	// Configure sessions
 	app.use(
 		session({
-			secret: configService.get('SESSION_SECRET') || 'your-default-secret',
+			secret: '5da5a3a9-da1d-4812-93c2-7b3f4ef0e01b', //configService.get('SESSION_SECRET') || 'your-default-secret',
 			resave: false,
 			saveUninitialized: false,
 			cookie: {
-				// domain: configService.get('COOKIE_DOMAIN'),
-				secure: isProduction, // HTTPS in production
+				domain: 'post-reach-fe.vercel.app', //configService.get('COOKIE_DOMAIN'),
+				secure: false, // HTTPS in production
 				httpOnly: true, // Prevent client-side JavaScript access
-				sameSite: isProduction ? 'none' : 'lax', // 'None' for cross-origin
+				sameSite: false, // isProduction ? 'none' : 'lax', // 'None' for cross-origin
 				maxAge: 24 * 60 * 60 * 1000, // 1 day in milliseconds
 			},
 		}),
