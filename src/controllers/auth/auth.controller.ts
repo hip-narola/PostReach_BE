@@ -57,7 +57,8 @@ export class AuthController {
 			secure: true,
 			maxAge: 24 * 60 * 60 * 1000,
 			sameSite: 'none',
-			partitioned: true
+			partitioned: true,
+			domain: 'vercel.app'
 		});
 
 		res.redirect(redirectUrl);
@@ -93,7 +94,8 @@ export class AuthController {
 			secure: true,
 			maxAge: 24 * 60 * 60 * 1000,
 			sameSite: 'none',
-			partitioned: true
+			partitioned: true,
+			domain: 'vercel.app'
 		});
 
 		res.redirect(redirectUrl);
@@ -124,7 +126,8 @@ export class AuthController {
 				secure: true,
 				maxAge: 24 * 60 * 60 * 1000,
 				sameSite: 'none',
-				partitioned: true
+				partitioned: true,
+				domain: 'vercel.app'
 			});
 			return res.json({
 				StatusCode: 200,
@@ -164,7 +167,8 @@ export class AuthController {
 				secure: true,
 				maxAge: 24 * 60 * 60 * 1000,
 				sameSite: 'none',
-				partitioned: true
+				partitioned: true,
+				domain: 'vercel.app'
 			});
 			return res.json({
 				StatusCode: 200,
