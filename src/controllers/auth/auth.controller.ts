@@ -135,9 +135,9 @@ export class AuthController {
 				secure: true,
 				sameSite: 'none',
 				// maxAge: 24 * 60 * 60 * 1000, // 1 day in milliseconds
-				// sameSite: 'none',
+
 				 partitioned: true,
-				// domain: 'postreachbe-production.up.railway.app',
+				 domain: 'post-reach-fe.vercel.app',
 			});
 
 			return res.status(HttpStatus.OK).json({
