@@ -29,13 +29,14 @@ async function bootstrap() {
 		session({
 			secret: configService.get('SESSION_SECRET') || 'your-default-secret',
 			resave: false,
-			saveUninitialized: false,
+			saveUninitialized: false,	
 			cookie: {
 				domain: 'vercel.app',
 				secure: true,//isProduction, // HTTPS in production
 				httpOnly: true, // Prevent client-side JavaScript access
 				sameSite: 'none', // isProduction ? 'none' : 'lax', // 'None' for cross-origin
 				maxAge: 24 * 60 * 60 * 1000, // 1 day in milliseconds
+				partitioned: true
 			},
 		}),
 	);

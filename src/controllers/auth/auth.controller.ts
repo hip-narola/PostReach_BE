@@ -56,7 +56,8 @@ export class AuthController {
 			httpOnly: true,
 			secure: true,
 			maxAge: 24 * 60 * 60 * 1000,
-			sameSite: 'none'
+			sameSite: 'none',
+			partitioned: true
 		});
 
 		res.redirect(redirectUrl);
@@ -91,7 +92,8 @@ export class AuthController {
 			httpOnly: true,
 			secure: true,
 			maxAge: 24 * 60 * 60 * 1000,
-			sameSite: 'none'
+			sameSite: 'none',
+			partitioned: true
 		});
 
 		res.redirect(redirectUrl);
@@ -121,7 +123,8 @@ export class AuthController {
 				httpOnly: true,
 				secure: true,
 				maxAge: 24 * 60 * 60 * 1000,
-				sameSite: 'none'
+				sameSite: 'none',
+				partitioned: true
 			});
 			return res.json({
 				StatusCode: 200,
@@ -160,7 +163,8 @@ export class AuthController {
 				httpOnly: true,
 				secure: true,
 				maxAge: 24 * 60 * 60 * 1000,
-				sameSite: 'none'
+				sameSite: 'none',
+				partitioned: true
 			});
 			return res.json({
 				StatusCode: 200,
