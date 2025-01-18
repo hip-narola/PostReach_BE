@@ -11,7 +11,7 @@ import { GlobalExceptionFilter } from './shared/filters/global-exception/global-
 import helmet from 'helmet';
 // import * as rateLimit from 'express-rate-limit';
 // import * as RedisStore from 'connect-redis';
-import { createClient } from 'redis';
+// import { createClient } from 'redis';
 
 async function bootstrap() {
 	const app = await NestFactory.create(AppModule);
@@ -25,11 +25,11 @@ async function bootstrap() {
 	app.use(helmet());
 
 	// Redis-based session store for scalability
-	const redisClient = createClient({
-		url: configService.get('REDIS_URL'),
-		legacyMode: true,
-	});
-	await redisClient.connect();
+	// const redisClient = createClient({
+	// 	url: configService.get('REDIS_URL'),
+	// 	legacyMode: true,
+	// });
+	// await redisClient.connect();
 
 	// Configure sessions
 	app.use(
@@ -58,12 +58,15 @@ async function bootstrap() {
 	app.use(cookieParser());
 	// CORS configuration
 	const allowedOrigins = [
-		'http://localhost:3001',
 		configService.get('APP_URL_FRONTEND')
 	];
 
 	app.enableCors({
-		origin: (origin, callback) => {
+		origin:  
+		// [
+		// 	configService.get('APP_URL_FRONTEND')
+		// ],
+		(origin, callback) => {
 			if (!origin || allowedOrigins.includes(origin)) {
 				callback(null, true);
 			} else {
