@@ -133,9 +133,9 @@ export class AuthController {
 			res.cookie('accessToken', data.accessToken, {
 				httpOnly: true,
 				secure: true,
-				maxAge: 24 * 60 * 60 * 1000, // 1 day in milliseconds
-				sameSite: 'none',
-				partitioned: true,
+				// maxAge: 24 * 60 * 60 * 1000, // 1 day in milliseconds
+				// sameSite: 'none',
+				// partitioned: true,
 				// domain: 'postreachbe-production.up.railway.app',
 			});
 
