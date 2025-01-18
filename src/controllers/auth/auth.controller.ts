@@ -136,7 +136,7 @@ export class AuthController {
 				maxAge: 24 * 60 * 60 * 1000, // 1 day in milliseconds
 				sameSite: 'none',
 				partitioned: true,
-				domain: 'postreachbe-production.up.railway.app',
+				// domain: 'postreachbe-production.up.railway.app',
 			});
 
 			return res.status(HttpStatus.OK).json({

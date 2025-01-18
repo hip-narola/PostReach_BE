@@ -31,7 +31,7 @@ async function bootstrap() {
 			resave: false,
 			saveUninitialized: false,	
 			cookie: {
-				domain: 'postreachbe-production.up.railway.app',
+				// domain: 'postreachbe-production.up.railway.app',
 				secure: true,//isProduction, // HTTPS in production
 				httpOnly: true, // Prevent client-side JavaScript access
 				sameSite: 'none', // isProduction ? 'none' : 'lax', // 'None' for cross-origin
@@ -49,19 +49,16 @@ async function bootstrap() {
 	// CORS configuration
 	const allowedOrigins = [
 		'https://post-reach-fe.vercel.app',
-		// 'https://postreachbe-production.up.railway.app',
+		'https://postreachbe-production.up.railway.app',
 		'http://localhost:3001'
 	];
 
 	app.enableCors({
-		origin:
-		(origin, callback) => {
-			if (!origin || allowedOrigins.includes(origin)) {
-				callback(null, true);
-			} else {
-				callback(new Error('Not allowed by CORS'));
-			}
-		},
+		origin:[
+			'https://post-reach-fe.vercel.app',
+			'https://postreachbe-production.up.railway.app',
+			'http://localhost:3001'
+		],
 		credentials: true,
 		methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
 		allowedHeaders: ['Content-Type', 'Accept', 'Authorization'],
