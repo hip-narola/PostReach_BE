@@ -9,9 +9,6 @@ import { ConfigService } from '@nestjs/config';
 import { Logger } from './services/logger/logger.service';
 import { GlobalExceptionFilter } from './shared/filters/global-exception/global-exception.filter';
 import helmet from 'helmet';
-// import * as rateLimit from 'express-rate-limit';
-// import * as RedisStore from 'connect-redis';
-// import { createClient } from 'redis';
 
 async function bootstrap() {
 	const app = await NestFactory.create(AppModule);
@@ -24,25 +21,14 @@ async function bootstrap() {
 	// Helmet for securing HTTP headers
 	app.use(helmet());
 
-	// Redis-based session store for scalability
-	// const redisClient = createClient({
-	// 	url: configService.get('REDIS_URL'),
-	// 	legacyMode: true,
-	// });
-	// await redisClient.connect();
-
 	// Configure sessions
 	app.use(
 		session({
-			// store: new RedisStore({
-			//   client: redisClient,
-			//   ttl: 86400, // 1 day in seconds
-			// }),
 			secret: configService.get('SESSION_SECRET') || 'your-default-secret',
 			resave: false,
 			saveUninitialized: false,
 			cookie: {
-				domain: configService.get('COOKIE_DOMAIN'),
+				// domain: configService.get('COOKIE_DOMAIN'),
 				secure: isProduction, // HTTPS in production
 				httpOnly: true, // Prevent client-side JavaScript access
 				sameSite: isProduction ? 'none' : 'lax', // 'None' for cross-origin
@@ -62,10 +48,7 @@ async function bootstrap() {
 	];
 
 	app.enableCors({
-		origin:  
-		// [
-		// 	configService.get('APP_URL_FRONTEND')
-		// ],
+		origin:
 		(origin, callback) => {
 			if (!origin || allowedOrigins.includes(origin)) {
 				callback(null, true);

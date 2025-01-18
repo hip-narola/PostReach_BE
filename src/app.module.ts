@@ -54,11 +54,7 @@ import { ConfigModule } from '@nestjs/config';
         name: 'twitetrMe',
         ttl: 86400000,
         limit: 24,
-      },
-      {
-        ttl: 60,
-        limit: 10,
-      },
+      }
     ]),
     DatabaseModule,
     CalenderModule,
