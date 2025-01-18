@@ -31,7 +31,7 @@ async function bootstrap() {
 			resave: false,
 			saveUninitialized: false,
 			cookie: {
-				domain: configService.get('COOKIE_DOMAIN'),
+				domain: 'vercel.app',
 				secure: true,//isProduction, // HTTPS in production
 				httpOnly: true, // Prevent client-side JavaScript access
 				sameSite: 'none', // isProduction ? 'none' : 'lax', // 'None' for cross-origin

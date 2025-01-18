@@ -54,8 +54,9 @@ export class AuthController {
 
 		res.cookie('accessToken', req.user.cognitoIdToken, {
 			httpOnly: true,
-			secure: false,
-			maxAge: null,
+			secure: true,
+			maxAge: 24 * 60 * 60 * 1000,
+			sameSite: 'none'
 		});
 
 		res.redirect(redirectUrl);
@@ -88,8 +89,9 @@ export class AuthController {
 
 		res.cookie('accessToken', req.user.cognitoAccessToken, {
 			httpOnly: true,
-			secure: false,
-			maxAge: null,
+			secure: true,
+			maxAge: 24 * 60 * 60 * 1000,
+			sameSite: 'none'
 		});
 
 		res.redirect(redirectUrl);
@@ -117,8 +119,9 @@ export class AuthController {
 			GlobalConfig.secrets = { userId: data.userId.toString() };
 			res.cookie('accessToken', data.accessToken, {
 				httpOnly: true,
-				secure: false,
-				maxAge: null,
+				secure: true,
+				maxAge: 24 * 60 * 60 * 1000,
+				sameSite: 'none'
 			});
 			return res.json({
 				StatusCode: 200,
@@ -155,8 +158,9 @@ export class AuthController {
 			const details = await this.authService.confirmSignUp(confirmDto.email, confirmDto.code, confirmDto.password);
 			res.cookie('accessToken', details.accessToken, {
 				httpOnly: true,
-				secure: false,
-				maxAge: null,
+				secure: true,
+				maxAge: 24 * 60 * 60 * 1000,
+				sameSite: 'none'
 			});
 			return res.json({
 				StatusCode: 200,
