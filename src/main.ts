@@ -47,7 +47,9 @@ async function bootstrap() {
 	app.use(cookieParser());
 	// CORS configuration
 	const allowedOrigins = [
-		configService.get('APP_URL_FRONTEND')
+		configService.get('APP_URL_FRONTEND'),
+		'https://postreachbe-production.up.railway.app',
+		'http://localhost:3001'
 	];
 
 	app.enableCors({
