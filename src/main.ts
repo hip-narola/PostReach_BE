@@ -28,7 +28,7 @@ async function bootstrap() {
 			resave: false,
 			saveUninitialized: false,
 			cookie: {
-				domain: 'post-reach-fe.vercel.app', //configService.get('COOKIE_DOMAIN'),
+				domain: '.post-reach-fe.vercel.app', //configService.get('COOKIE_DOMAIN'),
 				secure: false, // HTTPS in production
 				httpOnly: true, // Prevent client-side JavaScript access
 				sameSite: false, // isProduction ? 'none' : 'lax', // 'None' for cross-origin
