@@ -57,6 +57,7 @@ async function bootstrap() {
 		origin:[
 			'https://post-reach-fe.vercel.app',
 			'https://postreachbe-production.up.railway.app',
+			'https://*.post-reach-fe.vercel.app',
 			'http://localhost:3001'
 		],
 		credentials: true,
