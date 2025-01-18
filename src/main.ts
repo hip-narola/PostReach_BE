@@ -31,7 +31,7 @@ async function bootstrap() {
 			resave: false,
 			saveUninitialized: false,	
 			cookie: {
-				domain: 'post-reach-fe.vercel.app',
+				domain: 'postreachbe-production.up.railway.app',
 				secure: true,//isProduction, // HTTPS in production
 				httpOnly: true, // Prevent client-side JavaScript access
 				sameSite: 'none', // isProduction ? 'none' : 'lax', // 'None' for cross-origin
@@ -49,7 +49,7 @@ async function bootstrap() {
 	// CORS configuration
 	const allowedOrigins = [
 		'https://post-reach-fe.vercel.app',
-		'https://postreachbe-production.up.railway.app',
+		// 'https://postreachbe-production.up.railway.app',
 		'http://localhost:3001'
 	];
 
