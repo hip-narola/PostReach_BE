@@ -58,7 +58,7 @@ export class AuthController {
 			maxAge: 24 * 60 * 60 * 1000,
 			sameSite: 'none',
 			partitioned: true,
-			domain: 'vercel.app'
+			domain: 'post-reach-fe.vercel.app'
 		});
 
 		res.redirect(redirectUrl);
@@ -95,7 +95,7 @@ export class AuthController {
 			maxAge: 24 * 60 * 60 * 1000,
 			sameSite: 'none',
 			partitioned: true,
-			domain: 'vercel.app'
+			domain: 'post-reach-fe.vercel.app'
 		});
 
 		res.redirect(redirectUrl);
@@ -116,39 +116,47 @@ export class AuthController {
 	// User Sign-In
 	@Post('signin')
 	@ApiBody({ type: SignInDto })
-	async signIn(@Body() signInDto: { email: string; password: string, rememberMe?: boolean }, @Req() req: Request, @Res() res: Response) {
+	async signIn(
+		@Body() signInDto: SignInDto,
+		@Req() req: Request,
+		@Res() res: Response,
+	) {
 		try {
-			const data = await this.authService.signIn(signInDto.email, signInDto.password, signInDto.rememberMe);
+			const data = await this.authService.signIn(
+				signInDto.email,
+				signInDto.password,
+				signInDto.rememberMe,
+			);
+
 			req.session.userId = data.userId.toString();
-			GlobalConfig.secrets = { userId: data.userId.toString() };
+
 			res.cookie('accessToken', data.accessToken, {
 				httpOnly: true,
 				secure: true,
-				maxAge: 24 * 60 * 60 * 1000,
+				maxAge: 24 * 60 * 60 * 1000, // 1 day in milliseconds
 				sameSite: 'none',
 				partitioned: true,
-				domain: 'vercel.app'
+				domain: 'post-reach-fe.vercel.app',
 			});
-			return res.json({
+
+			return res.status(HttpStatus.OK).json({
 				StatusCode: 200,
 				Message: 'Sign in successfully',
 				IsSuccess: true,
 				Data: data,
 			});
-		}
-		catch (error) {
-			if (error.name == "NotAuthorizedException") {
-				return res.json({
-					StatusCode: HttpStatus.OK,
-					Message: "Incorrect username or password.",
+		} catch (error) {
+			if (error.name === 'NotAuthorizedException') {
+				return res.status(HttpStatus.UNAUTHORIZED).json({
+					StatusCode: HttpStatus.UNAUTHORIZED,
+					Message: 'Incorrect username or password.',
 					IsSuccess: false,
 					Data: null,
 				});
-			}
-			else {
-				return res.json({
-					StatusCode: HttpStatus.BAD_REQUEST,
-					Message: error,
+			} else {
+				return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+					StatusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+					Message: 'An error occurred during sign-in.',
 					IsSuccess: false,
 					Data: null,
 				});
@@ -168,7 +176,7 @@ export class AuthController {
 				maxAge: 24 * 60 * 60 * 1000,
 				sameSite: 'none',
 				partitioned: true,
-				domain: 'vercel.app'
+				domain: 'post-reach-fe.vercel.app'
 			});
 			return res.json({
 				StatusCode: 200,
