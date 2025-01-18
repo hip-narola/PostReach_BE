@@ -1,40 +1,50 @@
-import { GetSecretValueCommand, SecretsManagerClient } from '@aws-sdk/client-secrets-manager';
+import {
+  GetSecretValueCommand,
+  SecretsManagerClient,
+} from '@aws-sdk/client-secrets-manager';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import * as AWS from 'aws-sdk';
-import { STS } from 'aws-sdk';
-import { GlobalConfig } from 'src/config/global-config';
 @Injectable()
 export class AwsSecretsService {
-    private readonly secretsManagerClient: SecretsManagerClient;
-    private readonly sts: any;
+  private readonly secretsManagerClient: SecretsManagerClient;
+  private secretCache = new Map<string, { [key: string]: string }>();
 
-    constructor(
-        private configService: ConfigService) {
-        AWS.config.update({
-            region: this.configService.get<string>('REGION'),
-        });
-        this.sts = new STS();
-        this.secretsManagerClient = new SecretsManagerClient({ region: "us-east-1" });
-    }
+  constructor(private configService: ConfigService) {
+    const region = this.configService.get<string>('REGION');
+    this.secretsManagerClient = new SecretsManagerClient({
+      region,
+    });
+  }
 
-    getSecret(secretName: string): Promise<{ [key: string]: string }> {
-        const command = new GetSecretValueCommand({ SecretId: secretName, VersionStage: "AWSCURRENT" });
-    
-        return this.secretsManagerClient.send(command)
-            .then((response) => {
-                const secrets = response.SecretString ? JSON.parse(response.SecretString) : {};
-                GlobalConfig.secrets = {
-                    ...(GlobalConfig.secrets || {}),
-                    [secretName]: secrets,
-                };
-    
-                return secrets; // Return the secrets directly
-            })
-            .catch((error) => {
-                return Promise.reject(error); // Return a rejected Promise with the error
-            });
+  async getSecret(
+    secretName: string,
+    cache: boolean = true,
+  ): Promise<{ [key: string]: string }> {
+    try {
+      if (cache && this.secretCache.has(secretName)) {
+        return this.secretCache.get(secretName);
+      }
+
+      const command = new GetSecretValueCommand({
+        SecretId: secretName,
+      });
+
+      const response = await this.secretsManagerClient.send(command);
+      const secretString = response.SecretString;
+
+      if (!secretString) {
+        throw new Error('Secret value is empty');
+      }
+
+      const parsedSecret = JSON.parse(secretString);
+
+      if (cache) {
+        this.secretCache.set(secretName, parsedSecret);
+      }
+
+      return parsedSecret;
+    } catch (error) {
+      throw new Error(`Failed to get secret: ${error.message}`);
     }
-    
-    
+  }
 }

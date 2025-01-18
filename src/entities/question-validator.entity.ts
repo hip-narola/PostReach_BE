@@ -6,7 +6,6 @@ import {
     UpdateDateColumn,
     DeleteDateColumn,
     OneToMany,
-    JoinColumn,
 } from 'typeorm';
 import { Question } from './question.entity';
 

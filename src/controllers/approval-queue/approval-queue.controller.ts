@@ -7,7 +7,7 @@ import { UpdatePostTaskStatusDTO } from 'src/dtos/params/update-post-task-status
 
 @Controller('approval-queue')
 export class ApprovalQueueController {
-    constructor(private readonly approvalQueueService: ApprovalQueueService) {}
+    constructor(private readonly approvalQueueService: ApprovalQueueService) { }
 
     @Post('getList')
     @ApiBody({ type: PaginationParamDto })

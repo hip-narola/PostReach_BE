@@ -181,10 +181,4 @@ export class SocialMediaInsightsRepository extends GenericRepository<SocialMedia
 
         return result;
     }
-
-
-   
-
-
-
 }

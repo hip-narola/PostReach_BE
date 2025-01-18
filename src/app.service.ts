@@ -9,14 +9,17 @@ export class AppService implements OnModuleInit {
         private readonly schedulerService: SchedulerService,
         private readonly likesCommentsViewsSchedularService: LikesCommentsViewsSchedulerService,
         private readonly subscriptionSchedulerService: SubscriptionSchedulerService
-    ) {}
+    ) { }
 
     async onModuleInit() {
         await this.schedulerService.scheduleHourlyJob();
         await this.likesCommentsViewsSchedularService.onModuleInit();
         await this.subscriptionSchedulerService.onModuleInit();
     }
-    getHello(): string {
-        return 'Hello World!';
+    getHello(): { message: string; data?: unknown } {
+        return {
+            message: 'Custom message from AppService',
+            data: 'Hello World!',
+        };
     }
 }

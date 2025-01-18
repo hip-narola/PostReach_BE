@@ -1,6 +1,4 @@
-import { Controller, Post, Body, Get } from '@nestjs/common';
-import { ApiBody } from '@nestjs/swagger';
-import { SchedulePostDto } from 'src/dtos/params/schedule-post-param.dto';
+import { Controller } from '@nestjs/common';
 import { PostService } from 'src/services/schedule-post/schedule-post.service';
 
 

@@ -1,5 +1,4 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
-import { User } from './user.entity';
 import { SocialMediaAccount } from './social-media-account.entity';
 
 @Entity('social_media_insights')

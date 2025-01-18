@@ -96,29 +96,26 @@ export class PostService {
     ) {
         try {
             // Fetch all jobs from the post queue
-            const jobs = await this.postQueue.getJobs(['waiting', 'delayed', 'active']);
+            const jobs = await this.postQueue.getJobs(['delayed', 'waiting', 'active']);
             const now = moment(); // Current date
 
             // Filter jobs to find the ones to be removed
             const jobsToRemove = await this.getJobsToRemove(jobs, expiredSubscriptions, now);
-
             // Remove jobs and collect IDs
-            const ids = await this.removeJobs(jobsToRemove);
+            if (jobsToRemove.length > 0) {
+                const ids = await this.removeJobs(jobsToRemove);
+                // Update status for removed jobs
+                const postTaskStatusData = {
+                    id: ids,
+                    isApproved: false,
+                    rejectreasonId: 7, // Subscription cancelled or expired
+                    rejectReason: REJECT_REASONS[7],
+                };
 
-            // Update status for removed jobs
-            const postTaskStatusData = {
-                id: ids,
-                isApproved: false,
-                rejectreasonId: 7, // Subscription cancelled or expired
-                rejectReason: REJECT_REASONS[7],
-            };
+                await this.approvalQueueService.updateStatus(postTaskStatusData);
+            }
 
-            const result = await this.approvalQueueService.updateStatus(postTaskStatusData);
-            console.log('Batch status update result:', result);
-
-            console.log('Removed Jobs:', jobsToRemove.map((job) => job.id));
         } catch (error) {
-            console.error('Error in removeExpiredScheduledPosts:', error);
         }
     }
 
@@ -130,21 +127,20 @@ export class PostService {
         return await Promise.all(
             jobs.filter(async (job) => {
                 const expiredSubscription = expiredSubscriptions.find(
-                    (subscription) => subscription.userId === job.data.userId
+                    (sub) => sub.userId == job.data.userId
                 );
 
                 if (expiredSubscription) {
                     const scheduleTime = moment(job.data.scheduleTime);
                     const endDate = moment(expiredSubscription.endDate);
-
                     if (expiredSubscription.cycle == 1) {
                         if (scheduleTime.isSameOrAfter(now, 'day') && scheduleTime.isBefore(endDate, 'day')) {
                             if (moment(job.data.post_created_at).isBefore(endDate, 'day')) {
                                 const isValid = await this.validateJobWithinCredits(
                                     expiredSubscription.userId,
                                     job.data.post_created_at,
-                                    // scheduleTime,
-                                    // endDate
+                                    scheduleTime,
+                                    endDate
                                 );
                                 return isValid;
                             }
@@ -161,8 +157,8 @@ export class PostService {
     private async validateJobWithinCredits(
         userId: number,
         postCreatedAt: moment.Moment,
-        // scheduleTime: moment.Moment,
-        // endDate: moment.Moment
+        scheduleTime: moment.Moment,
+        endDate: moment.Moment
     ): Promise<boolean> {
         const userCreditRepository = this.unitOfWork.getRepository(
             UserCreditRepository,
@@ -171,9 +167,10 @@ export class PostService {
         );
 
         const userCredits = await userCreditRepository.getUserCredits(userId);
-        if (userCredits && userCredits.length > 0) {
-            const lastTriggerDate = moment(userCredits[0].last_trigger_date);
-            return postCreatedAt.isSameOrAfter(lastTriggerDate, 'day');
+        if (userCredits) {
+            const lastTriggerDate = moment(userCredits.last_trigger_date);
+            // return postCreatedAt.isSameOrAfter(lastTriggerDate, 'day') && scheduleTime.isBefore(userCredits[0].cancel_Date, 'day');
+            return postCreatedAt.isAfter(lastTriggerDate, 'day') && scheduleTime.isBefore(userCredits.cancel_Date, 'day');
         }
         // && scheduleTime.isBefore(endDate, 'day')
         return false;
@@ -187,7 +184,7 @@ export class PostService {
                     await job.remove();
                     ids.push(job.data.Id); // Collect removed job IDs
                 } catch (error) {
-                   throw error;
+                    throw error;
                 }
             })
         );

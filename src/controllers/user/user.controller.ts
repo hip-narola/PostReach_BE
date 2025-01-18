@@ -11,7 +11,6 @@ import {
     HttpStatus,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { createClient } from '@supabase/supabase-js';
 import { UserDto } from 'src/dtos/params/user.dto';
 import { User } from 'src/entities/user.entity';
 import { UserService } from 'src/services/user/user.service';

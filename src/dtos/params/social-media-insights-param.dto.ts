@@ -16,5 +16,4 @@ export class SocialMediaInsightParamDTO {
 
     @Column()
     social_media_account_id: number;
-
 }

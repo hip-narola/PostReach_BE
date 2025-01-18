@@ -1,4 +1,4 @@
-import { IsArray, IsDateString, IsIn, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsArray,IsIn, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { SocialMediaPlatform } from 'src/shared/constants/social-media.constants';
 
@@ -18,7 +18,7 @@ export class FacebookPostParamDto {
     })
     @IsNotEmpty()
     @IsNumber()
-    accessToken: String;
+    accessToken: string;
 
     @ApiProperty({
         description: 'The message to post',
@@ -26,7 +26,7 @@ export class FacebookPostParamDto {
     })
     @IsOptional()
     @IsIn(Object.values(SocialMediaPlatform))
-    message: String | null;
+    message: string | null;
 
     @ApiProperty({
         description: 'The URL of the image to include in the post.',

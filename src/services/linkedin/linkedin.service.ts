@@ -14,7 +14,6 @@ import { LinkedInUserDataDto } from 'src/dtos/response/linkedin-user-data-dto';
 import { LinkedInOrganizationDetailsDto } from 'src/dtos/response/linkedin-organization-detail-dto';
 import { LinkedInUserPagesDto } from 'src/dtos/response/linkedin-user-pages-dto';
 import { Throttle } from '@nestjs/throttler';
-import { NotificationMessage, NotificationType } from 'src/shared/constants/notification-constants';
 import { NotificationService } from '../notification/notification.service';
 import { AwsSecretsService } from '../aws-secrets/aws-secrets.service';
 import { AWS_SECRET } from 'src/shared/constants/aws-secret-name-constants';
@@ -33,7 +32,7 @@ export class LinkedinService {
 		private readonly notificationService: NotificationService,
 		private readonly secretService: AwsSecretsService,
 		private configService: ConfigService
-	) { 
+	) {
 		this.initialize();
 	}
 
@@ -146,14 +145,14 @@ export class LinkedinService {
 			const validOrganizationDetails = organizationDetails.filter(Boolean);
 
 			// Format the response
-			var formattedResponse = validOrganizationDetails.map((org) => ({
+			const formattedResponse = validOrganizationDetails.map((org) => ({
 				pageId: org.id,
 				pageName: org.localizedName,
 				logoUrl: org.logoUrl ? org.logoUrl : null,
 				isPage: true
 			}));
 
-			var LinkedinUser = {
+			const LinkedinUser = {
 				pageId: userSocialAccount.social_media_user_id,
 				pageName: userSocialAccount.user_name,
 				logoUrl: userSocialAccount.user_profile,
@@ -434,7 +433,6 @@ export class LinkedinService {
 		}
 		catch (error) {
 			await this.unitOfWork.rollbackTransaction();
-
 		}
 	}
 }

@@ -12,7 +12,7 @@ export class CheckUserSubscriptionService {
     async isUserSubscriptionActive(userId: number) {
         const userSubscriptionRepository = this.unitOfWork.getRepository(UserSubscriptionRepository, UserSubscription, false);
         const usersubscription = await userSubscriptionRepository.findUserActiveSubscriptionWithoutSubscriptionId(userId);
-        await this.unitOfWork.completeTransaction();
+        // await this.unitOfWork.completeTransaction();
         if (usersubscription) {
             return true;
         }

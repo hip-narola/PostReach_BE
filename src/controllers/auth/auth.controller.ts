@@ -1,6 +1,5 @@
-import { Controller, Get, Post, Body, Req, Res, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Req, Res, UseGuards, HttpStatus } from '@nestjs/common';
 import { AuthService } from 'src/services/auth/auth.service';
-import { AuthGuard } from '@nestjs/passport';
 import { Response, Request } from 'express';
 import { SignUpDto } from 'src/dtos/params/signup-param.dto';
 import { ApiBody } from '@nestjs/swagger';
@@ -13,6 +12,8 @@ import { UserService } from 'src/services/user/user.service';
 import { GlobalConfig } from 'src/config/global-config';
 import { FacebookService } from 'src/services/facebook/facebook.service';
 import { ConfigService } from '@nestjs/config';
+import { FacebookSignupAuthGuard } from 'src/shared/common/guards/facebook-signup/facebook-signup.guard';
+import { GoogleSignupGuard } from 'src/shared/common/guards/google-signup/google-signup.guard';
 @Controller('auth')
 export class AuthController {
 
@@ -21,15 +22,15 @@ export class AuthController {
 
 	// Google Login
 	@Get('google')
-	@UseGuards(AuthGuard('google'))
+	@UseGuards(GoogleSignupGuard)
 	googleLogin() { }
 
 	// Google Login Callback
 	@Get('google/callback')
-	@UseGuards(AuthGuard('google'))
+	@UseGuards(GoogleSignupGuard)
 	async googleLoginCallback(@Req() req, @Res() res: Response) {
 
-		const appUrl= this.configService.get<string>('APP_URL_FRONTEND');
+		const appUrl = this.configService.get<string>('APP_URL_FRONTEND');
 		const error = req.query.error;
 		if (error) {
 			if (error === 'access_denied') {
@@ -62,16 +63,15 @@ export class AuthController {
 
 	// Facebook Login
 	@Get('facebook')
-	@UseGuards(AuthGuard('facebook'))
+	@UseGuards(FacebookSignupAuthGuard)
 	async facebookLogin() { }
 
 	// Facebook Login Callback
 	@Get('facebook/callback')
-	@UseGuards(AuthGuard('facebook'))
+	@UseGuards(FacebookSignupAuthGuard)
 	async facebookLoginCallback(@Req() req, @Res() res: Response) {
-		const appUrl= this.configService.get<string>('APP_URL_FRONTEND');
+		const appUrl = this.configService.get<string>('APP_URL_FRONTEND');
 		const error = req.query.error;
-		// Check for access_denied error
 		if (error === 'access_denied') {
 			const isSuccess = false;
 			const redirectUrl = `${appUrl}/auth/signin?isSuccess=${encodeURIComponent(isSuccess)}`;
@@ -100,55 +100,113 @@ export class AuthController {
 	@Post('signup')
 	@ApiBody({ type: SignUpDto })
 	async signUp(@Body() signUpDto: { username: string; email: string; password: string }) {
-		return await this.authService.signUp(signUpDto.username, signUpDto.email, signUpDto.password);
+		const details = await this.authService.signUp(signUpDto.username, signUpDto.email, signUpDto.password);
+		return {
+			message: 'Signup successfully',
+			data: details,
+		};
 	}
 
 	// User Sign-In
 	@Post('signin')
 	@ApiBody({ type: SignInDto })
 	async signIn(@Body() signInDto: { email: string; password: string, rememberMe?: boolean }, @Req() req: Request, @Res() res: Response) {
-		const data = await this.authService.signIn(signInDto.email, signInDto.password, signInDto.rememberMe);
-		req.session.userId = data.userId.toString();
-		GlobalConfig.secrets = { userId: data.userId.toString() };
-		res.cookie('accessToken', data.accessToken, {
-			httpOnly: true,
-			secure: false,
-			maxAge: null,
-		});
-		return res.json({
-			StatusCode: 200,
-			Message: '',
-			IsSuccess: true,
-			Data: data,
-		});
+		try {
+			const data = await this.authService.signIn(signInDto.email, signInDto.password, signInDto.rememberMe);
+			req.session.userId = data.userId.toString();
+			GlobalConfig.secrets = { userId: data.userId.toString() };
+			res.cookie('accessToken', data.accessToken, {
+				httpOnly: true,
+				secure: false,
+				maxAge: null,
+			});
+			return res.json({
+				StatusCode: 200,
+				Message: 'Sign in successfully',
+				IsSuccess: true,
+				Data: data,
+			});
+		}
+		catch (error) {
+			if (error.name == "NotAuthorizedException") {
+				return res.json({
+					StatusCode: HttpStatus.OK,
+					Message: "Incorrect username or password.",
+					IsSuccess: false,
+					Data: null,
+				});
+			}
+			else {
+				return res.json({
+					StatusCode: HttpStatus.BAD_REQUEST,
+					Message: error,
+					IsSuccess: false,
+					Data: null,
+				});
+			}
+		}
 	}
 
 	// Confirm Sign-Up
 	@Post('signup/confirmation')
 	@ApiBody({ type: SignUpConfirmationParams })
-	async confirmSignUp(@Body() confirmDto: { email: string; code: string, password: string }) {
-		return await this.authService.confirmSignUp(confirmDto.email, confirmDto.code, confirmDto.password);
+	async confirmSignUp(@Body() confirmDto: { email: string; code: string, password: string }, @Req() req: Request, @Res() res: Response) {
+		try {
+			const details = await this.authService.confirmSignUp(confirmDto.email, confirmDto.code, confirmDto.password);
+			res.cookie('accessToken', details.accessToken, {
+				httpOnly: true,
+				secure: false,
+				maxAge: null,
+			});
+			return res.json({
+				StatusCode: 200,
+				Message: 'Signup confirmation successfully',
+				IsSuccess: true,
+				Data: details,
+			});
+		}
+		catch (error) {
+			return res.json({
+				StatusCode: HttpStatus.BAD_REQUEST,
+				Message: error,
+				IsSuccess: false,
+				Data: null,
+			});
+		}
 	}
 
 	// Resend confirmation code
 	@Post('signup/resendConfirmationCode')
 	@ApiBody({ type: ResendConfirmationCodeParamDto })
 	async resendConfirmationCode(@Body() ResendConfirmationCodeParamDto: { email: string; }) {
-		return await this.authService.ResendConfirmationCode(ResendConfirmationCodeParamDto.email);
-
+		const details = await this.authService.ResendConfirmationCode(ResendConfirmationCodeParamDto.email);
+		return {
+			message: 'Confirmation code resend successfully',
+			data: details,
+		};
 	}
 
 	// Forget password
 	@Post('forgotPassword')
 	@ApiBody({ type: ForgotPasswordParamDto })
 	async forgotPassword(@Body() ForgotPasswordParamDto: { email: string }) {
-		return await this.authService.forgotPassword(ForgotPasswordParamDto.email);
+		const details = await this.authService.forgotPassword(ForgotPasswordParamDto.email);
+		return {
+			message: 'Password forgot successfully',
+			data: details,
+		};
 	}
 
 	// Reset password
 	@Post('resetPassword')
 	@ApiBody({ type: ResetPasswordParamsDto })
 	async resetPassword(@Body() ResetPasswordParamsDto: { email: string, password: string, code: string }) {
-		return await this.authService.resetPassword(ResetPasswordParamsDto.email, ResetPasswordParamsDto.password, ResetPasswordParamsDto.code);
+		const details = await this.authService.resetPassword(ResetPasswordParamsDto.email, ResetPasswordParamsDto.password, ResetPasswordParamsDto.code);
+		return {
+			message: 'Password reset successfully',
+			data: details,
+		};
 	}
+
+
 }

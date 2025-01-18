@@ -1,5 +1,4 @@
 import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, CreateDateColumn } from 'typeorm';
-import { PostTask } from './post-task.entity';
 import { Post } from './post.entity';
 
 

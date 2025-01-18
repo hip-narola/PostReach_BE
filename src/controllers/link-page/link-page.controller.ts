@@ -193,7 +193,6 @@ export class LinkPageController {
         if (accounts.data && accounts.data.length > 0) {
             for (const account of accounts.data) {
                 const pageId = account.id;
-                const pageAccessToken = account.access_token;
                 const longLivedAccessToken =
                     await this.facebookService.exchangeToLongLivedUserToken(
                         account.access_token,
@@ -332,8 +331,6 @@ export class LinkPageController {
                             data.instagram_business_account.id,
                             longLivedAccessToken,
                         );
-                    const instagramAccountDetails =
-                        data.instagram_business_account;
                     const newPageDetail = {
                         access_token: longLivedAccessToken || null,
                         pageName: instagramDetails.name,
@@ -546,17 +543,15 @@ export class LinkPageController {
 
     @Get('connected-tweet-post')
     async main() {
-        const content = 'This is a tweet with an image!';
         const imageUrl =
             'https://owehwuxrqdrgsfvzwwdl.supabase.co/storage/v1/object/public/user/22/business/image_Fh.png';
 
         try {
             // Step 1: Upload the media
-            const mediaId = await this.twitterService.uploadMedia2(imageUrl);
+            await this.twitterService.uploadMedia2(imageUrl);
 
             // Step 2: Post the tweet with the uploaded media
             // const tweetResponse = await this.twitterService.postTweet2(content, mediaId);
-            // console.log('Tweet posted successfully:', tweetResponse.data.id);
             // const post1Insights = await this.twitterService.getAccount1Insights(tweetResponse.data.id);
         } catch (error) {
             throw error;

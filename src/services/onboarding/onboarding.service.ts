@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { log } from 'console';
-import { Question } from 'src/entities/question.entity';
+
 import { OnboardingRepository } from 'src/repositories/onboarding-repository';
 import { UnitOfWork } from 'src/unitofwork/unitofwork';
 

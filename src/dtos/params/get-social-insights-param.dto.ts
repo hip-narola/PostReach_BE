@@ -1,4 +1,4 @@
-import { IsDateString, IsIn, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsIn, IsNotEmpty, IsNumber, IsOptional } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { SocialMediaPlatform } from 'src/shared/constants/social-media.constants';
 

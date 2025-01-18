@@ -696,11 +696,10 @@ export class SubscriptionService {
 					userSubscription,
 				);
 
-
-				//expire active credits
+				// expire active credits
 				await userCreditRepository.updateUserCreditsStatus(userSubscription.user.id);
 
-				//add cancelled plan notification 
+				// add cancelled plan notification 
 				await this.notificationService.saveData(userSubscription.user.id, NotificationType.SUBSCRIPTION_CANCELLED, NotificationMessage[NotificationType.SUBSCRIPTION_CANCELLED]);
 
 				expiredSubscriptions.push({

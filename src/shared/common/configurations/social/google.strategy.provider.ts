@@ -7,8 +7,8 @@ import { AWS_SECRET } from 'src/shared/constants/aws-secret-name-constants';
 
 export const GoogleStrategyProvider: Provider = {
     provide: GoogleStrategy,
-    useFactory: async (cognitoIdentityService: CognitoIdentityService,
-        userService: UserService, secretService: AwsSecretsService) => {
+    useFactory: async (
+        userService: UserService,cognitoIdentityService: CognitoIdentityService, secretService: AwsSecretsService) => {
         const data = await secretService.getSecret(AWS_SECRET.AWSSECRETNAME);
         const clientId = data.GOOGLE_CLIENT_ID;
         const clientSecret = data.GOOGLE_CLIENT_SECRET;

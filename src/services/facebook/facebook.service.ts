@@ -9,7 +9,6 @@ import { SocialMediaPlatform, SocialMediaPlatformNames } from 'src/shared/consta
 import { FacebookPageDetailsDTO } from 'src/entities/facebook-page-details.entity';
 import { SocialMediaAccountRepository } from 'src/repositories/social-media-account-repository';
 import { SocialMediaAccount } from 'src/entities/social-media-account.entity';
-import * as AWS from 'aws-sdk';
 import { ConfigService } from '@nestjs/config';
 import { AWS_SECRET } from 'src/shared/constants/aws-secret-name-constants';
 import { AwsSecretsService } from '../aws-secrets/aws-secrets.service';
@@ -17,17 +16,10 @@ import { AwsSecretsService } from '../aws-secrets/aws-secrets.service';
 @Injectable()
 export class FacebookService {
     private readonly apiUrl: string = 'https://graph.facebook.com/v21.0';
-    private readonly cognitoClient: AWS.CognitoIdentityServiceProvider;
-    private cognitoISP: AWS.CognitoIdentityServiceProvider;
     private addId: string;
     private appSecret: string;
 
     constructor(private readonly socialMediaAccountService: SocialMediaAccountService, private readonly unitOfWork: UnitOfWork, private readonly configService: ConfigService, private readonly secretService: AwsSecretsService,) {
-        this.cognitoISP = new AWS.CognitoIdentityServiceProvider({
-            region: this.configService.get<string>('REGION'),
-        });
-        AWS.config.update({ region: this.configService.get<string>('REGION') });
-        this.cognitoClient = new AWS.CognitoIdentityServiceProvider();
         this.initialize();
     }
 
@@ -61,7 +53,7 @@ export class FacebookService {
             scope: null,
             file_name: filePath
         });
-        const data = await this.socialMediaAccountService.storeTokenDetails(userId, tokenDataDTO, platform);
+        await this.socialMediaAccountService.storeTokenDetails(userId, tokenDataDTO, platform);
 
         return true;
     }
@@ -173,6 +165,7 @@ export class FacebookService {
                 fileName,
             };
         } catch (error) {
+            throw error;
             throw new Error('Failed to fetch image from URL');
         }
     }
@@ -201,7 +194,7 @@ export class FacebookService {
                     await postRepository.update(post.id, record);
                 } catch (error) {
                     await this.unitOfWork.rollbackTransaction();
-
+                    throw error;
                 }
             }
 
@@ -209,6 +202,7 @@ export class FacebookService {
         }
         catch (error) {
             await this.unitOfWork.rollbackTransaction();
+            throw error;
         }
     }
 
@@ -296,7 +290,7 @@ export class FacebookService {
 
     private async revokeFacebookAccess(facebookUserId: string, accessToken: string) {
         try {
-            const response = await axios.delete(
+            await axios.delete(
                 `https://graph.facebook.com/v21.0/${facebookUserId}/permissions`,
                 { params: { access_token: accessToken } }
             );

@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { GenericRepository } from './generic-repository';
-import { SocialMediaAccount } from 'src/entities/social-media-account.entity';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Questionnaire } from 'src/entities/questionnaire.entity';

@@ -21,7 +21,9 @@ export class FacebookStrategy extends PassportStrategy(Strategy, 'facebook') {
       clientSecret: appSecret,
       callbackURL: facebookStartegy,
       profileFields: ['id', 'emails', 'name'],
-      auth_type: 'reauthenticate',
+      scope: ['email'],
+      auth_type: 'login',
+      authParams: { 'force_reauthentication': 'true' },
     });
   }
 

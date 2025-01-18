@@ -1,6 +1,5 @@
 import { Body, Controller, Get, Post, Query } from '@nestjs/common';
 import { ApiBody, ApiQuery } from '@nestjs/swagger';
-import { FacebookPostParamDto } from 'src/dtos/params/facebook-post-param.dto';
 import { GetSocilInsightsParamDto } from 'src/dtos/params/get-social-insights-param.dto';
 import { InsightsParamDto } from 'src/dtos/params/insights-param.dto';
 import { PostToInstagramDto } from 'src/dtos/params/post-to-instagram.dto';
@@ -21,19 +20,19 @@ export class DashboardInsightsController {
     // count apis for facebook
     @Get('getTotalFacebookPostList')
     @ApiQuery({ name: 'userid', type: Number, required: true, description: 'User ID to fetch Facebook posts' })
-    async getTotalFacebookPostList(@Query('userid') userid: number): Promise<Number> {
+    async getTotalFacebookPostList(@Query('userid') userid: number): Promise<number> {
         return await this.dashboardInsightsService.getTotalFacebookPostList(userid);
     }
 
     @Get('getTotalFacebookApprovedPostList')
     @ApiQuery({ name: 'userid', type: Number, required: true, description: 'User ID to fetch Facebook posts' })
-    async getTotalFacebookApprovedPostList(@Query('userid') userid: number): Promise<Number> {
+    async getTotalFacebookApprovedPostList(@Query('userid') userid: number): Promise<number> {
         return await this.dashboardInsightsService.getTotalFacebookApprovedPostList(userid);
     }
 
     @Get('getTotalFacebookRejectedPostList')
     @ApiQuery({ name: 'userid', type: Number, required: true, description: 'User ID to fetch Facebook posts' })
-    async getTotalFacebookRejectedPostList(@Query('userid') userid: number): Promise<Number> {
+    async getTotalFacebookRejectedPostList(@Query('userid') userid: number): Promise<number> {
         return await this.dashboardInsightsService.getTotalFacebookRejectedPostList(userid);
     }
 
@@ -41,19 +40,19 @@ export class DashboardInsightsController {
     // count apis for linkedin
     @Get('getTotalLinkedinPostList')
     @ApiQuery({ name: 'userid', type: Number, required: true, description: 'User ID to fetch linkedin posts' })
-    async getTotalLinkedinPostList(@Query('userid') userid: number): Promise<Number> {
+    async getTotalLinkedinPostList(@Query('userid') userid: number): Promise<number> {
         return await this.dashboardInsightsService.getTotalLinkedinPostList(userid);
     }
 
     @Get('getTotalLinkedinApprovedPostList')
     @ApiQuery({ name: 'userid', type: Number, required: true, description: 'User ID to fetch linkedin posts' })
-    async getTotalLinkedinApprovedPostList(@Query('userid') userid: number): Promise<Number> {
+    async getTotalLinkedinApprovedPostList(@Query('userid') userid: number): Promise<number> {
         return await this.dashboardInsightsService.getTotalLinkedinApprovedPostList(userid);
     }
 
     @Get('getTotalLinkedinRejectedPostList')
     @ApiQuery({ name: 'userid', type: Number, required: true, description: 'User ID to fetch linkedin posts' })
-    async getTotalLinkedinRejectedPostList(@Query('userid') userid: number): Promise<Number> {
+    async getTotalLinkedinRejectedPostList(@Query('userid') userid: number): Promise<number> {
         return await this.dashboardInsightsService.getTotalLinkedinRejectedPostList(userid);
     }
 
@@ -62,19 +61,19 @@ export class DashboardInsightsController {
 
     @Get('getTotalTwitterPostList')
     @ApiQuery({ name: 'userid', type: Number, required: true, description: 'User ID to fetch twitter posts' })
-    async getTotalTwitterPostList(@Query('userid') userid: number): Promise<Number> {
+    async getTotalTwitterPostList(@Query('userid') userid: number): Promise<number> {
         return await this.dashboardInsightsService.getTotalTwitterPostList(userid);
     }
 
     @Get('getTotalTwitterApprovedPostList')
     @ApiQuery({ name: 'userid', type: Number, required: true, description: 'User ID to fetch twitter posts' })
-    async getTotalTwitterApprovedPostList(@Query('userid') userid: number): Promise<Number> {
+    async getTotalTwitterApprovedPostList(@Query('userid') userid: number): Promise<number> {
         return await this.dashboardInsightsService.getTotalTwitterApprovedPostList(userid);
     }
 
     @Get('getTotalTwitterRejectedPostList')
     @ApiQuery({ name: 'userid', type: Number, required: true, description: 'User ID to fetch twitter posts' })
-    async getTotalTwitterRejectedPostList(@Query('userid') userid: number): Promise<Number> {
+    async getTotalTwitterRejectedPostList(@Query('userid') userid: number): Promise<number> {
         return await this.dashboardInsightsService.getTotalTwitterRejectedPostList(userid);
     }
 
@@ -82,19 +81,19 @@ export class DashboardInsightsController {
 
     @Get('getTotalInstagramPostList')
     @ApiQuery({ name: 'userid', type: Number, required: true, description: 'User ID to fetch instagram posts' })
-    async getTotalInstagramPostList(@Query('userid') userid: number): Promise<Number> {
+    async getTotalInstagramPostList(@Query('userid') userid: number): Promise<number> {
         return await this.dashboardInsightsService.getTotalInstagramPostList(userid);
     }
 
     @Get('getTotalInstagramApprovedPostList')
     @ApiQuery({ name: 'userid', type: Number, required: true, description: 'User ID to fetch instagram posts' })
-    async getTotalInstagramApprovedPostList(@Query('userid') userid: number): Promise<Number> {
+    async getTotalInstagramApprovedPostList(@Query('userid') userid: number): Promise<number> {
         return await this.dashboardInsightsService.getTotalInstagramApprovedPostList(userid);
     }
 
     @Get('getTotalInstagramRejectedPostList')
     @ApiQuery({ name: 'userid', type: Number, required: true, description: 'User ID to fetch instagram posts' })
-    async getTotalInstagramRejectedPostList(@Query('userid') userid: number): Promise<Number> {
+    async getTotalInstagramRejectedPostList(@Query('userid') userid: number): Promise<number> {
         return await this.dashboardInsightsService.getTotalInstagramRejectedPostList(userid);
     }
 
@@ -105,7 +104,6 @@ export class DashboardInsightsController {
     async getSocialinsightsList(@Body() GetSocilInsightsParamDto: { days: number, userId: number, platform: number | null }): Promise<any> {
         return await this.socialMediaInsightsService.getSocialinsightsList(GetSocilInsightsParamDto);
     }
-
 
     @Post('getTwitterInsights')
     @ApiBody({ type: InsightsParamDto })
@@ -121,7 +119,6 @@ export class DashboardInsightsController {
         return await this.dashboardInsightsService.gelinkedInInsights(userid, platform);
     }
 
-
     @Get('post-details')
     async getPostDetails(
         @Query('postId') postId: string,
@@ -135,7 +132,6 @@ export class DashboardInsightsController {
         return await this.facebookService.fetchAndUpdatePostData();
     }
 
-
     @Post('post')
     @ApiBody({ type: PostToInstagramDto })
     async postToInstagram(@Body() postToInstagramDto: PostToInstagramDto) {
@@ -148,8 +144,6 @@ export class DashboardInsightsController {
         }
     }
 
-
-
     @Get('Instagram-post-metrics')
     async getPostMetrics(@Query('mediaId') mediaId: string, @Query('accessToken') accessToken: string) {
         if (!mediaId) {
@@ -157,6 +151,4 @@ export class DashboardInsightsController {
         }
         return await this.instagramService.getPostMetrics(mediaId, accessToken);
     }
-
-
 }

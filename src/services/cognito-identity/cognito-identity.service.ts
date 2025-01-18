@@ -1,22 +1,29 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import * as AWS from 'aws-sdk';
 import { AwsSecretsService } from '../aws-secrets/aws-secrets.service';
 import { AWS_SECRET } from 'src/shared/constants/aws-secret-name-constants';
+import { 
+    CognitoIdentityProviderClient,
+    InitiateAuthCommand,
+    AdminCreateUserCommand,
+    AdminSetUserPasswordCommand
+} from "@aws-sdk/client-cognito-identity-provider";
 
 @Injectable()
 export class CognitoIdentityService {
 
-    private cognitoISP: AWS.CognitoIdentityServiceProvider;
+    private cognitoClient: CognitoIdentityProviderClient;
     private password = 'tXo{Eg$7Z8_;H%sA';
     private userPoolId: string;
     private appClientId: string;
+
     constructor(private readonly configService: ConfigService, private readonly secretService: AwsSecretsService) {
-        this.cognitoISP = new AWS.CognitoIdentityServiceProvider({
+        this.cognitoClient = new CognitoIdentityProviderClient({
             region: this.configService.get<string>('REGION'),
         });
         this.initialize();
     }
+
     private async initialize() {
         const secretData = await this.secretService.getSecret(AWS_SECRET.AWSSECRETNAME);
         this.userPoolId = secretData?.USERPOOLID;
@@ -26,19 +33,19 @@ export class CognitoIdentityService {
         }
     }
 
-
     // Get access token from AWS by userId
     async getIdToken(userId: string): Promise<string> {
-        const params = {
+        const command = new InitiateAuthCommand({
             AuthFlow: 'USER_PASSWORD_AUTH',
             ClientId: this.appClientId,
             AuthParameters: {
                 USERNAME: userId,
                 PASSWORD: this.password
             }
-        };
+        });
+
         try {
-            const response = await this.cognitoISP.initiateAuth(params).promise();
+            const response = await this.cognitoClient.send(command);
             return response.AuthenticationResult.AccessToken;
         } catch (error) {
             throw new Error('Failed to get ID Token from Cognito:' + error);
@@ -47,7 +54,7 @@ export class CognitoIdentityService {
 
     // Create user in AWS
     async createUser(user: any): Promise<any> {
-        const params = {
+        const createUserCommand = new AdminCreateUserCommand({
             UserPoolId: this.userPoolId,
             Username: user.email,
             TemporaryPassword: this.password,
@@ -62,18 +69,18 @@ export class CognitoIdentityService {
                 },
             ],
             MessageAction: 'SUPPRESS',
-        };
+        });
 
-        const setPasswordParams = {
+        const setPasswordCommand = new AdminSetUserPasswordCommand({
             UserPoolId: this.userPoolId,
             Username: user.email,
             Password: this.password,
             Permanent: true,
-        };
+        });
 
         try {
-            const response = await this.cognitoISP.adminCreateUser(params).promise();
-            await this.cognitoISP.adminSetUserPassword(setPasswordParams).promise();
+            const response = await this.cognitoClient.send(createUserCommand);
+            await this.cognitoClient.send(setPasswordCommand);
             return response.User;
         } catch (error) {
             throw new Error('Failed to create user in cognito:' + error);

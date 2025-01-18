@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { GenericRepository } from './generic-repository';
 import { Repository } from 'typeorm';
-import { PostArchive } from 'src/entities/post_archive.entity';
 import { Asset } from 'src/entities/asset.entity';
 
 @Injectable()

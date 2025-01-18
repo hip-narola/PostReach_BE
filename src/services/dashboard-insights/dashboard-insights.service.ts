@@ -15,14 +15,10 @@ import { Post } from 'src/entities/post.entity';
 import { TWITTER_CONST } from 'src/shared/constants/twitter-constant';
 import { LinkedinService } from '../linkedin/linkedin.service';
 import { SocialMediaPlatform, SocialMediaPlatformNames } from 'src/shared/constants/social-media.constants';
-import { log } from 'winston';
 import { Throttle } from '@nestjs/throttler';
 
 @Injectable()
 export class DashboardInsightsService {
-    postToFacebook(pageId: string, accessToken: string, message: string) {
-        throw new Error('Method not implemented.');
-    }
 
     constructor(
         private readonly unitOfWork: UnitOfWork,
@@ -125,7 +121,7 @@ export class DashboardInsightsService {
             let totalEngagements = 0;
             let totalFollowers = 0;
 
-            const insights = await Promise.all(socialMediaAccounts.map(async account => {
+            await Promise.all(socialMediaAccounts.map(async account => {
                 // Fetch insights for each account
                 const insightsData = await this.fetchPageInsights(account.page_id, account.encrypted_access_token);
 
@@ -147,7 +143,7 @@ export class DashboardInsightsService {
             return result;
         }
         catch (error) {
-
+            throw error;
         }
     }
 
@@ -196,7 +192,7 @@ export class DashboardInsightsService {
             let totalEngagements = 0;
             let totalFollowers = 0;
 
-            const insights = await Promise.all(socialMediaAccounts.map(async account => {
+            await Promise.all(socialMediaAccounts.map(async account => {
                 // Fetch insights for each account
                 const insightsData = await this.fetchInstagramInsights(account.instagram_Profile, account.encrypted_access_token);
 
@@ -219,7 +215,7 @@ export class DashboardInsightsService {
             return result;
         }
         catch (error) {
-
+            throw error;
         }
     }
 
@@ -297,16 +293,11 @@ export class DashboardInsightsService {
                 SocialMediaAccount,
                 false
             );
-
             const socialMediaAccount = await socialMediaAccountRepo.findByUserAndPlatform(userID, platform);
-            // Initialize aggregates
-            let totalImpressions = 0;
-            let totalEngagements = 0;
-            let totalFollowers = 0;
 
             if (socialMediaAccount.page_id) {
-                var followersCount = await this.fetchLinkedinOrganizationFollowers(socialMediaAccount.page_id, socialMediaAccount.encrypted_access_token);
-                var insightsData = await this.fetchLinkedInPageInsights(socialMediaAccount.page_id, socialMediaAccount.encrypted_access_token);
+                const followersCount = await this.fetchLinkedinOrganizationFollowers(socialMediaAccount.page_id, socialMediaAccount.encrypted_access_token);
+                const insightsData = await this.fetchLinkedInPageInsights(socialMediaAccount.page_id, socialMediaAccount.encrypted_access_token);
                 var result: SocialMediaInsightParamDTO = {
                     platform: platform,
                     impressions: insightsData[0]?.totalShareStatistics?.impressionCount || 0,
@@ -523,7 +514,7 @@ export class DashboardInsightsService {
         let totalEngagements = 0;
         let totalFollowers = 0;
 
-        const insights = await Promise.all(socialMediaAccounts.map(async account => {
+        await Promise.all(socialMediaAccounts.map(async account => {
             // Fetch insights for each account
 
             const insightsData = await this.fetchTwitterInsights(account.id, account.encrypted_access_token);
@@ -558,11 +549,11 @@ export class DashboardInsightsService {
             });
 
             if (response.status === 200) {
-                if(response.data?.data?.public_metrics){
+                if (response.data?.data?.public_metrics) {
                     const metrics = response.data.data.public_metrics;
                     return metrics.followers_count;
                 }
-                else{
+                else {
                     return 0;
                 }
             } else {
@@ -585,9 +576,9 @@ export class DashboardInsightsService {
             });
 
             const metrics = response.data.data.public_metrics;
-            
+
             const result: PageInsightsDTO = {
-                impressions:  metrics.impression_count || 0,
+                impressions: metrics.impression_count || 0,
                 followers: 0,
                 engagements: metrics.like_count + metrics.retweet_count + metrics.reply_count + metrics.quote_count || 0,
             };
@@ -610,11 +601,9 @@ export class DashboardInsightsService {
             const allTweet = await postRepository.fetchTwitterPosts();
 
             const followerCount = await this.fetchTwitterfollowersMetrics(accessToken);
-
+            let totalImpressions = 0;
+            let totalEngagements = 0;
             if (allTweet) {
-                var totalImpressions = 0;
-                var totalEngagements = 0;
-
                 // Step 2: Fetch Metrics for Each Tweet and Aggregate
                 for (const tweet of allTweet) {
                     const tweetId = tweet.external_platform_id;
@@ -623,7 +612,7 @@ export class DashboardInsightsService {
                     totalEngagements += insightsData.engagements || 0;
                 }
             } else {
-            
+
             }
             // const metrics1 = await this.fetchTweetMetrics(userId, accessToken);
             // const metrics2 = await this.fetchUserTweetsWithMetrics(userId, accessToken);
@@ -658,6 +647,7 @@ export class DashboardInsightsService {
             return response.data.data;
 
         } catch (error) {
+            throw error;
         }
     }
 }

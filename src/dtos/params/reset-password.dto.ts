@@ -1,5 +1,5 @@
 
-import { IsEmail, IsNotEmpty, IsString, Matches } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 export class ResetPasswordDto {
     @ApiProperty({
@@ -25,5 +25,5 @@ export class ResetPasswordDto {
     })
     @IsNotEmpty({ message: 'Confirmation password is required' })
     @IsString()
-    confirmPassword: string; 
+    confirmPassword: string;
 }

@@ -8,7 +8,6 @@ import {
 	DeleteDateColumn,
 	OneToMany,
 	JoinColumn,
-	OneToOne,
 } from 'typeorm';
 import { Questionnaire } from './questionnaire.entity';
 import { QuestionOption } from './question-option.entity';

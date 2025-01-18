@@ -9,21 +9,9 @@ export class EmailService {
     sesClient: SESClient;
 
     constructor(private configService: ConfigService) {
-        const apiKey = this.configService.get<string>('AWS_ACCESS_KEY_ID')
-        const secretKey = this.configService.get<string>('AWS_SECRET_ACCESS_KEY')
         const region = this.configService.get<string>('REGION')
-        const sessionToken = this.configService.get<string>('AWS_SESSION_TOKEN')
-        if (!apiKey || !secretKey) {
-            throw new Error('AWS credentials are not set in the environment variables');
-        }
-
         this.sesClient = new SESClient({
             region,
-            credentials: {
-                accessKeyId: apiKey,
-                secretAccessKey: secretKey,
-                sessionToken: sessionToken,
-            },
         });
     }
 

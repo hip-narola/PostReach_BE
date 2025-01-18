@@ -8,7 +8,7 @@ export class SchedulePostDto {
     })
     @IsString()
     @IsNotEmpty()
-    postid: Number;
+    postid: number;
 
     @ApiProperty({
         description: 'The page title of the page',

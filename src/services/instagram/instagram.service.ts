@@ -63,7 +63,6 @@ export class InstagramService {
 
   async saveInstagramId(pageId: string, pageAccessToken: string, instagramId: string, platform: string, facebookId: string, userId: number) {
     const tokenDataDTO = new SocialTokenDataDTO({
-      userId: 7,
       page_id: pageId,
       facebook_Profile: facebookId,
       access_token: pageAccessToken,
@@ -73,7 +72,7 @@ export class InstagramService {
       scope: null
     });
     //   const userId = 7;
-    const data = await this.socialMediaAccountService.storeTokenDetails(userId, tokenDataDTO, platform);
+    await this.socialMediaAccountService.storeTokenDetails(userId, tokenDataDTO, platform);
     return true;
   }
 
@@ -150,7 +149,7 @@ export class InstagramService {
           await postRepository.update(post.id, record);
         } catch (error) {
           await this.unitOfWork.rollbackTransaction();
-
+          throw error;
         }
       }
 
@@ -158,6 +157,7 @@ export class InstagramService {
     }
     catch (error) {
       await this.unitOfWork.rollbackTransaction();
+     throw error;
     }
   }
 

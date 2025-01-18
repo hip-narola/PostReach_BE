@@ -7,11 +7,9 @@ import {
     UpdateDateColumn,
     DeleteDateColumn,
     JoinColumn,
-    OneToOne,
 } from 'typeorm';
 import { User } from './user.entity';
 import { Question } from './question.entity';
-import { Questionnaire } from './questionnaire.entity';
 import { QuestionOption } from './question-option.entity';
 
 @Entity('user_answer')

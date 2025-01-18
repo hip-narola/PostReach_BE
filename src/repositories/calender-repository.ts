@@ -2,8 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { GenericRepository } from './generic-repository';
 import { PostTask } from 'src/entities/post-task.entity';
-import { PaginationParamDto } from 'src/dtos/params/pagination-param.dto';
-import { PaginatedResponseDto } from 'src/dtos/response/pagination-response.dto';
 import { CalenderParamDto } from 'src/dtos/params/calender-param.dto';
 import { SocialMediaPlatformNames } from 'src/shared/constants/social-media.constants';
 

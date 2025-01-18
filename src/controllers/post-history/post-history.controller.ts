@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Req } from '@nestjs/common';
+import { Body, Controller, Post } from '@nestjs/common';
 import { ApiBody } from '@nestjs/swagger';
 import { ArchivePostsDto } from 'src/dtos/params/archive-post-param.dto';
 import { PaginationParamDto } from 'src/dtos/params/pagination-param.dto';
@@ -19,8 +19,7 @@ export class PostHistoryController {
     @Post('archive')
     @ApiBody({ type: ArchivePostsDto })
     async archivePosts(@Body() dto: ArchivePostsDto): Promise<object> {
-        const data= await this.postHistoryService.archivePosts(dto.postIds);
-        
+        await this.postHistoryService.archivePosts(dto.postIds);
         return {
             message: 'Post are deleted successfully',
         };

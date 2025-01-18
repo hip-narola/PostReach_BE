@@ -1,6 +1,5 @@
 import { Injectable, HttpException, HttpStatus, Inject } from '@nestjs/common';
 import { SupabaseClient } from '@supabase/supabase-js';
-import { log } from 'console';
 
 @Injectable()
 export class ImageUploadService {

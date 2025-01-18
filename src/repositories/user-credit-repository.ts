@@ -67,8 +67,8 @@ export class UserCreditRepository extends GenericRepository<UserCredit> {
     }
 
     //Get all credit of user
-    async getUserCredits(userId: number): Promise<UserCredit[] | null> {
-        return this.repository.find({
+    async getUserCredits(userId: number): Promise<UserCredit | null> {
+        return this.repository.findOne({
             where: {
                 user: { id: userId },
                 status: UserCreditStatusType.ACTIVE,
@@ -89,10 +89,11 @@ export class UserCreditRepository extends GenericRepository<UserCredit> {
         await this.repository.update(
             {
                 user: { id: userId },
-                status: UserCreditStatusType.ACTIVE
+                status: UserCreditStatusType.ACTIVE,
             },
             {
-                status: UserCreditStatusType.EXPIRED
+                status: UserCreditStatusType.EXPIRED,
+                cancel_Date: new Date()
             }
         );
     }

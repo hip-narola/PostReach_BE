@@ -1,4 +1,4 @@
-import { IsBoolean, IsNotEmpty, IsOptional, IsString, IsDateString, IsEnum } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString, IsDateString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class UserBusinessDto {

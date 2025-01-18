@@ -219,26 +219,25 @@ export class UserService {
 	}
 
 
-	async findBySocialMediaId(socialMediaId: string, isFacebook: boolean = false): Promise<User | null> {
+	async findBySocialMediaId(socialMediaId: string): Promise<User | null> {
 		try {
-			if (isFacebook == false) {
-				await this.unitOfWork.startTransaction();
-			}
+
+			await this.unitOfWork.startTransaction();
+
 			const userRepository = this.unitOfWork.getRepository(
 				UserRepository,
 				User,
 				false,
 			);
 			const data = userRepository.findBySocialMediaId(socialMediaId);
-			if (isFacebook == false) {
-				await this.unitOfWork.completeTransaction();
-			}
+
+			await this.unitOfWork.completeTransaction();
+
 			return data;
 		}
 		catch (error) {
-			if (isFacebook == false) {
-				await this.unitOfWork.rollbackTransaction();
-			}
+			await this.unitOfWork.rollbackTransaction();
+
 			throw error;
 		}
 	}

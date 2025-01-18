@@ -14,9 +14,7 @@ export class CheckUserSubscriptionController {
             // const user =  await this.userService.findOne(userId);
 
             return await this.checkUserSubscriptionService.isUserSubscriptionActive(userId);
-
         } catch (error) {
-
             throw error;
         }
     }

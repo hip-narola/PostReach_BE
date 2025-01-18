@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNumber, IsString, IsNotEmpty, IsBoolean } from 'class-validator';
+import { IsNumber, IsNotEmpty, IsBoolean } from 'class-validator';
 
 export class NotificationParamDto {
     @ApiProperty({
