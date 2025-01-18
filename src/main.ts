@@ -23,15 +23,15 @@ async function bootstrap() {
 
 	// Helmet for securing HTTP headers
 	app.use(helmet());
-	
+
 	// Configure sessions
 	app.use(
 		session({
 			secret: configService.get('SESSION_SECRET') || 'your-default-secret',
 			resave: false,
-			saveUninitialized: false,	
+			saveUninitialized: false,
 			cookie: {
-				 domain: '.postreachbe-production.up.railway.app',
+				// domain: '.postreachbe-production.up.railway.app',
 				secure: true,//isProduction, // HTTPS in production
 				httpOnly: true, // Prevent client-side JavaScript access
 				sameSite: 'none', // isProduction ? 'none' : 'lax', // 'None' for cross-origin
@@ -54,7 +54,7 @@ async function bootstrap() {
 	];
 
 	app.enableCors({
-		origin:[
+		origin: [
 			'https://postreachfe-production.up.railway.app',
 			'https://postreachbe-production.up.railway.app',
 			'https://*.post-reach-fe.vercel.app',
