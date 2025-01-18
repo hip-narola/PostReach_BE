@@ -58,7 +58,7 @@ export class AuthController {
 			maxAge: 24 * 60 * 60 * 1000,
 			sameSite: 'none',
 			partitioned: true,
-			domain: 'postreachbe-production.up.railway.app'
+			domain: 'post-reach-fe.vercel.app'
 		});
 
 		res.redirect(redirectUrl);
@@ -95,7 +95,7 @@ export class AuthController {
 			maxAge: 24 * 60 * 60 * 1000,
 			sameSite: 'none',
 			partitioned: true,
-			domain: 'postreachbe-production.up.railway.app'
+			domain: 'post-reach-fe.vercel.app'
 		});
 
 		res.redirect(redirectUrl);
@@ -136,7 +136,7 @@ export class AuthController {
 				maxAge: 24 * 60 * 60 * 1000, // 1 day in milliseconds
 				sameSite: 'none',
 				partitioned: true,
-				domain: 'postreachbe-production.up.railway.app',
+				domain: 'post-reach-fe.vercel.app',
 			});
 
 			return res.status(HttpStatus.OK).json({
@@ -176,7 +176,7 @@ export class AuthController {
 				maxAge: 24 * 60 * 60 * 1000,
 				sameSite: 'none',
 				partitioned: true,
-				domain: 'postreachbe-production.up.railway.app'
+				domain: 'post-reach-fe.vercel.app'
 			});
 			return res.json({
 				StatusCode: 200,
