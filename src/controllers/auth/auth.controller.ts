@@ -9,6 +9,7 @@ import { ForgotPasswordParamDto } from 'src/dtos/params/forgot-password-param.dt
 import { ResetPasswordParamsDto } from 'src/dtos/params/reset-password-param.dto';
 import { ResendConfirmationCodeParamDto } from 'src/dtos/params/resend-confirmation-code-param.dto';
 import { UserService } from 'src/services/user/user.service';
+import { GlobalConfig } from 'src/config/global-config';
 import { FacebookService } from 'src/services/facebook/facebook.service';
 import { ConfigService } from '@nestjs/config';
 import { FacebookSignupAuthGuard } from 'src/shared/common/guards/facebook-signup/facebook-signup.guard';
@@ -116,6 +117,7 @@ export class AuthController {
 			);
 
 			req.session.userId = data.userId.toString();
+			GlobalConfig.secrets = { userId: data.userId.toString() };
 
 			this.setCookie(res, data.accessToken);
 
