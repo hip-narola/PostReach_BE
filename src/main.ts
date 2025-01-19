@@ -9,7 +9,7 @@ import { ConfigService } from '@nestjs/config';
 import { Logger } from './services/logger/logger.service';
 import { GlobalExceptionFilter } from './shared/filters/global-exception/global-exception.filter';
 import helmet from 'helmet';
-// import * as rateLimit from 'express-rate-limit';
+import { rateLimit } from 'express-rate-limit'
 // import * as RedisStore from 'connect-redis';
 // import { createClient } from 'redis';
 
@@ -31,10 +31,10 @@ async function bootstrap() {
 			resave: false,
 			saveUninitialized: false,
 			cookie: {
-				domain: '.railway.app',
-				secure: true,//isProduction, // HTTPS in production
+				domain: configService.get('COOKIE_DOMAIN'),
+				secure: isProduction, // HTTPS in production
 				httpOnly: true, // Prevent client-side JavaScript access
-				sameSite: 'none', // isProduction ? 'none' : 'lax', // 'None' for cross-origin
+				sameSite: isProduction ? 'none' : 'lax', // 'None' for cross-origin
 				maxAge: 24 * 60 * 60 * 1000, // 1 day in milliseconds
 				// partitioned: true
 			},
@@ -54,12 +54,7 @@ async function bootstrap() {
 	];
 
 	app.enableCors({
-		origin: [
-			'https://postreachfe-production.up.railway.app',
-			'https://postreachbe-production.up.railway.app',
-			'https://*.post-reach-fe.vercel.app',
-			'http://localhost:3001'
-		],
+		origin: allowedOrigins,
 		credentials: true,
 		methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
 		allowedHeaders: ['Content-Type', 'Accept', 'Authorization'],
@@ -67,13 +62,13 @@ async function bootstrap() {
 	});
 
 	// Rate limiting for basic DOS protection
-	// app.use(
-	//   rateLimit({
-	//     windowMs: 15 * 60 * 1000, // 15 minutes
-	//     max: 100, // Limit each IP to 100 requests per windowMs
-	//     message: 'Too many requests from this IP, please try again later.',
-	//   }),
-	// );
+	app.use(
+		rateLimit({
+			windowMs: 15 * 60 * 1000, // 15 minutes
+			max: 200, // Limit each IP to 200 requests per windowMs
+			message: 'Too many requests from this IP, please try again later.',
+		}),
+	);
 
 	// Swagger setup
 	const swaggerConfig = new DocumentBuilder()

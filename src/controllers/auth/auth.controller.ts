@@ -9,7 +9,6 @@ import { ForgotPasswordParamDto } from 'src/dtos/params/forgot-password-param.dt
 import { ResetPasswordParamsDto } from 'src/dtos/params/reset-password-param.dto';
 import { ResendConfirmationCodeParamDto } from 'src/dtos/params/resend-confirmation-code-param.dto';
 import { UserService } from 'src/services/user/user.service';
-import { GlobalConfig } from 'src/config/global-config';
 import { FacebookService } from 'src/services/facebook/facebook.service';
 import { ConfigService } from '@nestjs/config';
 import { FacebookSignupAuthGuard } from 'src/shared/common/guards/facebook-signup/facebook-signup.guard';
@@ -52,14 +51,7 @@ export class AuthController {
 			`access_token=${encodeURIComponent(req.user.cognitoIdToken)}&` +
 			`refresh_token=${encodeURIComponent(req.user.refreshToken)}`;
 
-		res.cookie('accessToken', req.user.cognitoIdToken, {
-			httpOnly: true,
-			secure: true,
-			maxAge: 24 * 60 * 60 * 1000,
-			sameSite: 'none',
-			partitioned: true,
-			domain: 'postreachbe-production.up.railway.app'
-		});
+		this.setCookie(res, req.user.cognitoIdToken);
 
 		res.redirect(redirectUrl);
 	}
@@ -89,14 +81,7 @@ export class AuthController {
 			`access_token=${encodeURIComponent(req.user.cognitoAccessToken)}&` +
 			`refresh_token=${encodeURIComponent(req.user.refreshToken)}`;
 
-		res.cookie('accessToken', req.user.cognitoAccessToken, {
-			httpOnly: true,
-			secure: true,
-			maxAge: 24 * 60 * 60 * 1000,
-			sameSite: 'none',
-			partitioned: true,
-			domain: 'postreachbe-production.up.railway.app'
-		});
+		this.setCookie(res, req.user.cognitoAccessToken);
 
 		res.redirect(redirectUrl);
 	}
@@ -130,15 +115,7 @@ export class AuthController {
 
 			req.session.userId = data.userId.toString();
 
-			res.cookie('accessToken', data.accessToken, {
-				httpOnly: true,
-				secure: true,
-				sameSite: 'none',
-				// maxAge: 24 * 60 * 60 * 1000, // 1 day in milliseconds
-
-				 partitioned: true,
-				 domain: '.railway.app',
-			});
+			this.setCookie(res, data.accessToken);
 
 			return res.status(HttpStatus.OK).json({
 				StatusCode: 200,
@@ -171,14 +148,8 @@ export class AuthController {
 	async confirmSignUp(@Body() confirmDto: { email: string; code: string, password: string }, @Req() req: Request, @Res() res: Response) {
 		try {
 			const details = await this.authService.confirmSignUp(confirmDto.email, confirmDto.code, confirmDto.password);
-			res.cookie('accessToken', details.accessToken, {
-				httpOnly: true,
-				secure: true,
-				maxAge: 24 * 60 * 60 * 1000,
-				sameSite: 'none',
-				partitioned: true,
-				domain: 'postreachbe-production.up.railway.app'
-			});
+			this.setCookie(res, details.accessToken);
+
 			return res.json({
 				StatusCode: 200,
 				Message: 'Signup confirmation successfully',
@@ -229,5 +200,15 @@ export class AuthController {
 		};
 	}
 
-
+	private setCookie(res: Response, accessToken: string) {
+		const isProduction = this.configService.get('NODE_ENV') === 'production';
+		res.cookie('accessToken', accessToken, {
+			httpOnly: true,
+			secure: isProduction,
+			sameSite: isProduction ? 'none' : 'lax',
+			maxAge: 24 * 60 * 60 * 1000, // 1 day in milliseconds
+			partitioned: true,
+			domain: this.configService.get('COOKIE_DOMAIN')
+		});
+	}
 }
