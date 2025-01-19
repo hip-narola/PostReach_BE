@@ -201,11 +201,10 @@ export class AuthController {
 	}
 
 	private setCookie(res: Response, accessToken: string) {
-		const isProduction = this.configService.get('NODE_ENV') === 'production';
 		res.cookie('accessToken', accessToken, {
 			httpOnly: true,
-			secure: isProduction,
-			sameSite: isProduction ? 'none' : 'lax',
+			secure: true,
+			sameSite: 'none',
 			maxAge: 24 * 60 * 60 * 1000, // 1 day in milliseconds
 			partitioned: true,
 			domain: this.configService.get('COOKIE_DOMAIN')
