@@ -26,7 +26,7 @@ async function bootstrap() {
       resave: false,
       saveUninitialized: false,
       cookie: {
-        domain: configService.get('COOKIE_DOMAIN'),
+        // domain: configService.get('COOKIE_DOMAIN'),
         secure: true,
         httpOnly: true,
         sameSite: 'none',

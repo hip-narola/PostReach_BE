@@ -207,7 +207,7 @@ export class AuthController {
 			sameSite: 'none',
 			maxAge: 24 * 60 * 60 * 1000, // 1 day in milliseconds
 			partitioned: true,
-			domain: this.configService.get('COOKIE_DOMAIN')
+			// domain: this.configService.get('COOKIE_DOMAIN')
 		});
 	}
 }
