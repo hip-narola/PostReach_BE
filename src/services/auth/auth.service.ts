@@ -23,6 +23,7 @@ import { AWS_SECRET } from 'src/shared/constants/aws-secret-name-constants';
 import { promisify } from 'util';
 import { AwsSecretsService } from '../aws-secrets/aws-secrets.service';
 import { UserService } from '../user/user.service';
+import axios from 'axios';
 
 @Injectable()
 export class AuthService {
@@ -35,6 +36,7 @@ export class AuthService {
   private userPool: CognitoUserPool;
   private resetTokens: Map<string, { token: string; expires: Date }> =
     new Map();
+  private readonly cognitoBaseUrl: string;
 
   constructor(
     private configService: ConfigService,
@@ -44,7 +46,7 @@ export class AuthService {
     this.identityClient = new CognitoIdentityClient({
       region: this.configService.get<string>('REGION'),
     });
-
+    this.cognitoBaseUrl = `https://cognito-idp.${this.configService.get<string>('REGION')}.amazonaws.com`;
     this.initialize();
   }
 
@@ -111,7 +113,7 @@ export class AuthService {
       error.name = 'UserNotConfirmedException';
       throw error;
     }
-   promisify(
+    promisify(
       cognitoUser.authenticateUser.bind(cognitoUser),
     );
     return new Promise((resolve, reject) => {
@@ -222,4 +224,25 @@ export class AuthService {
       identityId: tokenResponse.IdentityId,
     };
   }
+
+  async globalSignOut(accessToken: string): Promise<void> {
+    const url = this.cognitoBaseUrl;
+    const headers = {
+      'Content-Type': 'application/x-amz-json-1.1',
+      'X-Amz-Target': 'AWSCognitoIdentityProviderService.GlobalSignOut',
+    };
+
+    const body = {
+      AccessToken: accessToken,
+      
+    };
+
+    try {
+      await axios.post(url, body, { headers });
+    } catch (error) {
+      throw new Error(`Global sign-out failed: ${error.response?.data?.message || error.message}`);
+    }
+  }
+
+
 }

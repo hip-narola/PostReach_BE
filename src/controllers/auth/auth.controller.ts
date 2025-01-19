@@ -13,6 +13,8 @@ import { FacebookService } from 'src/services/facebook/facebook.service';
 import { ConfigService } from '@nestjs/config';
 import { FacebookSignupAuthGuard } from 'src/shared/common/guards/facebook-signup/facebook-signup.guard';
 import { GoogleSignupGuard } from 'src/shared/common/guards/google-signup/google-signup.guard';
+import { LogoutParamDto } from 'src/dtos/params/logout-param.dto';
+
 @Controller('auth')
 export class AuthController {
 
@@ -200,13 +202,40 @@ export class AuthController {
 		};
 	}
 
+	@Post('logout')
+	@ApiBody({ type: LogoutParamDto })
+	async logout(@Body('accessToken') accessToken: string, @Res() res: Response) {
+		try {
+			await this.authService.globalSignOut(accessToken);
+			res.clearCookie('accessToken', {
+				httpOnly: true,
+				secure: true,
+				sameSite: 'none',
+				domain: this.configService.get('COOKIE_DOMAIN')
+			});
+
+			return res.json({
+				StatusCode: 200,
+				Message: 'Logout successfully',
+				IsSuccess: true,
+				Data: null,
+			});
+		} catch (error) {
+			return res.json({
+				StatusCode: HttpStatus.BAD_REQUEST,
+				Message: error,
+				IsSuccess: false,
+				Data: null,
+			});
+		}
+	}
+
 	private setCookie(res: Response, accessToken: string) {
 		res.cookie('accessToken', accessToken, {
 			httpOnly: true,
 			secure: true,
 			sameSite: 'none',
 			maxAge: 24 * 60 * 60 * 1000, // 1 day in milliseconds
-			partitioned: true,
 			domain: this.configService.get('COOKIE_DOMAIN')
 		});
 	}

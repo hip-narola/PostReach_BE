@@ -298,21 +298,23 @@ export class DashboardInsightsService {
             if (socialMediaAccount.page_id) {
                 const followersCount = await this.fetchLinkedinOrganizationFollowers(socialMediaAccount.page_id, socialMediaAccount.encrypted_access_token);
                 const insightsData = await this.fetchLinkedInPageInsights(socialMediaAccount.page_id, socialMediaAccount.encrypted_access_token);
-                var result: SocialMediaInsightParamDTO = {
+
+                const result: SocialMediaInsightParamDTO = {
                     platform: platform,
                     impressions: insightsData[0]?.totalShareStatistics?.impressionCount || 0,
                     newFollowers: followersCount || 0,
                     engagements: insightsData[0]?.totalShareStatistics?.engagement || 1,
                     social_media_account_id: socialMediaAccount.id
                 };
-
+                return result;
             }
             else {
-                var result = await this.fetchUserInsights(socialMediaAccount.id, socialMediaAccount.encrypted_access_token);
+                const result = await this.fetchUserInsights(socialMediaAccount.id, socialMediaAccount.encrypted_access_token);
+                return result;
             }
 
             // Return aggregated results along with individual account insights
-            return result;
+
         }
         catch (error) {
             throw new Error(`Error fetching Twitter user statssadasd: ${error}`);
