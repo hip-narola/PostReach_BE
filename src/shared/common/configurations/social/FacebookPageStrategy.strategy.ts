@@ -1,16 +1,11 @@
 import { Strategy, VerifyCallback } from 'passport-facebook';
 import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
-import { Logger } from 'src/services/logger/logger.service';
 
 @Injectable()
 export class FacebookPageStrategy extends PassportStrategy(Strategy, 'facebook-page') {
-  constructor(private readonly appId: string, private readonly appSecret: string, private readonly facebookStrategy: string, private readonly logger: Logger
+  constructor(private readonly appId: string, private readonly appSecret: string, private readonly facebookStrategy: string
   ) {
-    console.log(appId);
-    console.log(appSecret);
-    console.log(facebookStrategy);
-
     super({
       clientID: appId,
       clientSecret: appSecret,
@@ -18,7 +13,6 @@ export class FacebookPageStrategy extends PassportStrategy(Strategy, 'facebook-p
       profileFields: ['id', 'emails', 'name', 'gender', 'birthday', 'accounts', 'picture'],
       scope: ['email', 'public_profile', 'pages_show_list', 'pages_read_engagement', 'read_insights', 'pages_manage_posts', 'pages_read_user_content'],
     });
-
   }
 
   async validate(

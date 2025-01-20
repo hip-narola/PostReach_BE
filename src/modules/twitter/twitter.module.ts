@@ -1,5 +1,6 @@
 // twitter.module.ts
 import { Module } from '@nestjs/common';
+import { SocialMediaAccountService } from 'src/services/social-media-account/social-media-account.service';
 import { TwitterService } from 'src/services/twitter/twitter.service';
 import { SocialMediaAccountModule } from '../social-media-account/social-media-account.module';
 import { UserService } from 'src/services/user/user.service';
@@ -11,6 +12,7 @@ import { ImageUploadService } from 'src/services/image-upload/image-upload.servi
 import { QuestionnaireModule } from '../questionnaire/questionnaire.module'; // Import the module
 import { NotificationModule } from '../notification/notification.module';
 import { AwsSecretsServiceModule } from '../aws-secrets-service/aws-secrets-service.module';
+import { RedisService } from 'src/redis-service';
 
 @Module({
   imports: [
@@ -21,7 +23,9 @@ import { AwsSecretsServiceModule } from '../aws-secrets-service/aws-secrets-serv
     NotificationModule,
     AwsSecretsServiceModule
   ],
-  providers: [TwitterService, UserService, ImageUploadService],
+  providers: [TwitterService, UserService, ImageUploadService,
+    RedisService
+  ],
   exports: [UserService],
 })
 export class TwitterModule { }

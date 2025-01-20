@@ -6,6 +6,7 @@ import { SocialTokenDataDTO } from 'src/dtos/params/social-token-data-dto';
 import { plainToInstance } from 'class-transformer';
 import { UserCreditRepository } from 'src/repositories/user-credit-repository';
 import { UserCredit } from 'src/entities/user_credit.entity';
+import { SocialMediaPlatform, SocialMediaPlatformNames } from 'src/shared/constants/social-media.constants';
 
 @Injectable()
 export class SocialMediaAccountService {
@@ -13,7 +14,7 @@ export class SocialMediaAccountService {
         private readonly socialMediaAccountRepository: SocialMediaAccountRepository,
         private readonly unitOfWork: UnitOfWork,
     ) { }
-
+    
     async storeTokenDetails(userId: number, tokenData: SocialTokenDataDTO, platform: string): Promise<SocialMediaAccount> {
         await this.unitOfWork.startTransaction();
         try {
@@ -25,9 +26,9 @@ export class SocialMediaAccountService {
                 SocialMediaAccount,
                 true
             );
-
+            
             if (platform == "facebook") {
-
+                
                 const socialMediaAccountExists = await this.findSocialAccountOfUserForFacebook(userId, platform, tokenData.page_id, tokenData.facebook_Profile);
                 if (!socialMediaAccountExists) {
                     // Create new account if it doesn't exist
@@ -52,12 +53,19 @@ export class SocialMediaAccountService {
                 await this.unitOfWork.completeTransaction();
                 return updatedSocialMediaAccount;
             }
+            else if (platform == SocialMediaPlatformNames[SocialMediaPlatform.LINKEDIN]) {
+                // const socialMediaAccountExists = await this.findSocialAccountOfUserForInstagram(userId, platform, tokenData.instagram_Profile, tokenData.page_id, tokenData.facebook_Profile);
+                const updatedSocialMediaAccount = await socialMediaAccountRepo.create(data);
+                await this.unitOfWork.completeTransaction();
+                return updatedSocialMediaAccount;
+            }
             else {
                 const socialMediaAccountExists = await this.findSocialAccountOfUser(userId, platform);
                 if (!socialMediaAccountExists) {
                     // Create new account if it doesn't exist
                     var updatedSocialMediaAccount = await socialMediaAccountRepo.create(data);
-                } else {
+                } 
+                else {
                     // Update the existing account
                     const updateResult = await socialMediaAccountRepo.update(socialMediaAccountExists.id, data);
                     // After update, fetch the updated entity to return
@@ -71,7 +79,7 @@ export class SocialMediaAccountService {
             throw error;
         }
     }
-
+    
     async findSocialAccountOfUser(userId: number, platform: string): Promise<SocialMediaAccount | null> {
         const socialMediaAccountRepo = this.unitOfWork.getRepository(
             SocialMediaAccountRepository,
@@ -80,9 +88,9 @@ export class SocialMediaAccountService {
         );
         var socialMediaAccount = await socialMediaAccountRepo.findByUserAndPlatform(userId, platform);
         return socialMediaAccount;
-
+        
     }
-
+    
     async findSocialAccountOfUserForFacebook(userId: number, platform: string, facebookpageId: string, facebook_Profile: string): Promise<SocialMediaAccount | null> {
         const socialMediaAccountRepo = this.unitOfWork.getRepository(
             SocialMediaAccountRepository,
@@ -92,7 +100,7 @@ export class SocialMediaAccountService {
         var socialMediaAccount = await socialMediaAccountRepo.findByUserAndPlatformAndFacebookId(userId, platform, facebookpageId, facebook_Profile);
         return socialMediaAccount;
     }
-
+    
     async findSocialAccountOfUserForInstagram(userId: number, platform: string, instagramId: string, facebookpageId: string, facebook_Profile: string): Promise<SocialMediaAccount | null> {
         const socialMediaAccountRepo = this.unitOfWork.getRepository(
             SocialMediaAccountRepository,
@@ -102,8 +110,8 @@ export class SocialMediaAccountService {
         var socialMediaAccount = await socialMediaAccountRepo.findByUserAndPlatformAndInstagramId(userId, platform, instagramId, facebookpageId, facebook_Profile);
         return socialMediaAccount;
     }
-
-
+    
+    
     async socialLinks(userId: number): Promise<any> {
         try {
             return await this.socialMediaAccountRepository.findByFields({
@@ -118,30 +126,30 @@ export class SocialMediaAccountService {
         }
     }
     async findSocialAccountOfUserForLinkedIn(userId: number, platform: string):
-        Promise<SocialMediaAccount | null> {
-
+    Promise<SocialMediaAccount | null> {
+        
         const socialMediaAccountRepo = this.unitOfWork.getRepository(
             SocialMediaAccountRepository,
             SocialMediaAccount,
             false
         );
         const socialMediaAccount = await socialMediaAccountRepo.findByUserAndPlatform(userId, platform);
-
+        
         return socialMediaAccount;
     }
-
+    
     async findSocialAccountForConnectAndDisconnectProfile(userId: number, platform: string, isDisconnect: boolean):
-        Promise<SocialMediaAccount | null> {
+    Promise<SocialMediaAccount | null> {
         const socialMediaAccountRepo = this.unitOfWork.getRepository(
             SocialMediaAccountRepository,
             SocialMediaAccount,
             false
         );
         const socialMediaAccount = await socialMediaAccountRepo.findByUserAndPlatformAndisDiConnect(userId, platform, isDisconnect);
-
+        
         return socialMediaAccount;
     }
-   
+    
     async findFirstSocialMediaAccountWithoutActiveCredit(
         userId: number
     ): Promise<string | null> {
@@ -152,36 +160,36 @@ export class SocialMediaAccountService {
                 SocialMediaAccount,
                 false
             );
-    
+            
             const userSubscriptionCreditRepository = this.unitOfWork.getRepository(
                 UserCreditRepository,
                 UserCredit,
                 false
             );
-    
+            
             // Find all social media accounts for the user
             const userSocialAccounts = await socialMediaAccountRepository.findPlatformsOfUser(userId);
-    
+            
             if (!userSocialAccounts || userSocialAccounts.length === 0) {
                 return null;
             }
-    
+            
             // Iterate over accounts and check for active credit
             for (const account of userSocialAccounts) {
                 const activeCredit = await userSubscriptionCreditRepository.getUserCreditWithSocialMedia(
                     userId,
                     account.id
                 );
-    
+                
                 // Return the first account without active credit
                 if (!activeCredit) {
                     return account.platform;
                 }
             }
-    
+            
             // No accounts found without active credit
             return null;
-    
+            
         } catch (error) {
             throw error;
         }

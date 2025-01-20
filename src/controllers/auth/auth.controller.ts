@@ -15,11 +15,13 @@ import { ConfigService } from '@nestjs/config';
 import { FacebookSignupAuthGuard } from 'src/shared/common/guards/facebook-signup/facebook-signup.guard';
 import { GoogleSignupGuard } from 'src/shared/common/guards/google-signup/google-signup.guard';
 import { LogoutParamDto } from 'src/dtos/params/logout-param.dto';
-
+import { RedisService } from 'src/redis-service';
 @Controller('auth')
 export class AuthController {
 
-	constructor(private configService: ConfigService, private readonly authService: AuthService, private readonly userService: UserService, private readonly facebookService: FacebookService
+	constructor(private configService: ConfigService, 
+		private readonly authService: AuthService, 
+		private readonly redisService: RedisService
 	) { }
 
 	// Google Login
@@ -115,7 +117,7 @@ export class AuthController {
 				signInDto.password,
 				signInDto.rememberMe,
 			);
-
+			await this.redisService.set(`userID_${data.userId.toString()}`, data.userId.toString());
 			req.session.userId = data.userId.toString();
 			GlobalConfig.secrets = { userId: data.userId.toString() };
 

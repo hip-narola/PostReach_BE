@@ -8,15 +8,15 @@ import { RejectReason } from 'src/entities/reject-reason.entity';
 import { ApprovalQueueRepository } from 'src/repositories/approval-queue-repository';
 import { RejectReasonRepository } from 'src/repositories/reject-reason-repository';
 import { UnitOfWork } from 'src/unitofwork/unitofwork';
-import { PostService } from '../schedule-post/schedule-post.service';
 import { EmailService } from '../email/email.service';
+import { JobSchedulerService } from 'src/scheduler/job-scheduler-service';
 
 @Injectable()
 export class ApprovalQueueService {
     constructor(
         private readonly unitOfWork: UnitOfWork,
-        @Inject(forwardRef(() => PostService)) // Use forwardRef here
-        private readonly schedulePostService: PostService,
+        @Inject(forwardRef(() => JobSchedulerService)) // Use forwardRef here
+        private readonly schedulePostService: JobSchedulerService,
         private readonly emailService: EmailService,
     ) { }
 

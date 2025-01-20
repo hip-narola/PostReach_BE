@@ -13,10 +13,11 @@ import { UnitOfWork } from 'src/unitofwork/unitofwork';
 import { GoogleStrategyProvider } from 'src/shared/common/configurations/social/google.strategy.provider';
 import { AwsSecretsService } from 'src/services/aws-secrets/aws-secrets.service';
 import { FacebookStrategyProvider } from 'src/shared/common/configurations/social/facebook.strategy.provider';
+import { RedisService } from 'src/redis-service';
 
 @Module({
   imports: [PassportModule,ConfigModule,UserModule,FacebookModule],
-  providers: [AuthService,GoogleStrategyProvider,EmailService,JwtStrategy,JwtAuthGuard,FacebookStrategyProvider,CognitoIdentityService,UnitOfWork,AwsSecretsService],
+  providers: [AuthService,GoogleStrategyProvider,EmailService,JwtStrategy,JwtAuthGuard,FacebookStrategyProvider,CognitoIdentityService,UnitOfWork,AwsSecretsService,RedisService],
   controllers: [AuthController],
   exports: [AuthService,JwtAuthGuard,JwtStrategy,CognitoIdentityService],
 })

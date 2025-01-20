@@ -2,6 +2,7 @@ export class SocialTokenDataDTO {
     token_type: string;
     encrypted_access_token: string;
     refresh_token?: string;
+    facebook_Profile_access_token:string;
     encryption_key_id?: string;
     expires_in: number;
     scope: string;
@@ -22,17 +23,18 @@ export class SocialTokenDataDTO {
     
     constructor(data: any) {
         this.user_name = data.user_name || null;
+        this.facebook_Profile_access_token = data.facebook_Profile_access_token || null;
         this.user_profile = data.user_profile || null;
         this.instagram_Profile = data.instagram_Profile || null;
         this.facebook_Profile = data.facebook_Profile || null;
         this.page_id = data.page_id || null;
         this.token_type = data.token_type;
-        this.encrypted_access_token = data.access_token;
+        this.encrypted_access_token = data.access_token || data.encrypted_access_token ;
         this.refresh_token = data.refresh_token || '';
         this.encryption_key_id = data.encryption_key_id || '';
-        this.expires_in = data.expires_in;
-        this.scope = data.scope;
-        this.file_name = data.file_name;
+        this.expires_in = data.expires_in || '';
+        this.scope = data.scope || '';
+        this.file_name = data.file_name || '';
         this.isDisconnect = false;
     }
 }

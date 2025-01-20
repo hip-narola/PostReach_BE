@@ -58,16 +58,4 @@ export class PaymentController {
         );
         return { url: portal.url };
     }
-
-    // test call
-    @Get(':email/send-email')
-    async sendEmail(@Param('email') email: string,) {
-        try {
-            await this.subscriptionService.sendEmail(email);
-        }
-        catch (error) {
-            throw error;
-        }
-    }
-
 }

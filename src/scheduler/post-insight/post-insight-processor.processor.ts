@@ -1,12 +1,12 @@
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
-import { FacebookService } from '../facebook/facebook.service';
-import { LinkedinService } from '../linkedin/linkedin.service';
-import { TwitterService } from '../twitter/twitter.service';
-import { InstagramService } from '../instagram/instagram.service';
+import { FacebookService } from '../../services/facebook/facebook.service';
+import { LinkedinService } from '../../services/linkedin/linkedin.service';
+import { TwitterService } from '../../services/twitter/twitter.service';
+import { InstagramService } from '../../services/instagram/instagram.service';
 
-@Processor('likesCommentsViewsScheduler') // Queue name
-export class LikesCommentsViewsSchedulerProcessor extends WorkerHost {
+@Processor('post-insight') // Queue name
+export class PostInsightProcessor extends WorkerHost {
 	constructor(private readonly facebookService: FacebookService,
 		private readonly linkedinService: LinkedinService,
 		private readonly twitterService: TwitterService,

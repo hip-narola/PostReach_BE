@@ -1,0 +1,97 @@
+import { Module } from '@nestjs/common';
+import { BullModule } from '@nestjs/bullmq';
+import { SchedulePostProcessor } from 'src/scheduler/schedule-post/schedule-post.processor';
+import { ApprovalQueueService } from 'src/services/approval-queue/approval-queue.service';
+import { UnitOfWorkModule } from '../unit-of-work.module';
+import { PageInsightProcessor } from 'src/scheduler/page-insight/page-insight-processor';
+import { SocialMediaInsightsService } from 'src/services/social-media-insights/social-media-insights.service';
+import { DashboardInsightsModule } from '../dashboard-insights/dashboard-insights.module';
+import { FacebookService } from 'src/services/facebook/facebook.service';
+import { SocialMediaAccountModule } from '../social-media-account/social-media-account.module';
+import { LinkedinService } from 'src/services/linkedin/linkedin.service';
+import { PostInsightProcessor } from 'src/scheduler/post-insight/post-insight-processor.processor';
+import { InstagramService } from 'src/services/instagram/instagram.service';
+import { TwitterService } from 'src/services/twitter/twitter.service';
+import { UserModule } from '../user/user.module';
+import { NotificationModule } from '../notification/notification.module';
+import { SubscriptionService } from 'src/services/subscription/subscription.service';
+import { CheckUserSubscriptionService } from 'src/services/check-user-subscription/check-user-subscription.service';
+import { EmailService } from 'src/services/email/email.service';
+import { AwsSecretsServiceModule } from '../aws-secrets-service/aws-secrets-service.module';
+import { AwsSecretsService } from 'src/services/aws-secrets/aws-secrets.service';
+import { AWS_SECRET } from 'src/shared/constants/aws-secret-name-constants';
+import { ConfigService } from '@nestjs/config';
+import { JobSchedulerService } from 'src/scheduler/job-scheduler-service';
+import { SubscriptionProcessor } from 'src/scheduler/subscription/subscription-processor';
+import { GeneratePostProcessor } from 'src/scheduler/generate-post/generate-processor';
+import { RedisService } from 'src/redis-service';
+
+
+async function getRedisConfig() {
+    const configService = new ConfigService();
+    const secretsService = new AwsSecretsService(configService);
+    const secrets = await secretsService.getSecret(AWS_SECRET.AWSSECRETNAME);
+    return {
+        host: secrets.REDIS_HOST,
+        port: parseInt(secrets.REDIS_PORT, 10),
+        password: secrets.REDIS_PASSWORD,
+        connectTimeout: 10000,
+    };
+}
+
+@Module({
+    imports: [
+        BullModule.forRootAsync({
+            useFactory: async () => {
+                const redisConfig = await getRedisConfig();
+                return {
+                    connection: redisConfig,
+                };
+            },
+        }),
+        BullModule.registerQueue(
+            { name: 'post-queue' },
+            { name: 'post-insight' },
+            { name: 'page-insight' },
+            { name: 'generate-post' },
+            { name: 'subscription-queue' },
+            // { name: 'exchangeAccessTokenQueue' }
+        ),
+        UnitOfWorkModule,
+        DashboardInsightsModule,
+        SocialMediaAccountModule,
+        UserModule,
+        NotificationModule,
+        AwsSecretsServiceModule
+    ],
+    providers: [
+        JobSchedulerService,
+        SchedulePostProcessor,
+        PostInsightProcessor,
+        PageInsightProcessor,
+        GeneratePostProcessor,
+        SubscriptionProcessor,
+        ApprovalQueueService,
+        SocialMediaInsightsService,
+        FacebookService,
+        LinkedinService,
+        InstagramService,
+        TwitterService,
+        SubscriptionService,
+        EmailService,
+        CheckUserSubscriptionService,
+        RedisService
+    ],
+    exports: [
+        BullModule,
+        JobSchedulerService,
+        FacebookService,
+        LinkedinService,
+        TwitterService,
+        InstagramService,
+        ApprovalQueueService,
+        SubscriptionService
+    ],
+})
+
+export class BullQueueModule { }

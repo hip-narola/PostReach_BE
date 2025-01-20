@@ -71,4 +71,4 @@ import { AwsSecretsServiceModule } from 'src/modules/aws-secrets-service/aws-sec
     }),
   ],
 })
-export class DatabaseModule {}
+export class DatabaseModule { }

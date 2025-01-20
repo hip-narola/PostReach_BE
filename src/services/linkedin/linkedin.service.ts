@@ -18,6 +18,8 @@ import { NotificationService } from '../notification/notification.service';
 import { AwsSecretsService } from '../aws-secrets/aws-secrets.service';
 import { AWS_SECRET } from 'src/shared/constants/aws-secret-name-constants';
 import { ConfigService } from '@nestjs/config';
+import { LinkedInTokenParamDto } from 'src/dtos/params/linkedin-token-data.dto';
+import { plainToInstance } from 'class-transformer';
 
 @Injectable()
 export class LinkedinService {
@@ -41,19 +43,19 @@ export class LinkedinService {
 		this.linkedinClientID = secretData.LINKEDIN_CLIENT_ID;
 		this.linkedinClientSecret = secretData.LINKEDIN_CLIENT_SECRET;
 		this.linkedinScope = secretData.LINKEDIN_SCOPE;
-		this.linkedinCallBack = secretData.LINKEDIN_CALLBACK_URL;
+		this.linkedinCallBack = secretData.LINKEDIN_CALLBACK_URL;		
 	}
 
 	async getLinkedInAuthUrl(): Promise<string> {
 		const clientId = this.linkedinClientID;
 		const scope = this.linkedinScope;
-		// const scope = 'r_liteprofile r_emailaddress w_member_social';
 		const redirectUri = this.linkedinCallBack;
 
 		return `${LINKEDIN_CONST.AUTH_ENDPOINT}/authorization?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scope)}`;
 	}
 
-	async getAccessToken(code: string, userId: number): Promise<any> {
+	async getAccessToken(code: string): Promise<any> {
+		// console.log(userId, 'userId');
 		const clientId = this.linkedinClientID;
 		const clientSecret = this.linkedinClientSecret;
 		const redirectUri = this.linkedinCallBack;
@@ -79,16 +81,16 @@ export class LinkedinService {
 				throw new Error('Failed to retrieve access token from LinkedIn');
 			}
 
-			const userResponse = await this.fetchLinkedInUserData(response.data.access_token);
+			// const userResponse = await this.fetchLinkedInUserData(response.data.access_token);
 
-			const tokenDataDTO = new SocialTokenDataDTO(response.data);
-			tokenDataDTO.user_profile = userResponse.profilePicture || null;
-			tokenDataDTO.user_name = `${userResponse.firstName} ${userResponse.lastName}`;
-			tokenDataDTO.social_media_user_id = userResponse.id; // Store the Twitter user ID
-			tokenDataDTO.page_id = null;
-			tokenDataDTO.token_type = LINKEDIN_CONST.LINKEDINID;
+			// const tokenDataDTO = new SocialTokenDataDTO(response.data);
+			// tokenDataDTO.user_profile = ' userResponse.profilePicture || null';
+			// tokenDataDTO.user_name = '`${userResponse.firstName} ${userResponse.lastName}`';
+			// tokenDataDTO.social_media_user_id = 'userResponse.id'; // Store the Twitter user ID
+			// tokenDataDTO.page_id = null;
+			// tokenDataDTO.token_type = LINKEDIN_CONST.LINKEDINID;
 
-			await this.socialMediaAccountService.storeTokenDetails(userId, tokenDataDTO, SocialMediaPlatformNames[SocialMediaPlatform.LINKEDIN]);
+			// await this.socialMediaAccountService.storeTokenDetails(userId, tokenDataDTO, SocialMediaPlatformNames[SocialMediaPlatform.LINKEDIN]);
 			return response;
 		} catch (error) {
 			throw new Error(`Failed to exchange code for token: ${error.response?.data || error.message}`);
@@ -114,15 +116,16 @@ export class LinkedinService {
 	// }
 
 	@Throttle({ default: { limit: 100, ttl: 86400000 } })
-	async getUserPages(userId: number, platform: number): Promise<LinkedInUserPagesDto[]> {
+	// async getUserPages(userId: number, platform: number): Promise<LinkedInUserPagesDto[]> {
+	async getUserPages(token: string): Promise<LinkedInUserPagesDto[]> {
 
-		const userSocialAccount = await this.socialMediaAccountService.findSocialAccountOfUserForLinkedIn(userId, SocialMediaPlatformNames[SocialMediaPlatform.LINKEDIN]);
+		// const userSocialAccount = await this.socialMediaAccountService.findSocialAccountOfUserForLinkedIn(userId, SocialMediaPlatformNames[SocialMediaPlatform.LINKEDIN]);
 
 		const url = `${LINKEDIN_CONST.ENDPOINT}/organizationAcls?q=roleAssignee`;
 		try {
 			const response = await axios.get(url, {
 				headers: {
-					Authorization: `Bearer ${userSocialAccount.encrypted_access_token}`,
+					Authorization: `Bearer ${token}`,
 				},
 			});
 			const organizations = response.data.elements || [];
@@ -136,7 +139,7 @@ export class LinkedinService {
 				organizations.map((org) => {
 					const organizationId = this.extractOrganizationId(org.organization);
 					if (organizationId) {
-						return this.getOrganizationDetails(organizationId, userSocialAccount.encrypted_access_token);
+						return this.getOrganizationDetails(organizationId, token);
 					}
 					return null;
 				})
@@ -152,10 +155,19 @@ export class LinkedinService {
 				isPage: true
 			}));
 
+			const userResponse = await this.fetchLinkedInUserData(token);
+
+			// const tokenDataDTO = new SocialTokenDataDTO(response.data);
+			// tokenDataDTO.user_profile = ' userResponse.profilePicture || null';
+			// tokenDataDTO.user_name = '`${userResponse.firstName} ${userResponse.lastName}`';
+			// tokenDataDTO.social_media_user_id = 'userResponse.id'; // Store the Twitter user ID
+			// tokenDataDTO.page_id = null;
+			// tokenDataDTO.token_type = LINKEDIN_CONST.LINKEDINID;
+
 			const LinkedinUser = {
-				pageId: userSocialAccount.social_media_user_id,
-				pageName: userSocialAccount.user_name,
-				logoUrl: userSocialAccount.user_profile,
+				pageId: userResponse.id,
+				pageName: `${userResponse.firstName} ${userResponse.lastName}`,
+				logoUrl: userResponse.profilePicture || null,
 				isPage: false
 			}
 
@@ -173,7 +185,6 @@ export class LinkedinService {
 		return match ? match[1] : '';
 	}
 
-	@Throttle({ default: { limit: 100, ttl: 86400000 } })
 	async getPostInsights(accessToken: string, postId: string): Promise<LinkedInPostInsightsDto> {
 		const url = `${LINKEDIN_CONST.ENDPOINT}/socialActions/${postId}`;
 		const headers = { Authorization: `Bearer ${accessToken}` };
@@ -190,7 +201,6 @@ export class LinkedinService {
 		}
 	}
 
-	@Throttle({ default: { limit: 100, ttl: 86400000 } })
 	// Fetch details of a specific organization
 	private async getOrganizationDetails(organizationId: string, accessToken: string): Promise<LinkedInOrganizationDetailsDto> {
 
@@ -211,7 +221,7 @@ export class LinkedinService {
 				logoUrl: logoUrl !== undefined ? logoUrl : null, // Only include logo if it exists
 			};
 		} catch (error) {
-			throw new Error(`Failed to fetch details for organization ID ${organizationId}`);
+			throw new Error(`Failed to fetch details for organization ID ${organizationId}${error}`);
 		}
 	}
 
@@ -362,22 +372,49 @@ export class LinkedinService {
 		}
 	}
 
-	async connectedLinkedinAccount(userId: number, pageId: string, Ispage: boolean, logoUrl: string) {
+	async connectedLinkedinAccount(userId: number, pageId: string, Ispage: boolean, logoUrl: string, linkedInTokenDetails: LinkedInTokenParamDto) {
 		try {
+			console.log(linkedInTokenDetails, 'linkedInTokenDetails')
 			await this.unitOfWork.startTransaction();
 
+			const socialMediaAccountRepo = this.unitOfWork.getRepository(SocialMediaAccountRepository, SocialMediaAccount, true);
+
 			const userSocialAccount = await this.socialMediaAccountService.findSocialAccountOfUserForLinkedIn(userId, SocialMediaPlatformNames[SocialMediaPlatform.LINKEDIN]);
-
+			const userResponse = await this.fetchLinkedInUserData(linkedInTokenDetails.encrypted_access_token);
+			console.log(userResponse, 'userResponse')
+			//crate or update soc. acc.
 			if (!userSocialAccount) {
-				throw new Error('No LinkedIn account found for the given user');
+				//create
+				const tokenDataDTO = new SocialTokenDataDTO(linkedInTokenDetails);
+				console.log(tokenDataDTO, 'tokenDataDTO');
+
+				tokenDataDTO.user_profile = userResponse.profilePicture || null;
+				tokenDataDTO.scope = this.linkedinScope;
+				tokenDataDTO.user_name = `${userResponse.firstName} ${userResponse.lastName}`;
+				tokenDataDTO.social_media_user_id = userResponse.id; // Store the Twitter user ID
+				tokenDataDTO.page_id = null;
+				tokenDataDTO.token_type = LINKEDIN_CONST.LINKEDINID;
+				tokenDataDTO.platform = SocialMediaPlatformNames[SocialMediaPlatform.LINKEDIN];
+				tokenDataDTO.user_id = userId;
+				const data = plainToInstance(SocialMediaAccount, tokenDataDTO);
+				console.log(data, 'datasdsa')
+				await socialMediaAccountRepo.create(data);
+				// await this.socialMediaAccountService.storeTokenDetails(userId, tokenDataDTO, SocialMediaPlatformNames[SocialMediaPlatform.LINKEDIN]);
+				// await socialMediaAccountRepo.create(tokenDataDTO);
+
+				// await this.socialMediaAccountService.storeTokenDetails(userId, tokenDataDTO, SocialMediaPlatformNames[SocialMediaPlatform.LINKEDIN]);
+				// throw new Error('No LinkedIn account found for the given user');
+			} else {
+
+				userSocialAccount.user_profile = userResponse.profilePicture || null;
+				userSocialAccount.user_name = `${userResponse.firstName} ${userResponse.lastName}`;
+				userSocialAccount.social_media_user_id = userResponse.id; // Store the Twitter user ID
+				userSocialAccount.token_type = Ispage ? LINKEDIN_CONST.PAGE_ACCESS_TOKEN : LINKEDIN_CONST.LINKEDINID
+				userSocialAccount.user_profile = logoUrl;
+				userSocialAccount.page_id = Ispage ? pageId : null;
+				console.log(userSocialAccount, 'tokenDataDTO ipasd');
+				await socialMediaAccountRepo.update(userSocialAccount.id, userSocialAccount);
 			}
-
-			const socialMediaInsightsRepo = this.unitOfWork.getRepository(SocialMediaAccountRepository, SocialMediaAccount, true);
-			userSocialAccount.token_type = Ispage ? LINKEDIN_CONST.PAGE_ACCESS_TOKEN : LINKEDIN_CONST.LINKEDINID
-			userSocialAccount.user_profile = logoUrl;
-
-			userSocialAccount.page_id = Ispage ? pageId : null;
-			await socialMediaInsightsRepo.update(userSocialAccount.id, userSocialAccount);
 			await this.unitOfWork.completeTransaction();
 		} catch (error: any) {
 			await this.unitOfWork.rollbackTransaction();

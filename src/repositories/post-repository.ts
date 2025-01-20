@@ -114,7 +114,7 @@ export class PostRepository extends GenericRepository<Post> {
                 status: 'Execute_Success',
             })
             .getMany();
-    
+
         return posts;
     }
 

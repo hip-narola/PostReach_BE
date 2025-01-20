@@ -1,6 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, OneToMany } from 'typeorm';
 import { User } from './user.entity';
 import { PostTask } from './post-task.entity';
+import { UserCredit } from './user_credit.entity';
 
 @Entity('social_media_accounts')
 export class SocialMediaAccount {
@@ -76,4 +77,7 @@ export class SocialMediaAccount {
 
     @OneToMany(() => PostTask, (postTask) => postTask.socialMediaAccount)
     postTasks: PostTask[];
+
+    @OneToMany(() => UserCredit, (userCredit) => userCredit.social_media)
+    userCredits: UserCredit[];
 }

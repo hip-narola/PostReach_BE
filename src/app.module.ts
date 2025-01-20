@@ -31,7 +31,7 @@ import { ApprovalQueueService } from './services/approval-queue/approval-queue.s
 import { CalenderModule } from './modules/calender/calender.module';
 import { CalenderService } from './services/calender/calender.service';
 import { PostHistoryModule } from './modules/post-history/post-history.module';
-import { SchedulePostModule } from './modules/schedule-post/schedule-post.module';
+import { BullQueueModule } from './modules/bull/bull-queue.module';
 import { DashboardInsightsModule } from './modules/dashboard-insights/dashboard-insights.module';
 import { DashboardInsightsService } from './services/dashboard-insights/dashboard-insights.service';
 import { HttpModule } from '@nestjs/axios';
@@ -40,9 +40,9 @@ import { SocialMediaInsightsService } from './services/social-media-insights/soc
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { NotificationModule } from './modules/notification/notification.module';
 import { PaymentModule } from './modules/payment/payment.module';
-import { SubscriptionSchedulerService } from './services/subscription-scheduler/subscription-scheduler.service';
 import { SubscriptionService } from './services/subscription/subscription.service';
 import { ConfigModule } from '@nestjs/config';
+import { RedisService } from './redis-service';
 
 @Module({
   imports: [
@@ -59,7 +59,7 @@ import { ConfigModule } from '@nestjs/config';
     DatabaseModule,
     CalenderModule,
     AuthModule,
-    SchedulePostModule,
+    BullQueueModule,
     DashboardInsightsModule,
     HttpModule,
     SocialMediaInsightsModule,
@@ -110,7 +110,7 @@ import { ConfigModule } from '@nestjs/config';
     DashboardInsightsService,
     SocialMediaInsightsService,
     SubscriptionService,
-    SubscriptionSchedulerService,
+    RedisService
   ],
   exports: [AwsSecretsService],
 })

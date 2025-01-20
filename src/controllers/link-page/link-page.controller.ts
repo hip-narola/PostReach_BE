@@ -22,14 +22,15 @@ import { InstagramAuthGuard } from 'src/shared/common/guards/instagram-auth/inst
 import { ApiBody } from '@nestjs/swagger';
 import { ImageUploadService } from 'src/services/image-upload/image-upload.service';
 import { SocialMediaPlatform, SocialMediaPlatformNames } from 'src/shared/constants/social-media.constants';
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import { FacebookPageDetailsDTO } from 'src/entities/facebook-page-details.entity';
 import { InstagramPageDetailsDTO } from 'src/entities/instagram-page-details.entity';
 import { DisconnectProfileDTO } from 'src/dtos/params/disconnect-profile-param.dto';
 import { UnitOfWork } from 'src/unitofwork/unitofwork';
-import { LinkedInPagesParamDto } from 'src/dtos/params/linkedin-pages-param.dto';
 import { SubscriptionService } from 'src/services/subscription/subscription.service';
 import { ConfigService } from '@nestjs/config';
+// import * as CryptoJS from 'crypto-js';
+import { LinkedInTokenParamDto } from 'src/dtos/params/linkedin-token-data.dto';
 
 @Controller('link-page')
 export class LinkPageController {
@@ -46,9 +47,9 @@ export class LinkPageController {
         private readonly subscriptionService: SubscriptionService,
     ) { }
 
-    @Get('twitter-login')
-    async login(@Res() res: Response, @Req() req: Request) {
-        const { url } = await this.twitterService.getAuthorizationUrl(req);
+    @Get('twitter-login/:userId')
+    async login(@Res() res: Response, @Param('userId') userId: number) {
+        const { url } = await this.twitterService.getAuthorizationUrl(userId);
         res.redirect(url); // Redirect to the authorization URL
     }
 
@@ -56,38 +57,35 @@ export class LinkPageController {
     async callback(
         @Query('code') code: string,
         @Query('state') state: string,
-        @Req() req: Request,
         @Res() res: Response,
     ) {
         try {
-            const userId = parseInt(req.session.userId, 10);
             let isSuccess = false;
+            const userId = state;
+
             const appUrl = this.configService.get<string>('APP_URL_FRONTEND');
-            if (!code || !state) {
+            if (!code || !userId) {
                 const redirectUrl =
                     `${appUrl}/user/link-social?` +
                     `isSuccess=${encodeURIComponent(isSuccess)}&` +
                     `error=${encodeURIComponent('Missing code or state')}`;
                 return res.redirect(redirectUrl);
             }
-            const tokenData = await this.twitterService.exchangeCodeForToken(
-                code,
-                state,
-                userId,
-                req,
-            );
+
+            const tokenData = await this.twitterService.exchangeCodeForToken(code, userId);
+
             if (tokenData.status == 200) {
                 isSuccess = true;
 
-                //check user is able to create trial subscription
-                const userHasSubscription = await this.subscriptionService.checkUserHasSubscription(userId);
+                // Check user has subscription
+                const userHasSubscription = await this.subscriptionService.checkUserHasSubscription(parseInt(userId, 10));
 
                 if (!userHasSubscription) {
-                    //create user trial period
-                    await this.subscriptionService.saveUserTrialSubscription(userId);
+                    // Create user trial period
+                    await this.subscriptionService.saveUserTrialSubscription(parseInt(userId, 10));
                 }
 
-                await this.subscriptionService.findByUserAndPlatformAndSaveCredit(userId, SocialMediaPlatformNames[SocialMediaPlatform.TWITTER]);
+                await this.subscriptionService.findByUserAndPlatformAndSaveCredit(parseInt(userId, 10), SocialMediaPlatformNames[SocialMediaPlatform.TWITTER]);
 
                 const redirectUrl =
                     `${appUrl}/user/link-social?isSuccess=${encodeURIComponent(isSuccess)}`;
@@ -95,7 +93,6 @@ export class LinkPageController {
             }
 
         } catch (error) {
-
             const isSuccess = false;
             const errorMessage =
                 error.data?.message || 'An unexpected error occurred';
@@ -116,9 +113,7 @@ export class LinkPageController {
             const url = await this.linkedinService.getLinkedInAuthUrl();
             res.redirect(url);
         } catch (error) {
-            res.status(500).json({
-                message: 'Error redirecting to LinkedIn authorization',
-            });
+            return `Error redirecting to LinkedIn authorization${error}`;
         }
     }
 
@@ -126,23 +121,31 @@ export class LinkPageController {
     async handleLinkedInCallback(
         @Query('code') code: string,
         @Res() res: Response,
-        @Req() req,
     ) {
         try {
-            const userId = parseInt(req.session.userId, 10);
             const accessToken = await this.linkedinService.getAccessToken(
                 code,
-                userId,
             );
-
+            const urlParams = [];
             let isSuccess = false;
             if (accessToken.status == 200) {
                 isSuccess = true;
+                // Append any other parameters if necessary
+                urlParams.push(`encrypted_access_token=${accessToken.data.access_token}`);
+                urlParams.push(`refresh_token=${accessToken.data.refresh_token}`);
+                urlParams.push(`refresh_token_expire_in=${accessToken.data.refresh_token_expires_in}`);
+                urlParams.push(`expires_in=${accessToken.data.expires_in}`);
             }
             const appUrl = this.configService.get<string>('APP_URL_FRONTEND');
-            const redirectUrl =
+            let redirectUrl =
                 `${appUrl}/user/link-social?` +
                 `isSuccess=${encodeURIComponent(isSuccess)}`;
+            // If we have any URL parameters, join them and append to the redirect URL
+            if (urlParams.length > 0) {
+                redirectUrl += '&';
+                redirectUrl += urlParams.join('&');
+            }
+
             res.redirect(redirectUrl);
             // return res.json(accessToken.data);
         } catch (error) {
@@ -371,17 +374,16 @@ export class LinkPageController {
     }
 
     @Get('pages/:userId/:platform')
-    @ApiBody({ type: LinkedInPagesParamDto })
     async getLinkedInPages(
         @Param('userId') userId: number,
         @Param('platform') platform: number,
+        @Query('token') platformToken: string,
         @Req() req,
     ) {
         try {
             if (platform == SocialMediaPlatform.LINKEDIN) {
                 return await this.linkedinService.getUserPages(
-                    userId,
-                    platform,
+                    platformToken
                 );
             } else if (platform == SocialMediaPlatform.FACEBOOK) {
                 if (req.session.facebookPageDetails) {
@@ -447,16 +449,19 @@ export class LinkPageController {
             isPage: boolean;
             platform: number;
             logoUrl: string;
+            linkedInTokenParamDto?: LinkedInTokenParamDto;
         },
     ) {
         const { userId, pageId, isPage, platform, logoUrl } = body;
         try {
             if (platform == SocialMediaPlatform.LINKEDIN) {
+                const { linkedInTokenParamDto } = body;
                 await this.linkedinService.connectedLinkedinAccount(
                     userId,
                     pageId,
                     isPage,
                     logoUrl,
+                    linkedInTokenParamDto
                 );
 
             }
@@ -538,23 +543,6 @@ export class LinkPageController {
                 error.message || 'Failed to connect profile',
                 error.status || HttpStatus.INTERNAL_SERVER_ERROR,
             );
-        }
-    }
-
-    @Get('connected-tweet-post')
-    async main() {
-        const imageUrl =
-            'https://owehwuxrqdrgsfvzwwdl.supabase.co/storage/v1/object/public/user/22/business/image_Fh.png';
-
-        try {
-            // Step 1: Upload the media
-            await this.twitterService.uploadMedia2(imageUrl);
-
-            // Step 2: Post the tweet with the uploaded media
-            // const tweetResponse = await this.twitterService.postTweet2(content, mediaId);
-            // const post1Insights = await this.twitterService.getAccount1Insights(tweetResponse.data.id);
-        } catch (error) {
-            throw error;
         }
     }
 

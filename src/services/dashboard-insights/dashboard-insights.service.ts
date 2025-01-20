@@ -115,7 +115,8 @@ export class DashboardInsightsService {
                 false
             );
 
-            const socialMediaAccounts = await socialMediaAccountRepo.findListByUserAndPlatform(userID, platform);
+            // const socialMediaAccounts = await socialMediaAccountRepo.findListByUserAndPlatform(userID, platform);
+            const socialMediaAccounts = await socialMediaAccountRepo.findActiveCreditsByUser(userID, platform);
             // Initialize aggregates
             let totalImpressions = 0;
             let totalEngagements = 0;
@@ -185,7 +186,8 @@ export class DashboardInsightsService {
                 false
             );
 
-            const socialMediaAccounts = await socialMediaAccountRepo.findListByUserAndPlatform(userID, platform);
+            // const socialMediaAccounts = await socialMediaAccountRepo.findListByUserAndPlatform(userID, platform);
+            const socialMediaAccounts = await socialMediaAccountRepo.findActiveCreditsByUser(userID, platform);
 
             // Initialize aggregates
             let totalImpressions = 0;
@@ -293,7 +295,8 @@ export class DashboardInsightsService {
                 SocialMediaAccount,
                 false
             );
-            const socialMediaAccount = await socialMediaAccountRepo.findByUserAndPlatform(userID, platform);
+            // const socialMediaAccount = await socialMediaAccountRepo.findByUserAndPlatform(userID, platform);
+            const socialMediaAccount = await socialMediaAccountRepo.findByPlatformAndUser(userID, platform);
 
             if (socialMediaAccount.page_id) {
                 const followersCount = await this.fetchLinkedinOrganizationFollowers(socialMediaAccount.page_id, socialMediaAccount.encrypted_access_token);
@@ -509,7 +512,8 @@ export class DashboardInsightsService {
             SocialMediaAccount,
             false
         );
-        const socialMediaAccounts = await socialMediaAccountRepo.findListByUserAndPlatform(userID, platform);
+        // const socialMediaAccounts = await socialMediaAccountRepo.findListByUserAndPlatform(userID, platform);
+        const socialMediaAccounts = await socialMediaAccountRepo.findActiveCreditsByUser(userID, platform);
 
         // Initialize aggregates
         let totalImpressions = 0;

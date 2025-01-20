@@ -1,27 +1,23 @@
-import { BadRequestException, HttpException, HttpStatus, Injectable, Res } from '@nestjs/common'; import * as crypto from 'crypto';
-import axios, { AxiosInstance } from 'axios';
+import { BadRequestException, HttpException, HttpStatus, Injectable } from '@nestjs/common'; import * as crypto from 'crypto';
+import axios from 'axios';
 import { Post } from 'src/entities/post.entity';
 import { SocialMediaAccountService } from '../social-media-account/social-media-account.service';
 import { SocialTokenDataDTO } from 'src/dtos/params/social-token-data-dto';
-import { UserService } from '../user/user.service';
 import { PostRepository } from 'src/repositories/post-repository';
 import { UnitOfWork } from 'src/unitofwork/unitofwork';
 import * as FormData from 'form-data';
 import * as OAuth from 'oauth-1.0a';
-import { Request, Response } from 'express';
 import { SocialMediaPlatform, SocialMediaPlatformNames } from 'src/shared/constants/social-media.constants';
 import { TWITTER_CONST } from 'src/shared/constants/twitter-constant';
-import { throttle } from 'rxjs';
 import { Throttle } from '@nestjs/throttler';
 import { SocialMediaAccountRepository } from 'src/repositories/social-media-account-repository';
 import { SocialMediaAccount } from 'src/entities/social-media-account.entity';
 import { TwitterUserDataDto } from 'src/dtos/response/twitter-user-data-dto';
 import { PostInsightsDTO } from 'src/dtos/response/post-insights-dto';
-import { NotificationMessage, NotificationType } from 'src/shared/constants/notification-constants';
-import { NotificationService } from '../notification/notification.service';
 import { AwsSecretsService } from '../aws-secrets/aws-secrets.service';
 import { AWS_SECRET } from 'src/shared/constants/aws-secret-name-constants';
-import { ConfigService } from '@nestjs/config';
+import { RedisService } from 'src/redis-service';
+import { REDIS_STORAGE } from 'src/shared/constants/redis_storage_contstants';
 
 @Injectable()
 export class TwitterService {
@@ -36,11 +32,9 @@ export class TwitterService {
 
 	constructor(
 		private readonly socialMediaAccountService: SocialMediaAccountService,
-		private readonly userService: UserService,
 		private readonly unitOfWork: UnitOfWork,
-		private readonly notificationService: NotificationService,
 		private readonly secretService: AwsSecretsService,
-		private configService: ConfigService
+		private redisService: RedisService,
 	) {
 
 		this.initialize();
@@ -57,11 +51,12 @@ export class TwitterService {
 
 
 	// Generate the authorization URL for OAuth 2.0 with PKCE
-	async getAuthorizationUrl(req: Request): Promise<{ url: string; codeVerifier: string }> {
+	async getAuthorizationUrl(userId: number): Promise<{ url: string; codeVerifier: string }> {
 		const codeVerifier = this.generateCodeVerifier();
 		const codeChallenge = await this.generateCodeChallenge(codeVerifier);
-		const state = crypto.randomBytes(16).toString('hex'); // Generate random state
-		req.session.codeVerifier = { codeVerifier, state };
+		const state = userId.toString();
+
+		await this.redisService.set(REDIS_STORAGE.TWITTER_CODEVERIFIER.replace('{0}', state), JSON.stringify({ codeVerifier, state }));
 
 		const clientId = this.clientId;
 		const redirectUri = this.twitterCallBack;
@@ -78,17 +73,19 @@ export class TwitterService {
 		return { url, codeVerifier };
 	}
 
-	async exchangeCodeForToken(code: string, state: string, userId: number, req: Request): Promise<any> {
+	async exchangeCodeForToken(code: string, state: string): Promise<any> {
 
 		// Exchange authorization code for access token
-		const sessionData = req.session.codeVerifier;
+		const codeverifier_json = await this.redisService.get(REDIS_STORAGE.TWITTER_CODEVERIFIER.replace('{0}', state));
+		const codeverifier_value = JSON.parse(codeverifier_json);
 
-		if (!sessionData || sessionData.state !== state) {
+		// Ensure the session data and state are valid
+		if (!codeverifier_value || codeverifier_value.state !== state) {
+			this.redisService.del(REDIS_STORAGE.TWITTER_CODEVERIFIER.replace('{0}', state));
 			throw new BadRequestException('Invalid or expired state parameter.');
 		}
-		const { codeVerifier } = sessionData;
-		const redirectUri = this.twitterCallBack;
 
+		const redirectUri = this.twitterCallBack;
 		const tokenUrl = `${TWITTER_CONST.ENDPOINT}/oauth2/token`;
 		const clientId = this.clientId;
 
@@ -97,7 +94,8 @@ export class TwitterService {
 		params.append('grant_type', 'authorization_code');
 		params.append('client_id', clientId);
 		params.append('redirect_uri', redirectUri);
-		params.append('code_verifier', codeVerifier);
+		params.append('code_verifier', codeverifier_value.codeVerifier);
+
 
 		try {
 			const response = await axios.post(tokenUrl, params, {
@@ -107,25 +105,29 @@ export class TwitterService {
 			});
 
 			if (response.status == 200) {
-				const tokenDataDTO = new SocialTokenDataDTO(response.data); // Use DTO				
+				const tokenDataDTO = new SocialTokenDataDTO(response.data); // Use DTO
+
 				// Fetch Twitter user details
 				const twitterUser = await this.fetchTwitterUser(response.data.access_token);
 
 				tokenDataDTO.name = twitterUser.name;
 				tokenDataDTO.user_name = twitterUser.username;
 				tokenDataDTO.social_media_user_id = twitterUser.id; // Store the Twitter user ID
-				tokenDataDTO.user_profile = twitterUser.profileImageUrl
+				tokenDataDTO.user_profile = twitterUser.profileImageUrl;
+
 				// Store token and user details
-				await this.socialMediaAccountService.storeTokenDetails(userId, tokenDataDTO, 'twitter');
+				await this.socialMediaAccountService.storeTokenDetails(parseInt(state), tokenDataDTO, 'twitter');
+				this.redisService.del(REDIS_STORAGE.TWITTER_CODEVERIFIER.replace('{0}', state));
 				return response;
 			}
 		} catch (error) {
-			if (error.response) {
-			} else {
-			}
+
+			this.redisService.del(REDIS_STORAGE.TWITTER_CODEVERIFIER.replace('{0}', state));
+			
 			throw new Error(`Failed to exchange code for token: ${JSON.stringify(error.response?.data || error.message)}`);
 		}
 	}
+
 
 	@Throttle({ default: { limit: 25, ttl: 86400000 } })
 	async fetchTwitterUser(bearerToken: string): Promise<TwitterUserDataDto> {
@@ -222,67 +224,63 @@ export class TwitterService {
 		}
 	}
 
-	async findSocialAccountOfUser(userId: number, platform: string): Promise<SocialMediaAccount | null> {
-		return this.socialMediaAccountService.findSocialAccountOfUser(userId, 'twitter');
-	}
-
 	// Upload media using v1.1 API
 
-	async postTweet2(content: string, mediaId: string): Promise<any> {
-		try {
-			const url = `${TWITTER_CONST.ENDPOINT}/tweets`;
-			var accessToken = 'M1JlZnJpNXcwQVh4Q2dqZ2pjZkxEbTBhWDZQcUNiLTItOHZaWXJXRTdZU1p5OjE3MzUwMzk1MDA4NDU6MTowOmF0OjE';
-			const headers = {
-				'Authorization': `Bearer ${accessToken}`, // Use Bearer token for v2
-				'Content-Type': 'application/json',
-			};
+	// async postTweet2(content: string, mediaId: string): Promise<any> {
+	// 	try {
+	// 		const url = `${TWITTER_CONST.ENDPOINT}/tweets`;
+	// 		const accessToken = 'M1JlZnJpNXcwQVh4Q2dqZ2pjZkxEbTBhWDZQcUNiLTItOHZaWXJXRTdZU1p5OjE3MzUwMzk1MDA4NDU6MTowOmF0OjE';
+	// 		const headers = {
+	// 			'Authorization': `Bearer ${accessToken}`, // Use Bearer token for v2
+	// 			'Content-Type': 'application/json',
+	// 		};
 
-			const requestBody = {
-				text: content,
-				media: { media_ids: [mediaId] }, // Include the media ID in the request
-			};
+	// 		const requestBody = {
+	// 			text: content,
+	// 			media: { media_ids: [mediaId] }, // Include the media ID in the request
+	// 		};
 
-			const response = await axios.post(url, requestBody, { headers });
-			return response.data;
-		} catch (error) {
-			throw new Error(`Failed to post tweet: ${error.response?.data || error.message}`);
-		}
-	}
+	// 		const response = await axios.post(url, requestBody, { headers });
+	// 		return response.data;
+	// 	} catch (error) {
+	// 		throw new Error(`Failed to post tweet: ${error.response?.data || error.message}`);
+	// 	}
+	// }
 
-	async getPostInsights(tweetId: string): Promise<any> {
-		const url = `${TWITTER_CONST.ENDPOINT}/tweets/${tweetId}`;
-		const requestData = {
-			url,
-			method: 'POST',
-			params: { ids: tweetId }, // Ensure the correct parameter
-		};
+	// async getPostInsights(tweetId: string): Promise<any> {
+	// 	const url = `${TWITTER_CONST.ENDPOINT}/tweets/${tweetId}`;
+	// 	const requestData = {
+	// 		url,
+	// 		method: 'POST',
+	// 		params: { ids: tweetId }, // Ensure the correct parameter
+	// 	};
 
-		this.oauth = new OAuth({
-			consumer: { key: this.consumerKey, secret: this.consumerSecret },
-			signature_method: 'HMAC-SHA1',
-			hash_function(base_string, key) {
-				return crypto.createHmac('sha1', key).update(base_string).digest('base64');
-			},
-		});
+	// 	this.oauth = new OAuth({
+	// 		consumer: { key: this.consumerKey, secret: this.consumerSecret },
+	// 		signature_method: 'HMAC-SHA1',
+	// 		hash_function(base_string, key) {
+	// 			return crypto.createHmac('sha1', key).update(base_string).digest('base64');
+	// 		},
+	// 	});
 
-		const headers = this.oauth.toHeader(
-			this.oauth.authorize(
-				{ url: requestData.url, method: requestData.method },
-				{ key: this.accessToken, secret: this.accessTokenSecret }
-			)
-		);
+	// 	const headers = this.oauth.toHeader(
+	// 		this.oauth.authorize(
+	// 			{ url: requestData.url, method: requestData.method },
+	// 			{ key: this.accessToken, secret: this.accessTokenSecret }
+	// 		)
+	// 	);
 
-		try {
-			const response = await axios.get(url, {
-				params: requestData.params,
-				headers: { ...headers },
-			});
-			return response.data;
+	// 	try {
+	// 		const response = await axios.get(url, {
+	// 			params: requestData.params,
+	// 			headers: { ...headers },
+	// 		});
+	// 		return response.data;
 
-		} catch (error) {
-			throw new Error(`Failed to fetch post insights: ${error.response?.data || error.message}`);
-		}
-	}
+	// 	} catch (error) {
+	// 		throw new Error(`Failed to fetch post insights: ${error.response?.data || error.message}`);
+	// 	}
+	// }
 
 
 	async uploadMedia2(imageUrl: string): Promise<string> {
@@ -343,7 +341,7 @@ export class TwitterService {
 	): Promise<any> {
 		try {
 
-			var postDataMessage = `${message}${hashtags?.length ? `\n\n${hashtags.map((tag) => `${tag}`).join(' ')}` : ''}`.trim();
+			let postDataMessage = `${message}${hashtags?.length ? `\n\n${hashtags.map((tag) => `${tag}`).join(' ')}` : ''}`.trim();
 
 			// Upload image logic (if needed)
 			if (imageUrl) {
@@ -362,7 +360,7 @@ export class TwitterService {
 				postDataMessage = postDataMessage.substring(postDataMessage.length - 270); // Keep last 270 characters
 			}
 
-			let r = (Math.random() + 1).toString(36).substring(7);
+			const r = (Math.random() + 1).toString(36).substring(7);
 			const requestBody: any = {
 				text: `${postDataMessage}${r}`,
 			};
