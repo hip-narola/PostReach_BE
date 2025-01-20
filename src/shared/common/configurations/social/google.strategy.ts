@@ -41,9 +41,6 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
     try {
       let cognitoAccessToken: string;
       let userId: number;
-
-      console.log("Profile details");
-      console.log(profile);
       const userDetails = new User();
       userDetails.name = name.givenName;
       userDetails.socialMediaId = googleId;
@@ -53,7 +50,6 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
       const existingUser = await this.userService.findBySocialMediaId(googleId);
 
       if (existingUser != null) {
-        console.log(existingUser);
         // Get access token from AWS by cognito id
         userId = existingUser.id;
         cognitoAccessToken = await this.cognitoIdentityService.getIdToken(existingUser.cognitoId);
