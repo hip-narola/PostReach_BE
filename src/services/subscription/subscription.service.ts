@@ -550,7 +550,7 @@ export class SubscriptionService {
 			const stripeSubscription = await this.stripe.subscriptions.create({
 				customer: user.stripeCustomerId,
 				items: [{ price: subscription.stripePriceId }], // Replace with your trial price ID
-				trial_period_days: 0,
+				trial_period_days: 7,
 				payment_behavior: 'default_incomplete', // Ensure the subscription waits for payment completion
 				expand: ['latest_invoice.payment_intent'], // Optional: Include payment intent details
 			});
