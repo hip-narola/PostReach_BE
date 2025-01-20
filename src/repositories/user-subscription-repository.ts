@@ -28,16 +28,16 @@ export class UserSubscriptionRepository extends GenericRepository<UserSubscripti
 	}
 	
 	async findTrialSubscriptionsByUserId(userId: number): Promise<UserSubscription> {
-		const currentDate = new Date();
-		const currentDateOnly = currentDate.toISOString().split('T')[0];
+		// const currentDate = new Date();
+		// const currentDateOnly = currentDate.toISOString().split('T')[0];
 		return this.repository
 		.createQueryBuilder('user_subscription')
 		.innerJoinAndSelect('user_subscription.subscription', 'subscription')
 		.innerJoinAndSelect('user_subscription.user', 'user')
-		.andWhere("DATE(user_subscription.start_Date) <= :currentDate", { currentDate: currentDateOnly })
-		.andWhere("DATE(user_subscription.end_Date) >= :currentDate", { currentDate: currentDateOnly })
-		.andWhere('subscription.planName = :planName', { planName: SUBSCRIPTION_PLANS.TRIAL })
-		.andWhere('user_subscription.status = :status', { status: UserSubscriptionStatusType.ACTIVE })
+		// .andWhere("DATE(user_subscription.start_Date) <= :currentDate", { currentDate: currentDateOnly })
+		// .andWhere("DATE(user_subscription.end_Date) >= :currentDate", { currentDate: currentDateOnly })
+		// .andWhere('subscription.planName = :planName', { planName: SUBSCRIPTION_PLANS.TRIAL })
+		.andWhere('user_subscription.status = :status', { status: UserSubscriptionStatusType.TRIAL })
 		.andWhere('user_subscription.user_id = :user_id', { user_id: userId })
 		.getOne();
 	}
