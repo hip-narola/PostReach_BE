@@ -379,7 +379,7 @@ export class SubscriptionService {
 		// userCredit.start_Date = userSubscription.start_Date;
 		// userCredit.end_Date = userSubscription.end_Date;
 		userCredit.status = UserCreditStatusType.ACTIVE;
-		console.log(userCredit, 'userCredit');
+		userCredit.cancel_Date = null;
 		return userCredit;
 	}
 

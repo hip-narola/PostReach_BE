@@ -41,6 +41,7 @@ import { AwsSecretsServiceModule } from 'src/modules/aws-secrets-service/aws-sec
           username: dbCredentials.DB_USERNAME,
           password: dbCredentials.DB_PASSWORD,
           database: dbCredentials.DB_NAME,
+          timezone: 'Z', // This ensures UTC timezone
           entities: [
             User,
             UserBusiness,

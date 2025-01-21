@@ -124,7 +124,6 @@ export class TwitterService {
 		} catch (error) {
 
 			this.redisService.del(REDIS_STORAGE.TWITTER_CODEVERIFIER.replace('{0}', state));
-
 			throw new Error(`Failed to exchange code for token: ${JSON.stringify(error.response?.data || error.message)}`);
 		}
 	}
@@ -343,7 +342,8 @@ export class TwitterService {
 		try {
 
 			let postDataMessage = `${message}${hashtags?.length ? `\n\n${hashtags.map((tag) => `${tag}`).join(' ')}` : ''}`.trim();
-			let mediaId;
+			let mediaId: string | null = null; // Declare mediaId and initialize it as null
+
 			// Upload image logic (if needed)
 			if (imageUrl) {
 				mediaId = await this.uploadMedia2(imageUrl);

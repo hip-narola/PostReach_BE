@@ -12,7 +12,7 @@ export class UserCreditRepository extends GenericRepository<UserCredit> {
     
     async findUserCreditDetailWithSocialAccount(userId: number, subscriptionId: string, socialMediaId: number): Promise<UserCredit | null> {
         
-        const currentDate = new Date();
+        // const currentDate = new Date();
         return this.repository
         .createQueryBuilder('userCredit')
         .leftJoinAndSelect('userCredit.user', 'user')
@@ -33,7 +33,7 @@ export class UserCreditRepository extends GenericRepository<UserCredit> {
     
     async findUserCreditDetail(userId: number, subscriptionId: string): Promise<UserCredit | null> {
         
-        const currentDate = new Date();
+        // const currentDate = new Date();
         return this.repository
         .createQueryBuilder('userCredit')
         .leftJoinAndSelect('userCredit.user', 'user')
@@ -49,20 +49,20 @@ export class UserCreditRepository extends GenericRepository<UserCredit> {
         .getOne();
     }
     
-    async findTrialCreditByUserId(userId: number, subscriptionId: string): Promise<UserCredit | null> {
-        const currentDate = new Date();
-        return this.repository
-        .createQueryBuilder('userCredit')
-        .leftJoinAndSelect('userCredit.user', 'user')
-        .leftJoinAndSelect('userCredit.subscription', 'subscription')
-        .where('userCredit.user_id = :userId', { userId })
-        .andWhere('userCredit.subscription_id = :subscriptionId', { subscriptionId })
-        .andWhere('userCredit.start_Date <= :currentDate', { currentDate })
-        .andWhere('userCredit.end_Date >= :currentDate', { currentDate })
-        .andWhere('userCredit.status = :status', { status: UserCreditStatusType.ACTIVE })
-        .andWhere('userCredit.current_credit_amount > 0')
-        .getOne();
-    }
+    // async findTrialCreditByUserId(userId: number, subscriptionId: string): Promise<UserCredit | null> {
+    //     const currentDate = new Date();
+    //     return this.repository
+    //     .createQueryBuilder('userCredit')
+    //     .leftJoinAndSelect('userCredit.user', 'user')
+    //     .leftJoinAndSelect('userCredit.subscription', 'subscription')
+    //     .where('userCredit.user_id = :userId', { userId })
+    //     .andWhere('userCredit.subscription_id = :subscriptionId', { subscriptionId })
+    //     .andWhere('userCredit.start_Date <= :currentDate', { currentDate })
+    //     .andWhere('userCredit.end_Date >= :currentDate', { currentDate })
+    //     .andWhere('userCredit.status = :status', { status: UserCreditStatusType.ACTIVE })
+    //     .andWhere('userCredit.current_credit_amount > 0')
+    //     .getOne();
+    // }
     
     
     async findUserAndSubscription(
