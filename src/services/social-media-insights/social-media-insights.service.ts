@@ -3,14 +3,12 @@ import { plainToInstance } from 'class-transformer';
 import { SocialMediaInsightParamDTO } from 'src/dtos/params/social-media-insights-param.dto';
 import { SocialMediaAccount } from 'src/entities/social-media-account.entity';
 import { SocialMediaInsight } from 'src/entities/social-media-insights.entity';
-import { User } from 'src/entities/user.entity';
 import { SocialMediaAccountRepository } from 'src/repositories/social-media-account-repository';
 import { SocialMediaInsightsRepository } from 'src/repositories/social-media-insights-repository';
-import { UserRepository } from 'src/repositories/userRepository';
 import { UnitOfWork } from 'src/unitofwork/unitofwork';
 import { DashboardInsightsService } from '../dashboard-insights/dashboard-insights.service';
-import { SocialMediaPlatformNames } from 'src/shared/constants/social-media.constants';
-import { SocialMediaAccountService } from '../social-media-account/social-media-account.service';
+import { SocialMediaPlatform, SocialMediaPlatformNames } from 'src/shared/constants/social-media.constants';
+
 
 @Injectable()
 export class SocialMediaInsightsService {
@@ -26,7 +24,7 @@ export class SocialMediaInsightsService {
             const socialMediaAccount = await socialMediaAccountRepository.findOne(createStudentDto.social_media_account_id);
             socialMediaInsightsData.socialMediaAccount = socialMediaAccount;
             const socialMediaInsightsRepo = this.unitOfWork.getRepository(SocialMediaInsightsRepository, SocialMediaInsight, true);
-            const data = await socialMediaInsightsRepo.create(socialMediaInsightsData);
+            await socialMediaInsightsRepo.create(socialMediaInsightsData);
             await this.unitOfWork.completeTransaction();
         } catch (error) {
             await this.unitOfWork.rollbackTransaction();
@@ -61,40 +59,40 @@ export class SocialMediaInsightsService {
             false
         );
 
-        var socialMediaInsightsEntry = await socialMediaInsightsRepo.findEntryByDate(date, social_media_account_id);
+        const socialMediaInsightsEntry = await socialMediaInsightsRepo.findEntryByDate(date, social_media_account_id);
         return socialMediaInsightsEntry;
     }
 
     async getSocialinsightsList(GetSocilInsightsParamDto: { days: number, userId: number; platform: number | null; }): Promise<any> {
 
-        const { days, userId, platform } = GetSocilInsightsParamDto;
+        const { platform } = GetSocilInsightsParamDto;
 
         const platformName = platform ? SocialMediaPlatformNames[platform] : null;
 
         const socialInsightsRepository = this.unitOfWork.getRepository(SocialMediaInsightsRepository, SocialMediaInsight, false);
-        var socialMediaInsightsData = await socialInsightsRepository.getSocialinsightsList(GetSocilInsightsParamDto);
+        const socialMediaInsightsData = await socialInsightsRepository.getSocialinsightsList(GetSocilInsightsParamDto);
 
         let totalPostList = 0;
         let approvedPostList = 0;
         let rejectedPostList = 0;
 
-        if (platformName == "facebook") {
+        if (platformName == SocialMediaPlatformNames[SocialMediaPlatform['FACEBOOK']]) {
             totalPostList = await this.dashboardInsightsService.getTotalFacebookPostList(GetSocilInsightsParamDto.userId);
             approvedPostList = await this.dashboardInsightsService.getTotalFacebookApprovedPostList(GetSocilInsightsParamDto.userId);
             rejectedPostList = await this.dashboardInsightsService.getTotalFacebookRejectedPostList(GetSocilInsightsParamDto.userId);
         }
-        else if (platformName == "instagram") {
+        else if (platformName == SocialMediaPlatformNames[SocialMediaPlatform['INSTAGRAM']]) {
             totalPostList = await this.dashboardInsightsService.getTotalInstagramPostList(GetSocilInsightsParamDto.userId);
             approvedPostList = await this.dashboardInsightsService.getTotalInstagramApprovedPostList(GetSocilInsightsParamDto.userId);
             rejectedPostList = await this.dashboardInsightsService.getTotalInstagramRejectedPostList(GetSocilInsightsParamDto.userId);
 
         }
-        else if (platformName == "linkedin") {
+        else if (platformName == SocialMediaPlatformNames[SocialMediaPlatform['LINKEDIN']]) {
             totalPostList = await this.dashboardInsightsService.getTotalLinkedinPostList(GetSocilInsightsParamDto.userId);
             approvedPostList = await this.dashboardInsightsService.getTotalLinkedinApprovedPostList(GetSocilInsightsParamDto.userId);
             rejectedPostList = await this.dashboardInsightsService.getTotalLinkedinRejectedPostList(GetSocilInsightsParamDto.userId);
         }
-        else if (platformName == "twitter") {
+        else if (platformName == SocialMediaPlatformNames[SocialMediaPlatform['TWITTER']]) {
             totalPostList = await this.dashboardInsightsService.getTotalTwitterPostList(GetSocilInsightsParamDto.userId);
             approvedPostList = await this.dashboardInsightsService.getTotalTwitterApprovedPostList(GetSocilInsightsParamDto.userId);
             rejectedPostList = await this.dashboardInsightsService.getTotalTwitterRejectedPostList(GetSocilInsightsParamDto.userId);

@@ -8,9 +8,7 @@ import { SignUpConfirmationParams } from 'src/dtos/params/signup-confirmation-pa
 import { ForgotPasswordParamDto } from 'src/dtos/params/forgot-password-param.dto';
 import { ResetPasswordParamsDto } from 'src/dtos/params/reset-password-param.dto';
 import { ResendConfirmationCodeParamDto } from 'src/dtos/params/resend-confirmation-code-param.dto';
-import { UserService } from 'src/services/user/user.service';
 import { GlobalConfig } from 'src/config/global-config';
-import { FacebookService } from 'src/services/facebook/facebook.service';
 import { ConfigService } from '@nestjs/config';
 import { FacebookSignupAuthGuard } from 'src/shared/common/guards/facebook-signup/facebook-signup.guard';
 import { GoogleSignupGuard } from 'src/shared/common/guards/google-signup/google-signup.guard';
@@ -117,7 +115,6 @@ export class AuthController {
 				signInDto.password,
 				signInDto.rememberMe,
 			);
-			await this.redisService.set(`userID_${data.userId.toString()}`, data.userId.toString());
 			req.session.userId = data.userId.toString();
 			GlobalConfig.secrets = { userId: data.userId.toString() };
 

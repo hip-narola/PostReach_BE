@@ -90,7 +90,6 @@ export class SubscriptionService {
 			// await this.unitOfWork.rollbackTransaction();
 			throw error;
 		}
-
 	}
 
 	async GeneratePostSubscriptionWiseOnFirstCycle(): Promise<void> {
@@ -116,12 +115,12 @@ export class SubscriptionService {
 						const platform = platforms.find(p => p.id === credit.social_media_id);
 
 						if (platform && credit.current_credit_amount > 0) {
-							// await this.createPostForSubscription(
-							// 	subscriptionDetail.user.id,
-							// 	credit.social_media_id,
-							// 	platform.id,
-							// 	subscriptionDetail.id
-							// );
+							await this.createPostForSubscription(
+								subscriptionDetail.user.id,
+								credit.social_media_id,
+								platform.id,
+								subscriptionDetail.id
+							);
 
 							// Deduct credit for the post
 							credit.last_trigger_date = new Date();
@@ -149,15 +148,17 @@ export class SubscriptionService {
 		const postTaskRepository = this.unitOfWork.getRepository(PostTaskRepository, PostTask, true);
 		const postRepository = this.unitOfWork.getRepository(PostRepository, Post, true);
 
+		const tempDate = new Date();
+		tempDate.setDate(tempDate.getDate() + 3)
 		// Step 1: Create PostTask
 		const postTask = new PostTask();
 		postTask.user = { id: userId } as any;
 		postTask.socialMediaAccount = { id: socialMediaAccountId } as any;
-		postTask.task_type = 'Scheduled';
+		postTask.task_type = 'Auto_Creation';
 		postTask.scheduled_at = new Date();
 		postTask.status = 'Pending';
 		postTask.created_By = userId;
-		postTask.created_at = new Date();
+		postTask.created_at = tempDate;
 
 		const savedPostTask = await postTaskRepository.create(postTask);
 
@@ -168,7 +169,7 @@ export class SubscriptionService {
 		post.content = `This is an auto-generated post for subscription ${subscriptionId}`;
 		post.hashtags = '#auto #generated #post';
 		post.created_By = userId;
-		post.created_at = new Date();
+		post.created_at = tempDate;
 
 		await postRepository.create(post);
 	}
@@ -196,12 +197,12 @@ export class SubscriptionService {
 					if ((new Date() == new Date(subscriptionDetail.start_Date))) {
 
 						// TODO: Generate Post
-						// await this.createPostForSubscription(
-						// 	subscriptionDetail.user.id,
-						// 	userCreditDetails.social_media_id,
-						// 	userPlatformId,
-						// 	subscriptionDetail.id
-						// );
+						await this.createPostForSubscription(
+							subscriptionDetail.user.id,
+							userCreditDetails.social_media_id,
+							userPlatformId,
+							subscriptionDetail.id
+						);
 
 						// TODO: Minus credit amount based on each social media post creation
 						userCreditDetails.last_trigger_date = new Date();
@@ -378,6 +379,7 @@ export class SubscriptionService {
 		// userCredit.start_Date = userSubscription.start_Date;
 		// userCredit.end_Date = userSubscription.end_Date;
 		userCredit.status = UserCreditStatusType.ACTIVE;
+		console.log(userCredit, 'userCredit');
 		return userCredit;
 	}
 
@@ -494,6 +496,7 @@ export class SubscriptionService {
 		userCredit.end_Date = new Date();
 		userCredit.end_Date.setMonth(userCredit.end_Date.getMonth() + 1);
 		userCredit.end_Date.setDate(userCredit.end_Date.getDate() + 3);
+		userCredit.cancel_Date = null;
 
 		userCredit.social_media_id = socialMediaAccountId;
 
@@ -550,6 +553,7 @@ export class SubscriptionService {
 			const stripeSubscription = await this.stripe.subscriptions.create({
 				customer: user.stripeCustomerId,
 				items: [{ price: subscription.stripePriceId }], // Replace with your trial price ID
+				// trial_period_days: 3,
 				trial_period_days: 7,
 				payment_behavior: 'default_incomplete', // Ensure the subscription waits for payment completion
 				expand: ['latest_invoice.payment_intent'], // Optional: Include payment intent details

@@ -12,6 +12,7 @@ import { SocialMediaAccount } from 'src/entities/social-media-account.entity';
 import { ConfigService } from '@nestjs/config';
 import { AWS_SECRET } from 'src/shared/constants/aws-secret-name-constants';
 import { AwsSecretsService } from '../aws-secrets/aws-secrets.service';
+import { TOKEN_TYPE } from 'src/shared/constants/token-type-constants';
 
 @Injectable()
 export class FacebookService {
@@ -44,10 +45,9 @@ export class FacebookService {
         const tokenDataDTO = new SocialTokenDataDTO({
             user_name: firstName,
             user_profile: profilePicUrl,
-            userId: 7,
             page_id: pageId,
             facebook_Profile: facebookId,
-            token_type: "Page Access Token",
+            token_type: TOKEN_TYPE.PAGE_ACCESS_TOKEN,
             access_token: pageAccessToken,
             expires_in: null,
             scope: null,
@@ -239,7 +239,7 @@ export class FacebookService {
                 facebookDetails.user_name = facebookPageDetailsDTO.pageName;
                 facebookDetails.user_profile = facebookPageDetailsDTO.logoUrl;
                 facebookDetails.file_name = facebookPageDetailsDTO.filePath;
-                facebookDetails.token_type = "Page Access Token";
+                facebookDetails.token_type = TOKEN_TYPE.PAGE_ACCESS_TOKEN;
                 facebookDetails.facebook_Profile_access_token = facebookPageDetailsDTO.facebook_Profile_access_token;
                 await socialMediaInsightsRepo.create(facebookDetails);
                 await this.unitOfWork.completeTransaction();

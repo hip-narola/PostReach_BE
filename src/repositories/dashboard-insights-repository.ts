@@ -2,6 +2,9 @@ import { Injectable } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { GenericRepository } from './generic-repository';
 import { PostTask } from 'src/entities/post-task.entity';
+import { SocialMediaPlatform, SocialMediaPlatformNames } from 'src/shared/constants/social-media.constants';
+import { POST_TASK_STATUS } from 'src/shared/constants/post-task-status-constants';
+import { ASSET_TYPE } from 'src/shared/constants/asset-type-constants';
 
 @Injectable()
 export class DashboardInsightsRepository extends GenericRepository<PostTask> {
@@ -29,11 +32,11 @@ export class DashboardInsightsRepository extends GenericRepository<PostTask> {
                     'ur.profilePicture AS profileimage',
                 ])
                 .leftJoin('pt.post', 'p')
-                .leftJoin('p.assets', 'a', 'a.type = :type', { type: 'image' })
+                .leftJoin('p.assets', 'a', 'a.type = :type', { type: ASSET_TYPE.IMAGE })
                 .leftJoin('pt.socialMediaAccount', 'sm')
                 .leftJoin('pt.user', 'ur')
                 .andWhere('pt.user_id = :userid', { userid: userId })
-                .andWhere('sm.platform = :platform', { platform: 'facebook' })
+                .andWhere('sm.platform = :platform', { platform: SocialMediaPlatformNames[SocialMediaPlatform['FACEBOOK']] })
                 .getRawMany();
 
 
@@ -81,12 +84,12 @@ export class DashboardInsightsRepository extends GenericRepository<PostTask> {
                     'ur.profilePicture AS profileimage',
                 ])
                 .leftJoin('pt.post', 'p')
-                .leftJoin('p.assets', 'a', 'a.type = :type', { type: 'image' })
+                .leftJoin('p.assets', 'a', 'a.type = :type', { type: ASSET_TYPE.IMAGE })
                 .leftJoin('pt.socialMediaAccount', 'sm')
                 .leftJoin('pt.user', 'ur')
                 .andWhere('pt.user_id = :userid', { userid: userId })
-                .andWhere('pt.status IN (:...statuses)', { statuses: ['Execute_Success', 'Scheduled'] })
-                .andWhere('sm.platform = :platform', { platform: 'facebook' })
+                .andWhere('pt.status IN (:...statuses)', { statuses: [POST_TASK_STATUS.EXECUTE_SUCCESS, POST_TASK_STATUS.SCHEDULED] })
+                .andWhere('sm.platform = :platform', { platform: SocialMediaPlatformNames[SocialMediaPlatform['FACEBOOK']] })
                 .getRawMany();
 
 
@@ -134,12 +137,12 @@ export class DashboardInsightsRepository extends GenericRepository<PostTask> {
                     'ur.profilePicture AS profileimage',
                 ])
                 .leftJoin('pt.post', 'p')
-                .leftJoin('p.assets', 'a', 'a.type = :type', { type: 'image' })
+                .leftJoin('p.assets', 'a', 'a.type = :type', { type: ASSET_TYPE.IMAGE })
                 .leftJoin('pt.socialMediaAccount', 'sm')
                 .leftJoin('pt.user', 'ur')
                 .andWhere('pt.user_id = :userid', { userid: userId })
-                .andWhere('pt.status = :status', { status: 'Rejected' })
-                .andWhere('sm.platform = :platform', { platform: 'facebook' })
+                .andWhere('pt.status = :status', { status: POST_TASK_STATUS.REJECTED })
+                .andWhere('sm.platform = :platform', { platform: SocialMediaPlatformNames[SocialMediaPlatform['FACEBOOK']] })
                 .getRawMany();
 
 
@@ -188,11 +191,11 @@ export class DashboardInsightsRepository extends GenericRepository<PostTask> {
                     'ur.profilePicture AS profileimage',
                 ])
                 .leftJoin('pt.post', 'p')
-                .leftJoin('p.assets', 'a', 'a.type = :type', { type: 'image' })
+                .leftJoin('p.assets', 'a', 'a.type = :type', { type:ASSET_TYPE.IMAGE })
                 .leftJoin('pt.socialMediaAccount', 'sm')
                 .leftJoin('pt.user', 'ur')
                 .andWhere('pt.user_id = :userid', { userid: userId })
-                .andWhere('sm.platform = :platform', { platform: 'linkedin' })
+                .andWhere('sm.platform = :platform', { platform: SocialMediaPlatformNames[SocialMediaPlatform['LINKEDIN']] })
                 .getRawMany();
 
 
@@ -239,12 +242,12 @@ export class DashboardInsightsRepository extends GenericRepository<PostTask> {
                     'ur.profilePicture AS profileimage',
                 ])
                 .leftJoin('pt.post', 'p')
-                .leftJoin('p.assets', 'a', 'a.type = :type', { type: 'image' })
+                .leftJoin('p.assets', 'a', 'a.type = :type', { type: ASSET_TYPE.IMAGE })
                 .leftJoin('pt.socialMediaAccount', 'sm')
                 .leftJoin('pt.user', 'ur')
                 .andWhere('pt.user_id = :userid', { userid: userId })
-                .andWhere('pt.status IN (:...statuses)', { statuses: ['Execute_Success', 'Scheduled'] })
-                .andWhere('sm.platform = :platform', { platform: 'linkedin' })
+                .andWhere('pt.status IN (:...statuses)', { statuses: [POST_TASK_STATUS.EXECUTE_SUCCESS, POST_TASK_STATUS.SCHEDULED] })
+                .andWhere('sm.platform = :platform', { platform: SocialMediaPlatformNames[SocialMediaPlatform['LINKEDIN']] })
                 .getRawMany();
 
 
@@ -291,12 +294,12 @@ export class DashboardInsightsRepository extends GenericRepository<PostTask> {
                     'ur.profilePicture AS profileimage',
                 ])
                 .leftJoin('pt.post', 'p')
-                .leftJoin('p.assets', 'a', 'a.type = :type', { type: 'image' })
+                .leftJoin('p.assets', 'a', 'a.type = :type', { type: ASSET_TYPE.IMAGE })
                 .leftJoin('pt.socialMediaAccount', 'sm')
                 .leftJoin('pt.user', 'ur')
                 .andWhere('pt.user_id = :userid', { userid: userId })
-                .andWhere('pt.status = :status', { status: 'Rejected' })
-                .andWhere('sm.platform = :platform', { platform: 'linkedin' })
+                .andWhere('pt.status = :status', { status: POST_TASK_STATUS.REJECTED })
+                .andWhere('sm.platform = :platform', { platform: SocialMediaPlatformNames[SocialMediaPlatform['LINKEDIN']] })
                 .getRawMany();
 
 
@@ -345,11 +348,11 @@ export class DashboardInsightsRepository extends GenericRepository<PostTask> {
                     'ur.profilePicture AS profileimage',
                 ])
                 .leftJoin('pt.post', 'p')
-                .leftJoin('p.assets', 'a', 'a.type = :type', { type: 'image' })
+                .leftJoin('p.assets', 'a', 'a.type = :type', { type: ASSET_TYPE.IMAGE })
                 .leftJoin('pt.socialMediaAccount', 'sm')
                 .leftJoin('pt.user', 'ur')
                 .andWhere('pt.user_id = :userid', { userid: userId })
-                .andWhere('sm.platform = :platform', { platform: 'twitter' })
+                .andWhere('sm.platform = :platform', { platform: SocialMediaPlatformNames[SocialMediaPlatform['TWITTER']] })
                 .getRawMany();
 
 
@@ -396,12 +399,12 @@ export class DashboardInsightsRepository extends GenericRepository<PostTask> {
                     'ur.profilePicture AS profileimage',
                 ])
                 .leftJoin('pt.post', 'p')
-                .leftJoin('p.assets', 'a', 'a.type = :type', { type: 'image' })
+                .leftJoin('p.assets', 'a', 'a.type = :type', { type: ASSET_TYPE.IMAGE })
                 .leftJoin('pt.socialMediaAccount', 'sm')
                 .leftJoin('pt.user', 'ur')
                 .andWhere('pt.user_id = :userid', { userid: userId })
-                .andWhere('pt.status IN (:...statuses)', { statuses: ['Execute_Success', 'Scheduled'] })
-                .andWhere('sm.platform = :platform', { platform: 'twitter' })
+                .andWhere('pt.status IN (:...statuses)', { statuses: [POST_TASK_STATUS.EXECUTE_SUCCESS, POST_TASK_STATUS.SCHEDULED] })
+                .andWhere('sm.platform = :platform', { platform: SocialMediaPlatformNames[SocialMediaPlatform['TWITTER']] })
                 .getRawMany();
 
 
@@ -447,12 +450,12 @@ export class DashboardInsightsRepository extends GenericRepository<PostTask> {
                     'ur.profilePicture AS profileimage',
                 ])
                 .leftJoin('pt.post', 'p')
-                .leftJoin('p.assets', 'a', 'a.type = :type', { type: 'image' })
+                .leftJoin('p.assets', 'a', 'a.type = :type', { type: ASSET_TYPE.IMAGE })
                 .leftJoin('pt.socialMediaAccount', 'sm')
                 .leftJoin('pt.user', 'ur')
                 .andWhere('pt.user_id = :userid', { userid: userId })
-                .andWhere('pt.status = :status', { status: 'Rejected' })
-                .andWhere('sm.platform = :platform', { platform: 'twitter' })
+                .andWhere('pt.status = :status', { status: POST_TASK_STATUS.REJECTED })
+                .andWhere('sm.platform = :platform', { platform: SocialMediaPlatformNames[SocialMediaPlatform['TWITTER']] })
                 .getRawMany();
 
 
@@ -499,11 +502,11 @@ export class DashboardInsightsRepository extends GenericRepository<PostTask> {
                     'ur.profilePicture AS profileimage',
                 ])
                 .leftJoin('pt.post', 'p')
-                .leftJoin('p.assets', 'a', 'a.type = :type', { type: 'image' })
+                .leftJoin('p.assets', 'a', 'a.type = :type', { type: ASSET_TYPE.IMAGE })
                 .leftJoin('pt.socialMediaAccount', 'sm')
                 .leftJoin('pt.user', 'ur')
                 .andWhere('pt.user_id = :userid', { userid: userId })
-                .andWhere('sm.platform = :platform', { platform: 'instagram' })
+                .andWhere('sm.platform = :platform', { platform: SocialMediaPlatformNames[SocialMediaPlatform['INSTAGRAM']] })
                 .getRawMany();
 
 
@@ -550,12 +553,12 @@ export class DashboardInsightsRepository extends GenericRepository<PostTask> {
                     'ur.profilePicture AS profileimage',
                 ])
                 .leftJoin('pt.post', 'p')
-                .leftJoin('p.assets', 'a', 'a.type = :type', { type: 'image' })
+                .leftJoin('p.assets', 'a', 'a.type = :type', { type: ASSET_TYPE.IMAGE })
                 .leftJoin('pt.socialMediaAccount', 'sm')
                 .leftJoin('pt.user', 'ur')
                 .andWhere('pt.user_id = :userid', { userid: userId })
-                .andWhere('pt.status IN (:...statuses)', { statuses: ['Execute_Success', 'Scheduled'] })
-                .andWhere('sm.platform = :platform', { platform: 'instagram' })
+                .andWhere('pt.status IN (:...statuses)', { statuses: [POST_TASK_STATUS.EXECUTE_SUCCESS, POST_TASK_STATUS.SCHEDULED] })
+                .andWhere('sm.platform = :platform', { platform: SocialMediaPlatformNames[SocialMediaPlatform['INSTAGRAM']] })
                 .getRawMany();
 
 
@@ -602,12 +605,12 @@ export class DashboardInsightsRepository extends GenericRepository<PostTask> {
                     'ur.profilePicture AS profileimage',
                 ])
                 .leftJoin('pt.post', 'p')
-                .leftJoin('p.assets', 'a', 'a.type = :type', { type: 'image' })
+                .leftJoin('p.assets', 'a', 'a.type = :type', { type: ASSET_TYPE.IMAGE })
                 .leftJoin('pt.socialMediaAccount', 'sm')
                 .leftJoin('pt.user', 'ur')
                 .andWhere('pt.user_id = :userid', { userid: userId })
-                .andWhere('pt.status = :status', { status: 'Rejected' })
-                .andWhere('sm.platform = :platform', { platform: 'instagram' })
+                .andWhere('pt.status = :status', { status: POST_TASK_STATUS.REJECTED })
+                .andWhere('sm.platform = :platform', { platform: SocialMediaPlatformNames[SocialMediaPlatform['INSTAGRAM']] })
                 .getRawMany();
 
             const data = postTasks.map(queryResult => ({

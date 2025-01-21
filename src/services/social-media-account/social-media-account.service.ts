@@ -26,29 +26,29 @@ export class SocialMediaAccountService {
                 SocialMediaAccount,
                 true
             );
-            
-            if (platform == "facebook") {
-                
+            let updatedSocialMediaAccount;
+            if (platform == SocialMediaPlatformNames[SocialMediaPlatform.FACEBOOK]) {
+
                 const socialMediaAccountExists = await this.findSocialAccountOfUserForFacebook(userId, platform, tokenData.page_id, tokenData.facebook_Profile);
                 if (!socialMediaAccountExists) {
                     // Create new account if it doesn't exist
-                    var updatedSocialMediaAccount = await socialMediaAccountRepo.create(data);
+                    updatedSocialMediaAccount = await socialMediaAccountRepo.create(data);
                 }
                 else {
                     // Update the existing account
                     data.updated_at = new Date();
-                    const updateResult = await socialMediaAccountRepo.update(socialMediaAccountExists.id, data);
+                    await socialMediaAccountRepo.update(socialMediaAccountExists.id, data);
                     // After update, fetch the updated entity to return
-                    var updatedSocialMediaAccount = await socialMediaAccountRepo.findOne(socialMediaAccountExists.id);
+                    updatedSocialMediaAccount = await socialMediaAccountRepo.findOne(socialMediaAccountExists.id);
                 }
                 await this.unitOfWork.completeTransaction();
                 return updatedSocialMediaAccount;
             }
-            else if (platform == "instagram") {
+            else if (platform == SocialMediaPlatformNames[SocialMediaPlatform.INSTAGRAM]) {
                 const socialMediaAccountExists = await this.findSocialAccountOfUserForInstagram(userId, platform, tokenData.instagram_Profile, tokenData.page_id, tokenData.facebook_Profile);
                 if (!socialMediaAccountExists) {
                     // Create new account if it doesn't exist
-                    var updatedSocialMediaAccount = await socialMediaAccountRepo.create(data);
+                    updatedSocialMediaAccount = await socialMediaAccountRepo.create(data);
                 }
                 await this.unitOfWork.completeTransaction();
                 return updatedSocialMediaAccount;
@@ -63,13 +63,12 @@ export class SocialMediaAccountService {
                 const socialMediaAccountExists = await this.findSocialAccountOfUser(userId, platform);
                 if (!socialMediaAccountExists) {
                     // Create new account if it doesn't exist
-                    var updatedSocialMediaAccount = await socialMediaAccountRepo.create(data);
-                } 
-                else {
+                    updatedSocialMediaAccount = await socialMediaAccountRepo.create(data);
+                } else {
                     // Update the existing account
-                    const updateResult = await socialMediaAccountRepo.update(socialMediaAccountExists.id, data);
+                    await socialMediaAccountRepo.update(socialMediaAccountExists.id, data);
                     // After update, fetch the updated entity to return
-                    var updatedSocialMediaAccount = await socialMediaAccountRepo.findOne(socialMediaAccountExists.id);
+                    updatedSocialMediaAccount = await socialMediaAccountRepo.findOne(socialMediaAccountExists.id);
                 }
                 await this.unitOfWork.completeTransaction();
                 return updatedSocialMediaAccount;
@@ -86,7 +85,7 @@ export class SocialMediaAccountService {
             SocialMediaAccount,
             true
         );
-        var socialMediaAccount = await socialMediaAccountRepo.findByUserAndPlatform(userId, platform);
+        const socialMediaAccount = await socialMediaAccountRepo.findByUserAndPlatform(userId, platform);
         return socialMediaAccount;
         
     }
@@ -97,7 +96,7 @@ export class SocialMediaAccountService {
             SocialMediaAccount,
             true
         );
-        var socialMediaAccount = await socialMediaAccountRepo.findByUserAndPlatformAndFacebookId(userId, platform, facebookpageId, facebook_Profile);
+        const socialMediaAccount = await socialMediaAccountRepo.findByUserAndPlatformAndFacebookId(userId, platform, facebookpageId, facebook_Profile);
         return socialMediaAccount;
     }
     
@@ -107,7 +106,7 @@ export class SocialMediaAccountService {
             SocialMediaAccount,
             true
         );
-        var socialMediaAccount = await socialMediaAccountRepo.findByUserAndPlatformAndInstagramId(userId, platform, instagramId, facebookpageId, facebook_Profile);
+        const socialMediaAccount = await socialMediaAccountRepo.findByUserAndPlatformAndInstagramId(userId, platform, instagramId, facebookpageId, facebook_Profile);
         return socialMediaAccount;
     }
     
@@ -149,7 +148,7 @@ export class SocialMediaAccountService {
         
         return socialMediaAccount;
     }
-    
+
     async findFirstSocialMediaAccountWithoutActiveCredit(
         userId: number
     ): Promise<string | null> {
@@ -160,36 +159,36 @@ export class SocialMediaAccountService {
                 SocialMediaAccount,
                 false
             );
-            
+
             const userSubscriptionCreditRepository = this.unitOfWork.getRepository(
                 UserCreditRepository,
                 UserCredit,
                 false
             );
-            
+
             // Find all social media accounts for the user
             const userSocialAccounts = await socialMediaAccountRepository.findPlatformsOfUser(userId);
-            
+
             if (!userSocialAccounts || userSocialAccounts.length === 0) {
                 return null;
             }
-            
+
             // Iterate over accounts and check for active credit
             for (const account of userSocialAccounts) {
                 const activeCredit = await userSubscriptionCreditRepository.getUserCreditWithSocialMedia(
                     userId,
                     account.id
                 );
-                
+
                 // Return the first account without active credit
                 if (!activeCredit) {
                     return account.platform;
                 }
             }
-            
+
             // No accounts found without active credit
             return null;
-            
+
         } catch (error) {
             throw error;
         }

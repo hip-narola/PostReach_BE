@@ -1,4 +1,5 @@
-import { BadRequestException, HttpException, HttpStatus, Injectable } from '@nestjs/common'; import * as crypto from 'crypto';
+import { BadRequestException, HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import * as crypto from 'crypto';
 import axios from 'axios';
 import { Post } from 'src/entities/post.entity';
 import { SocialMediaAccountService } from '../social-media-account/social-media-account.service';
@@ -46,7 +47,7 @@ export class TwitterService {
 		this.consumerSecret = secretData.TWITTER_API_KEY_SECRET;
 		this.accessToken = secretData.TWITTER_ACCESS_TOKEN;
 		this.accessTokenSecret = secretData.TWITTER_ACCESS_TOKEN_SECRET;
-		this.twitterCallBack=secretData.TWITTER_CALLBACK_URL;
+		this.twitterCallBack = secretData.TWITTER_CALLBACK_URL;
 	}
 
 
@@ -123,7 +124,7 @@ export class TwitterService {
 		} catch (error) {
 
 			this.redisService.del(REDIS_STORAGE.TWITTER_CODEVERIFIER.replace('{0}', state));
-			
+
 			throw new Error(`Failed to exchange code for token: ${JSON.stringify(error.response?.data || error.message)}`);
 		}
 	}
@@ -342,10 +343,10 @@ export class TwitterService {
 		try {
 
 			let postDataMessage = `${message}${hashtags?.length ? `\n\n${hashtags.map((tag) => `${tag}`).join(' ')}` : ''}`.trim();
-
+			let mediaId;
 			// Upload image logic (if needed)
 			if (imageUrl) {
-				var mediaId = await this.uploadMedia2(imageUrl);
+				mediaId = await this.uploadMedia2(imageUrl);
 				// var mediaId = '1871537014492835840';
 
 			}

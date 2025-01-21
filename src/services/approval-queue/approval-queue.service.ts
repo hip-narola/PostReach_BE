@@ -10,6 +10,7 @@ import { RejectReasonRepository } from 'src/repositories/reject-reason-repositor
 import { UnitOfWork } from 'src/unitofwork/unitofwork';
 import { EmailService } from '../email/email.service';
 import { JobSchedulerService } from 'src/scheduler/job-scheduler-service';
+import { POST_TASK_STATUS } from 'src/shared/constants/post-task-status-constants';
 
 @Injectable()
 export class ApprovalQueueService {
@@ -52,7 +53,7 @@ export class ApprovalQueueService {
                 //if approved true then if block will executed.
                 if (updateStatusParam.isApproved == true) {
                     //updated the status to scheduled
-                    record.status = 'Scheduled';
+                    record.status = POST_TASK_STATUS.SCHEDULED;
                     await approvalQueueRepository.update(id, record);
                     // scheduled the post.
                     const data =
@@ -80,7 +81,7 @@ export class ApprovalQueueService {
                 // if approved false then else if block executed.
                 else if (updateStatusParam.isApproved == false) {
 
-                    record.status = 'Rejected';
+                    record.status = POST_TASK_STATUS.REJECTED;
                     record.rejectReason = updateStatusParam.rejectReason;
                     const rejectReasonRepository =
                         this.unitOfWork.getRepository(

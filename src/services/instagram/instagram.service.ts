@@ -11,6 +11,7 @@ import { SocialMediaAccount } from 'src/entities/social-media-account.entity';
 import { SocialMediaPlatform, SocialMediaPlatformNames } from 'src/shared/constants/social-media.constants';
 import { AwsSecretsService } from '../aws-secrets/aws-secrets.service';
 import { AWS_SECRET } from 'src/shared/constants/aws-secret-name-constants';
+import { TOKEN_TYPE } from 'src/shared/constants/token-type-constants';
 @Injectable()
 export class InstagramService {
   private clientId: string;
@@ -66,12 +67,12 @@ export class InstagramService {
       page_id: pageId,
       facebook_Profile: facebookId,
       access_token: pageAccessToken,
-      token_type: "Instagram Id",
+      token_type: TOKEN_TYPE.INSTAGRAM_ID,
       instagram_Profile: instagramId,
       expires_in: null,
       scope: null
     });
-    //   const userId = 7;
+  
     await this.socialMediaAccountService.storeTokenDetails(userId, tokenDataDTO, platform);
     return true;
   }
@@ -157,7 +158,7 @@ export class InstagramService {
     }
     catch (error) {
       await this.unitOfWork.rollbackTransaction();
-     throw error;
+      throw error;
     }
   }
 
@@ -221,7 +222,7 @@ export class InstagramService {
         instagramDetails.user_name = instagramPageDetailsDTO.pageName;
         instagramDetails.user_profile = instagramPageDetailsDTO.logoUrl;
         instagramDetails.instagram_Profile = instagramPageDetailsDTO.instagramId;
-        instagramDetails.token_type = "Instagram Id";
+        instagramDetails.token_type = TOKEN_TYPE.INSTAGRAM_ID;
         instagramDetails.facebook_Profile_access_token = instagramPageDetailsDTO.facebook_Profile_access_token;
         await socialMediaInsightsRepo.create(instagramDetails);
         await this.unitOfWork.completeTransaction();

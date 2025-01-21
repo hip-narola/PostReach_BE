@@ -10,7 +10,6 @@ import { Repository } from 'typeorm';
 import { plainToInstance } from 'class-transformer';
 import { UnitOfWork } from 'src/unitofwork/unitofwork';
 import { JwtAuthGuard } from 'src/shared/common/guards/jwt/jwt.guard';
-import { createClient } from '@supabase/supabase-js';
 import { ImageUploadService } from '../image-upload/image-upload.service';
 
 @Injectable()

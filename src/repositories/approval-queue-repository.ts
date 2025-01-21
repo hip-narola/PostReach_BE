@@ -5,6 +5,7 @@ import { PostTask } from 'src/entities/post-task.entity';
 import { PaginationParamDto } from 'src/dtos/params/pagination-param.dto';
 import { PaginatedResponseDto } from 'src/dtos/response/pagination-response.dto';
 import { SocialMediaPlatformNames } from 'src/shared/constants/social-media.constants';
+import { POST_TASK_STATUS } from 'src/shared/constants/post-task-status-constants';
 
 @Injectable()
 export class ApprovalQueueRepository extends GenericRepository<PostTask> {
@@ -27,7 +28,7 @@ export class ApprovalQueueRepository extends GenericRepository<PostTask> {
                     'sm.platform AS channel',
                     'pt.scheduled_at AS schedule_date',
                     'ur.name AS user',
-                    'ur.profilePicture AS profileimage',
+                    'sm.user_profile AS profileimage',
                     'p.no_of_likes AS no_of_likes',
                     'p.no_of_comments AS no_of_comments',
                     'p.no_of_views AS no_of_views',
@@ -36,7 +37,7 @@ export class ApprovalQueueRepository extends GenericRepository<PostTask> {
                 .leftJoin('p.assets', 'a', 'a.type = :type', { type: 'image' })
                 .leftJoin('pt.socialMediaAccount', 'sm')
                 .leftJoin('pt.user', 'ur')
-                .where('pt.status = :status', { status: 'Pending' })
+                .where('pt.status = :status', { status: POST_TASK_STATUS.PENDING })
                 .andWhere('pt.user_id = :userid', { userid: paginatedParams.userId })
                 .andWhere('pt.scheduled_at > :now', { now: new Date() })
                 .getRawMany();
@@ -55,7 +56,7 @@ export class ApprovalQueueRepository extends GenericRepository<PostTask> {
                 ),
                 scheduled_at: queryResult.schedule_date,
                 user: queryResult.user,
-                profileImage: queryResult.profileimage,
+                profileImage: queryResult.profileimage || null,
                 analytics: [
                     { comments: queryResult.no_of_comments },
                     { likes: queryResult.no_of_likes },
@@ -114,7 +115,7 @@ export class ApprovalQueueRepository extends GenericRepository<PostTask> {
                 .leftJoin('p.assets', 'a', 'a.type = :type', { type: 'image' })
                 .leftJoin('pt.socialMediaAccount', 'sm')
                 .leftJoin('pt.user', 'ur')
-                .where('pt.status = :status', { status: 'Scheduled' })
+                .where('pt.status = :status', { status:POST_TASK_STATUS.SCHEDULED })
                 .andWhere('pt.id = :id', { id })
                 .orderBy('pt.scheduled_at', 'DESC')
                 .getRawOne();

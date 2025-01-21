@@ -46,7 +46,7 @@ export class AuthService {
     this.identityClient = new CognitoIdentityClient({
       region: this.configService.get<string>('REGION'),
     });
-    this.cognitoBaseUrl = `https://cognito-idp.${this.configService.get<string>('REGION')}.amazonaws.com`;
+    this.cognitoBaseUrl = `https://cognito-idp.us-east-1.amazonaws.com`;
     this.initialize();
   }
 
@@ -234,7 +234,6 @@ export class AuthService {
 
     const body = {
       AccessToken: accessToken,
-      
     };
 
     try {

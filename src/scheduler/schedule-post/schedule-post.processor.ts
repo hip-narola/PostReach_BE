@@ -11,6 +11,7 @@ import { NotificationMessage, NotificationType } from 'src/shared/constants/noti
 import { EmailService } from '../../services/email/email.service';
 import { UserService } from '../../services/user/user.service';
 import { EMAIL_SEND, EMAIL_SEND_FILE } from 'src/shared/constants/email-notification-constants';
+import { POST_TASK_STATUS } from 'src/shared/constants/post-task-status-constants';
 
 @Processor('post-queue')
 export class SchedulePostProcessor extends WorkerHost {
@@ -29,39 +30,40 @@ export class SchedulePostProcessor extends WorkerHost {
 	}
 
 	async process(job: Job<any>): Promise<void> {
-		const { Id, channel, PostId, accessToken, message, hashtags, imageUrl, pageId, SocialMediauserId, scheduleTime, instagramId, userId } = job.data;
+		const { Id, channel, PostId, accessToken, message, hashtags, imageUrl, pageId, SocialMediauserId, instagramId, userId } = job.data;
 		try {
 			// throw new Error('Failed to publish post');
 			switch (channel) {
-				case 'facebook':
+				case `${SocialMediaPlatformNames[SocialMediaPlatform['FACEBOOK']]}`:
 					await this.facebookService.postToFacebook(PostId, pageId, accessToken, message, hashtags, imageUrl);
-					await this.approvalQueueService.updateStatusAfterPostExecution(Id, "Execute_Success");
+					await this.approvalQueueService.updateStatusAfterPostExecution(Id, POST_TASK_STATUS.EXECUTE_SUCCESS);
 					await this.notificationService.saveData(userId, NotificationType.POST_PUBLISHED, NotificationMessage[NotificationType.POST_PUBLISHED]);
-
 					break;
 
 				case `${SocialMediaPlatformNames[SocialMediaPlatform['LINKEDIN']]}`:
 					await this.linkedinService.postToLinkedIn(PostId, pageId, accessToken, SocialMediauserId, message, imageUrl, hashtags);
-					await this.approvalQueueService.updateStatusAfterPostExecution(Id, "Execute_Success");
+					await this.approvalQueueService.updateStatusAfterPostExecution(Id, POST_TASK_STATUS.EXECUTE_SUCCESS);
 					await this.notificationService.saveData(userId, NotificationType.POST_PUBLISHED, NotificationMessage[NotificationType.POST_PUBLISHED]);
 					break;
 
-				case 'instagram':
+				case `${SocialMediaPlatformNames[SocialMediaPlatform['INSTAGRAM']]}`:
+
 					await this.instagramService.postToInstagram(PostId, instagramId, accessToken, imageUrl, message, hashtags);
-					await this.approvalQueueService.updateStatusAfterPostExecution(Id, 'Execute_Success');
+					await this.approvalQueueService.updateStatusAfterPostExecution(
+						Id, POST_TASK_STATUS.EXECUTE_SUCCESS);
 					await this.notificationService.saveData(userId, NotificationType.POST_PUBLISHED, NotificationMessage[NotificationType.POST_PUBLISHED]);
 					break;
 
 				case `${SocialMediaPlatformNames[SocialMediaPlatform['TWITTER']]}`:
 					await this.twitterService.postToTwitter(PostId, pageId, accessToken, SocialMediauserId, message, imageUrl, hashtags);
-					await this.approvalQueueService.updateStatusAfterPostExecution(Id, "Execute_Success");
+					await this.approvalQueueService.updateStatusAfterPostExecution(Id, POST_TASK_STATUS.EXECUTE_SUCCESS);
 					await this.notificationService.saveData(userId, NotificationType.POST_PUBLISHED, NotificationMessage[NotificationType.POST_PUBLISHED]);
 					break;
 			}
 		}
 		catch (error) {
 			if (job.attemptsMade >= 4) {
-				await this.approvalQueueService.updateStatusAfterPostExecution(Id, "Fail");
+				await this.approvalQueueService.updateStatusAfterPostExecution(Id, POST_TASK_STATUS.FAIL);
 				await this.notificationService.saveData(userId, NotificationType.POST_FAILED, NotificationMessage[NotificationType.POST_FAILED]);
 				const user = await this.userService.findOne(userId);
 

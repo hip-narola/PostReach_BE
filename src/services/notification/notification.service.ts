@@ -54,7 +54,7 @@ export class NotificationService {
         try {
             await this.unitOfWork.startTransaction();
             const notificationRepo = this.unitOfWork.getRepository(NotificationRepository, Notification, true);
-            var record;
+            let record;
             if (!isAllRead && !notificationId) {
                 throw new Error(`Please add either notification id or isAllRead param true`);
             }

@@ -12,19 +12,19 @@ export class SocialMediaAccountController {
     async findUserProfileStatus(@Param('id') id: number): Promise<any[]> {
         try {
             let data = await this.socialMediaAccountService.socialLinks(id);
-        
+
             data = data.map((account) => {
                 // Get the platform number based on the name
                 const platformNumber = Object.keys(SocialMediaPlatformNames).find(
                     (key) => SocialMediaPlatformNames[key] === account.platform
                 );
-        
+
                 return {
                     platform: Number(platformNumber), // Convert to a number
                     encrypted_access_token: account.encrypted_access_token,
                     ...(account.platform === SocialMediaPlatformNames[SocialMediaPlatform.LINKEDIN] && { isPage: !!account.page_id }), // Add `isPage` if LinkedIn
                 };
-            });            
+            });
             return data;
         } catch (error) {
             throw new Error('Unable to fetch user profile status.');

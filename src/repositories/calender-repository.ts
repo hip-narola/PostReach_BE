@@ -4,6 +4,7 @@ import { GenericRepository } from './generic-repository';
 import { PostTask } from 'src/entities/post-task.entity';
 import { CalenderParamDto } from 'src/dtos/params/calender-param.dto';
 import { SocialMediaPlatformNames } from 'src/shared/constants/social-media.constants';
+import { POST_TASK_STATUS } from 'src/shared/constants/post-task-status-constants';
 
 @Injectable()
 export class CalenderRepository extends GenericRepository<PostTask> {
@@ -30,7 +31,7 @@ export class CalenderRepository extends GenericRepository<PostTask> {
                 .leftJoin('p.assets', 'a', 'a.type = :type', { type: 'image' })
                 .leftJoin('pt.socialMediaAccount', 'sm')
                 .leftJoin('pt.user', 'ur')
-                .where('pt.status IN (:...statuses)', { statuses: ['Execute_Success', 'Scheduled'] })
+                .where('pt.status IN (:...statuses)', { statuses: [POST_TASK_STATUS.EXECUTE_SUCCESS, POST_TASK_STATUS.SCHEDULED] })
                 .andWhere('pt.user_id = :userid', { userid: paginatedParams.userId })
                 .andWhere('DATE(pt.scheduled_at) BETWEEN :startDate AND :endDate', {
                     startDate: paginatedParams.startWeekDate,
