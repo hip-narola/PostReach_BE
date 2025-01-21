@@ -43,7 +43,7 @@ export class LinkedinService {
 		this.linkedinClientID = secretData.LINKEDIN_CLIENT_ID;
 		this.linkedinClientSecret = secretData.LINKEDIN_CLIENT_SECRET;
 		this.linkedinScope = secretData.LINKEDIN_SCOPE;
-		this.linkedinCallBack = secretData.LINKEDIN_CALLBACK_URL;		
+		this.linkedinCallBack = secretData.LINKEDIN_CALLBACK_URL;
 	}
 
 	async getLinkedInAuthUrl(): Promise<string> {
@@ -374,19 +374,16 @@ export class LinkedinService {
 
 	async connectedLinkedinAccount(userId: number, pageId: string, Ispage: boolean, logoUrl: string, linkedInTokenDetails: LinkedInTokenParamDto) {
 		try {
-			console.log(linkedInTokenDetails, 'linkedInTokenDetails')
 			await this.unitOfWork.startTransaction();
 
 			const socialMediaAccountRepo = this.unitOfWork.getRepository(SocialMediaAccountRepository, SocialMediaAccount, true);
 
 			const userSocialAccount = await this.socialMediaAccountService.findSocialAccountOfUserForLinkedIn(userId, SocialMediaPlatformNames[SocialMediaPlatform.LINKEDIN]);
 			const userResponse = await this.fetchLinkedInUserData(linkedInTokenDetails.encrypted_access_token);
-			console.log(userResponse, 'userResponse')
 			//crate or update soc. acc.
 			if (!userSocialAccount) {
 				//create
 				const tokenDataDTO = new SocialTokenDataDTO(linkedInTokenDetails);
-				console.log(tokenDataDTO, 'tokenDataDTO');
 
 				tokenDataDTO.user_profile = userResponse.profilePicture || null;
 				tokenDataDTO.scope = this.linkedinScope;
@@ -397,7 +394,6 @@ export class LinkedinService {
 				tokenDataDTO.platform = SocialMediaPlatformNames[SocialMediaPlatform.LINKEDIN];
 				tokenDataDTO.user_id = userId;
 				const data = plainToInstance(SocialMediaAccount, tokenDataDTO);
-				console.log(data, 'datasdsa')
 				await socialMediaAccountRepo.create(data);
 				// await this.socialMediaAccountService.storeTokenDetails(userId, tokenDataDTO, SocialMediaPlatformNames[SocialMediaPlatform.LINKEDIN]);
 				// await socialMediaAccountRepo.create(tokenDataDTO);
@@ -412,7 +408,6 @@ export class LinkedinService {
 				userSocialAccount.token_type = Ispage ? LINKEDIN_CONST.PAGE_ACCESS_TOKEN : LINKEDIN_CONST.LINKEDINID
 				userSocialAccount.user_profile = logoUrl;
 				userSocialAccount.page_id = Ispage ? pageId : null;
-				console.log(userSocialAccount, 'tokenDataDTO ipasd');
 				await socialMediaAccountRepo.update(userSocialAccount.id, userSocialAccount);
 			}
 			await this.unitOfWork.completeTransaction();

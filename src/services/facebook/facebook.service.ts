@@ -31,10 +31,10 @@ export class FacebookService {
     }
 
 
-    async getUserPages(accessToken: string) {
-        const response = await axios.get(`https://graph.facebook.com/v21.0/me/accounts?fields=id,name,access_token,instagram_business_account&access_token=${accessToken}`);
-        return response.data.data;
-    }
+    // async getUserPages(accessToken: string) {
+    //     const response = await axios.get(`https://graph.facebook.com/v21.0/me/accounts?fields=id,name,access_token,instagram_business_account&access_token=${accessToken}`);
+    //     return response.data.data;
+    // }
 
     async getInstagramAccount(facebookPageId: string, accessToken: string) {
         const response = await axios.get(`https://graph.facebook.com/${facebookPageId}?fields=instagram_business_account&access_token=${accessToken}`);
@@ -226,10 +226,10 @@ export class FacebookService {
     async connectedFacebookAccount(facebookPageDetailsDTO: FacebookPageDetailsDTO): Promise<string> {
         try {
             const userSocialAccount = await this.socialMediaAccountService.findSocialAccountForConnectAndDisconnectProfile(facebookPageDetailsDTO.userId, SocialMediaPlatformNames[SocialMediaPlatform.FACEBOOK], false);
-
+            await this.unitOfWork.startTransaction();
+            const socialMediaInsightsRepo = this.unitOfWork.getRepository(SocialMediaAccountRepository, SocialMediaAccount, true);
             if (!userSocialAccount) {
-                await this.unitOfWork.startTransaction();
-                const socialMediaInsightsRepo = this.unitOfWork.getRepository(SocialMediaAccountRepository, SocialMediaAccount, true);
+
                 const facebookDetails = new SocialMediaAccount();
                 facebookDetails.encrypted_access_token = facebookPageDetailsDTO.access_token;
                 facebookDetails.facebook_Profile = facebookPageDetailsDTO.faceBookId;
@@ -242,8 +242,22 @@ export class FacebookService {
                 facebookDetails.token_type = TOKEN_TYPE.PAGE_ACCESS_TOKEN;
                 facebookDetails.facebook_Profile_access_token = facebookPageDetailsDTO.facebook_Profile_access_token;
                 await socialMediaInsightsRepo.create(facebookDetails);
-                await this.unitOfWork.completeTransaction();
             }
+            else {
+                userSocialAccount.encrypted_access_token = facebookPageDetailsDTO.access_token;
+                userSocialAccount.facebook_Profile = facebookPageDetailsDTO.faceBookId;
+                userSocialAccount.page_id = facebookPageDetailsDTO.id;
+                userSocialAccount.platform = SocialMediaPlatformNames[SocialMediaPlatform.FACEBOOK];
+                userSocialAccount.user_id = facebookPageDetailsDTO.userId;
+                userSocialAccount.user_name = facebookPageDetailsDTO.pageName;
+                userSocialAccount.user_profile = facebookPageDetailsDTO.logoUrl;
+                userSocialAccount.file_name = facebookPageDetailsDTO.filePath;
+                userSocialAccount.token_type = TOKEN_TYPE.PAGE_ACCESS_TOKEN;
+                userSocialAccount.facebook_Profile_access_token = facebookPageDetailsDTO.facebook_Profile_access_token;
+
+                await socialMediaInsightsRepo.update(userSocialAccount.id, userSocialAccount);
+            }
+            await this.unitOfWork.completeTransaction();
             return 'Facebook profile connected successfully.';
         } catch (error: any) {
             await this.unitOfWork.rollbackTransaction();
@@ -298,4 +312,23 @@ export class FacebookService {
             throw error;
         }
     }
+
+
+    async getUserPages(accessToken: string): Promise<any> {
+        try {
+            const url = `https://graph.facebook.com/v21.0/me/accounts`;
+            const response = await axios.get(url, {
+                headers: { Authorization: `Bearer ${accessToken}` },
+            });
+            return response;
+        } catch (error) {
+            throw new HttpException(
+                error.response?.data || 'Failed to fetch pages',
+                error.response?.status || HttpStatus.INTERNAL_SERVER_ERROR,
+            );
+        }
+    }
+
+
+
 }

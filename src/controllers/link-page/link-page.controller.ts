@@ -31,6 +31,7 @@ import { SubscriptionService } from 'src/services/subscription/subscription.serv
 import { ConfigService } from '@nestjs/config';
 // import * as CryptoJS from 'crypto-js';
 import { LinkedInTokenParamDto } from 'src/dtos/params/linkedin-token-data.dto';
+import { FacebookConnectProfileParamDto } from 'src/dtos/params/facebook-connect-profile-param.dto';
 
 @Controller('link-page')
 export class LinkPageController {
@@ -170,10 +171,9 @@ export class LinkPageController {
     @Get('facebook-page/callback')
     @UseGuards(FacebookPageAuthGuard)
     async facebookPageLoginCallback(@Req() req, @Res() res: Response) {
-        const facebookPageDetailsList = [];
-        const userId = parseInt(req.session.userId, 10);
         const appUrl = this.configService.get<string>('APP_URL_FRONTEND');
         const error = req.query.error;
+        const urlParams = [];
         if (error) {
             if (error === 'access_denied') {
                 const isSuccess = false;
@@ -183,83 +183,25 @@ export class LinkPageController {
                 res.redirect(redirectUrl);
             }
         }
-        const accounts = req.user?.accounts;
-        if (!accounts || !accounts.data || accounts.data.length === 0) {
-            const isSuccess = false;
-            const redirectUrl =
-                `${appUrl}/user/link-social?` +
-                `isSuccess=${encodeURIComponent(isSuccess)}`;
-            res.redirect(redirectUrl);
-        }
-        const bucketName = 'user';
-        const folderName = `${userId}/facebook`;
-        if (accounts.data && accounts.data.length > 0) {
-            for (const account of accounts.data) {
-                const pageId = account.id;
-                const longLivedAccessToken =
-                    await this.facebookService.exchangeToLongLivedUserToken(
-                        account.access_token,
-                    );
-                const longLivedFacebookProfileAccessToken =
-                    await this.facebookService.exchangeToLongLivedUserToken(
-                        req.user.accessToken,
-                    );
-                let pagePictureUrl: string | null = null;
-                try {
-                    const pictureResponse =
-                        await this.facebookService.getPagePicture(
-                            pageId,
-                            longLivedAccessToken,
-                        );
-                    pagePictureUrl = pictureResponse?.data?.url || null;
-                    const { buffer, mimeType, fileName } =
-                        await this.facebookService.fetchImageFromUrl(
-                            pagePictureUrl,
-                        );
 
-                    const file: Express.Multer.File = {
-                        fieldname: 'file',
-                        originalname: fileName,
-                        encoding: '7bit',
-                        mimetype: mimeType,
-                        size: buffer.length,
-                        buffer: buffer,
-                        destination: '',
-                        filename: fileName,
-                        path: '',
-                        stream: undefined as any,
-                    };
-                    const { publicUrl: imageUrl, filePath } =
-                        await this.imageUploadService.uploadImage(
-                            bucketName,
-                            file,
-                            folderName,
-                        );
-                    const newPageDetail = {
-                        access_token: longLivedAccessToken || null,
-                        pageName: account.name || null,
-                        id: account.id || null,
-                        logoUrl: imageUrl,
-                        isPage: true || null,
-                        userId: userId || null,
-                        faceBookId: req.user.facebookId || null,
-                        filePath: filePath || null,
-                        facebook_Profile_access_token:
-                            longLivedFacebookProfileAccessToken || null,
-                    };
-                    facebookPageDetailsList.push(newPageDetail);
-                } catch (error) {
-                    throw error;
-                }
-            }
-        }
-        req.session.facebookPageDetails = JSON.stringify(
-            facebookPageDetailsList,
-        );
+        const longLivedFacebookProfileAccessToken =
+            await this.facebookService.exchangeToLongLivedUserToken(
+                req.user.accessToken,
+            );
+
         const isSuccess = true;
-        const redirectUrl =
+        let redirectUrl =
             `${appUrl}/user/link-social?` +
             `isSuccess=${encodeURIComponent(isSuccess)}`;
+
+        if (longLivedFacebookProfileAccessToken != null || longLivedFacebookProfileAccessToken != undefined) {
+            urlParams.push(`facebook_profile_access_token=${longLivedFacebookProfileAccessToken}`);
+            urlParams.push(`facebookId=${req.user.facebookId}`);
+        }
+        if (urlParams.length > 0) {
+            redirectUrl += '&';
+            redirectUrl += urlParams.join('&');
+        }
         res.redirect(redirectUrl);
     }
 
@@ -289,8 +231,7 @@ export class LinkPageController {
     @Get('instagram-link/callback')
     @UseGuards(InstagramAuthGuard)
     async instagramLoginCallback(@Req() req, @Res() res: Response) {
-        const instagramPageDetailsList = [];
-        const userId = parseInt(req.session.userId, 10);
+
         const appUrl = this.configService.get<string>('APP_URL_FRONTEND');
         const error = req.query.error;
         if (error) {
@@ -303,60 +244,26 @@ export class LinkPageController {
                 return;
             }
         }
-        const accounts = req.user?.accounts;
-        if (!accounts || !accounts.data || accounts.data.length === 0) {
-            const isSuccess = false;
-            const redirectUrl =
-                `${appUrl}/user/link-social?` +
-                `isSuccess=${encodeURIComponent(isSuccess)}`;
-            res.redirect(redirectUrl);
-            return;
-        }
-        if (accounts.data && accounts.data.length > 0) {
-            for (const account of accounts.data) {
-                const pageId = account.id;
-                const pageAccessToken = account.access_token;
-                const data = await this.facebookService.getInstagramAccount(
-                    pageId,
-                    pageAccessToken,
-                );
-                const longLivedAccessToken =
-                    await this.facebookService.exchangeToLongLivedUserToken(
-                        account.access_token,
-                    );
-                const longLivedFacebookProfileAccessToken =
-                    await this.facebookService.exchangeToLongLivedUserToken(
-                        req.user.accessToken,
-                    );
-                if (data.instagram_business_account) {
-                    const instagramDetails =
-                        await this.instagramService.getInstagramPageDetails(
-                            data.instagram_business_account.id,
-                            longLivedAccessToken,
-                        );
-                    const newPageDetail = {
-                        access_token: longLivedAccessToken || null,
-                        pageName: instagramDetails.name,
-                        instagramId: data.instagram_business_account.id || null,
-                        logoUrl: instagramDetails.profile_picture_url,
-                        isPage: true || null,
-                        userId: userId || null,
-                        facebookPageId: data.id || null,
-                        faceBookId: req.user.FacebookID || null,
-                        facebook_Profile_access_token:
-                            longLivedFacebookProfileAccessToken || null,
-                    };
-                    instagramPageDetailsList.push(newPageDetail);
-                }
-            }
-            req.session.instagramPageDetails = JSON.stringify(
-                instagramPageDetailsList,
+        const longLivedFacebookProfileAccessToken =
+            await this.facebookService.exchangeToLongLivedUserToken(
+                req.user.accessToken,
             );
-        }
+
+        const urlParams = [];
+
         const isSuccess = true;
-        const redirectUrl =
+        let redirectUrl =
             `${appUrl}/user/link-social?` +
             `isSuccess=${encodeURIComponent(isSuccess)}`;
+
+        if (longLivedFacebookProfileAccessToken != null || longLivedFacebookProfileAccessToken != undefined) {
+            urlParams.push(`facebook_profile_access_token=${longLivedFacebookProfileAccessToken}`);
+            urlParams.push(`facebookId=${req.user.FacebookID}`);
+        }
+        if (urlParams.length > 0) {
+            redirectUrl += '&';
+            redirectUrl += urlParams.join('&');
+        }
         res.redirect(redirectUrl);
     }
 
@@ -378,51 +285,124 @@ export class LinkPageController {
         @Param('userId') userId: number,
         @Param('platform') platform: number,
         @Query('token') platformToken: string,
+        @Query('facebookId') facebookId: string,
         @Req() req,
     ) {
         try {
+
             if (platform == SocialMediaPlatform.LINKEDIN) {
                 return await this.linkedinService.getUserPages(
                     platformToken
                 );
             } else if (platform == SocialMediaPlatform.FACEBOOK) {
-                if (req.session.facebookPageDetails) {
-                    try {
-                        const facebookPageList = JSON.parse(
-                            req.session.facebookPageDetails,
-                        );
-                        const formattedDetails = facebookPageList.map(
-                            (detail) => ({
-                                pageId: detail.id || null,
-                                pageName: detail.pageName || null,
-                                logoUrl: detail.logoUrl || null,
-                                isPage: detail.isPage || null,
-                            }),
-                        );
-                        return formattedDetails;
-                    } catch (error) {
-                        throw error;
+                const facebookPageDetailsList = [];
+                const accounts = await this.facebookService.getUserPages(platformToken);
+
+                const bucketName = 'user';
+                const folderName = `${userId}/facebook`;
+                if (accounts.data) {
+                    for (const account of accounts.data.data) {
+
+                        const pageId = account.id;
+                        const longLivedAccessToken =
+                            await this.facebookService.exchangeToLongLivedUserToken(
+                                account.access_token,
+                            );
+                        const longLivedFacebookProfileAccessToken = platformToken;
+                        let pagePictureUrl: string | null = null;
+                        try {
+                            const pictureResponse =
+                                await this.facebookService.getPagePicture(
+                                    pageId,
+                                    longLivedAccessToken,
+                                );
+                            pagePictureUrl = pictureResponse?.data?.url || null;
+                            const { buffer, mimeType, fileName } =
+                                await this.facebookService.fetchImageFromUrl(
+                                    pagePictureUrl,
+                                );
+
+                            const file: Express.Multer.File = {
+                                fieldname: 'file',
+                                originalname: fileName,
+                                encoding: '7bit',
+                                mimetype: mimeType,
+                                size: buffer.length,
+                                buffer: buffer,
+                                destination: '',
+                                filename: fileName,
+                                path: '',
+                                stream: undefined as any,
+                            };
+                            const { publicUrl: imageUrl, filePath } =
+                                await this.imageUploadService.uploadImage(
+                                    bucketName,
+                                    file,
+                                    folderName,
+                                );
+                            const newPageDetail = {
+                                access_token: longLivedAccessToken || null,
+                                pageName: account.name || null,
+                                pageId: account.id || null,
+                                logoUrl: imageUrl,
+                                isPage: true || null,
+                                userId: userId || null,
+                                faceBookId: facebookId || null,
+                                filePath: filePath || null,
+                                facebook_Profile_access_token:
+                                    longLivedFacebookProfileAccessToken || null,
+                            };
+                            facebookPageDetailsList.push(newPageDetail);
+                        } catch (error) {
+                            throw error;
+                        }
                     }
                 }
+                return facebookPageDetailsList;
+
             } else if (platform == SocialMediaPlatform.INSTAGRAM) {
-                if (req.session.instagramPageDetails) {
-                    try {
-                        const instagramPageList = JSON.parse(
-                            req.session.instagramPageDetails,
+
+                const instagramPageDetailsList = [];
+                const accounts = await this.facebookService.getUserPages(platformToken);
+                const longLivedFacebookProfileAccessToken = platformToken;
+                if (accounts.data.data) {
+                    for (const account of accounts.data.data) {
+                        const pageId = account.id;
+                        const pageAccessToken = account.access_token;
+                        const data = await this.facebookService.getInstagramAccount(
+                            pageId,
+                            pageAccessToken,
                         );
-                        const formattedDetails = instagramPageList.map(
-                            (detail) => ({
-                                pageId: detail.instagramId || null,
-                                pageName: detail.pageName || null,
-                                logoUrl: detail.logoUrl || null,
-                                isPage: detail.isPage || null,
-                            }),
-                        );
-                        return formattedDetails;
-                    } catch (error) {
-                        throw error;
+                        const longLivedAccessToken =
+                            await this.facebookService.exchangeToLongLivedUserToken(
+                                account.access_token,
+                            );
+
+                        if (data.instagram_business_account) {
+                            const instagramDetails =
+                                await this.instagramService.getInstagramPageDetails(
+                                    data.instagram_business_account.id,
+                                    longLivedAccessToken,
+                                );
+                            const newPageDetail = {
+                                access_token: longLivedAccessToken || null,
+                                pageName: instagramDetails.name,
+                                instagramId: data.instagram_business_account.id || null,
+                                logoUrl: instagramDetails.profile_picture_url,
+                                isPage: true || null,
+                                userId: userId || null,
+                                facebookPageId: data.id || null,
+                                faceBookId: facebookId || null,
+                                facebook_Profile_access_token:
+                                    longLivedFacebookProfileAccessToken || null,
+                            };
+                            instagramPageDetailsList.push(newPageDetail);
+                        }
                     }
+
+
                 }
+                return instagramPageDetailsList;
             } else {
                 throw new HttpException(
                     'Invalid platform',
@@ -450,8 +430,10 @@ export class LinkPageController {
             platform: number;
             logoUrl: string;
             linkedInTokenParamDto?: LinkedInTokenParamDto;
+            facebookConnectProfileParamDto?: FacebookConnectProfileParamDto;
         },
     ) {
+
         const { userId, pageId, isPage, platform, logoUrl } = body;
         try {
             if (platform == SocialMediaPlatform.LINKEDIN) {
@@ -466,56 +448,36 @@ export class LinkPageController {
 
             }
             else if (platform == SocialMediaPlatform.FACEBOOK) {
-                const facebookDetails = JSON.parse(req.session.facebookPageDetails);
-                const matchingDetails = facebookDetails.find(
-                    (detail) =>
-                        detail.id === pageId && detail.userId === userId,
-                );
-                if (matchingDetails == undefined) {
-                    throw new HttpException(
-                        'No Record Found',
-                        HttpStatus.BAD_REQUEST,
-                    );
-                }
+                const { facebookConnectProfileParamDto } = body;
+
                 const facebookPageDetails = new FacebookPageDetailsDTO();
-                facebookPageDetails.access_token = matchingDetails.access_token;
-                facebookPageDetails.faceBookId = matchingDetails.faceBookId;
-                facebookPageDetails.id = matchingDetails.id;
-                facebookPageDetails.isPage = matchingDetails.isPage;
-                facebookPageDetails.pageName = matchingDetails.pageName;
-                facebookPageDetails.userId = matchingDetails.userId;
-                facebookPageDetails.logoUrl = matchingDetails.logoUrl;
-                facebookPageDetails.filePath = matchingDetails.filePath;
+                facebookPageDetails.access_token = facebookConnectProfileParamDto.access_token;
+                facebookPageDetails.faceBookId = facebookConnectProfileParamDto.faceBookId;
+                facebookPageDetails.id = pageId;
+                facebookPageDetails.isPage = isPage;
+                facebookPageDetails.pageName = facebookConnectProfileParamDto.pageName;
+                facebookPageDetails.userId = userId;
+                facebookPageDetails.logoUrl = logoUrl;
+                facebookPageDetails.filePath = facebookConnectProfileParamDto.filePath;
                 facebookPageDetails.facebook_Profile_access_token =
-                    matchingDetails.facebook_Profile_access_token;
+                    facebookConnectProfileParamDto.facebook_Profile_access_token;
                 await this.facebookService.connectedFacebookAccount(
                     facebookPageDetails,
                 );
+
+
             } else if (platform == SocialMediaPlatform.INSTAGRAM) {
-                const instagramDetails = JSON.parse(
-                    req.session.instagramPageDetails,
-                );
-                const matchingDetails = instagramDetails.find(
-                    (detail) =>
-                        detail.instagramId === pageId &&
-                        detail.userId === userId,
-                );
-                if (matchingDetails == undefined) {
-                    throw new HttpException(
-                        'No Record Found',
-                        HttpStatus.BAD_REQUEST,
-                    );
-                }
+                const { facebookConnectProfileParamDto } = body;
                 const instagramPageData = new InstagramPageDetailsDTO();
-                instagramPageData.access_token = matchingDetails.access_token;
-                instagramPageData.faceBookId = matchingDetails.faceBookId;
-                instagramPageData.instagramId = matchingDetails.instagramId;
-                instagramPageData.isPage = matchingDetails.isPage;
-                instagramPageData.pageName = matchingDetails.pageName;
-                instagramPageData.userId = matchingDetails.userId;
-                instagramPageData.logoUrl = matchingDetails.logoUrl;
-                instagramPageData.faceBookPageID = matchingDetails.facebookPageId;
-                instagramPageData.facebook_Profile_access_token = matchingDetails.facebook_Profile_access_token;
+                instagramPageData.access_token = facebookConnectProfileParamDto.access_token;
+                instagramPageData.faceBookId = facebookConnectProfileParamDto.faceBookId;
+                instagramPageData.instagramId = facebookConnectProfileParamDto.instagramId;
+                instagramPageData.isPage = isPage;
+                instagramPageData.pageName = facebookConnectProfileParamDto.pageName;
+                instagramPageData.userId = userId;
+                instagramPageData.logoUrl = logoUrl;
+                instagramPageData.faceBookPageID = pageId;
+                instagramPageData.facebook_Profile_access_token = facebookConnectProfileParamDto.facebook_Profile_access_token;
                 await this.instagramService.connectedInstagramAccount(instagramPageData);
             }
             else if (platform == SocialMediaPlatform.TWITTER) {

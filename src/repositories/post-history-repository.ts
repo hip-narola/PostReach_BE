@@ -30,6 +30,7 @@ export class PostHistoryRepository extends GenericRepository<PostTask> {
                     'ur.name AS user',
                     'ur.profilePicture AS profileimage',
                 ])
+                .addSelect('pt.scheduled_at::text AS scheduled_at')
                 .leftJoin('pt.post', 'p')
                 .leftJoin('p.assets', 'a', 'a.type = :type', { type: 'image' })
                 .leftJoin('pt.socialMediaAccount', 'sm')
@@ -47,7 +48,7 @@ export class PostHistoryRepository extends GenericRepository<PostTask> {
                 content: queryResult.content,
                 hashtags: queryResult.hashtags ? queryResult.hashtags.split(',') : [],
                 channel: Object.keys(SocialMediaPlatformNames).find(key => SocialMediaPlatformNames[key] === queryResult.socialimage),
-                scheduled_at: queryResult.schedule_date,
+                scheduled_at: queryResult.scheduled_at,
                 user: queryResult.user,
                 profileImage: queryResult.profileimage,
                 analytics: [

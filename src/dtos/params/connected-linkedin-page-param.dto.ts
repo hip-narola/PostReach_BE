@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsNumber, IsString, IsNotEmpty } from 'class-validator';
 import { LinkedInTokenParamDto } from './linkedin-token-data.dto';
+import { FacebookConnectProfileParamDto } from './facebook-connect-profile-param.dto';
 
 export class ConnectedLinkedInPageParamDto {
     @ApiProperty({
@@ -40,10 +41,16 @@ export class ConnectedLinkedInPageParamDto {
     @IsString()
     @IsNotEmpty()
     logoUrl: string;
-    
+
     @ApiProperty({
         description: 'LinkedIn page connection details',
         type: LinkedInTokenParamDto,
     })
     linkedInTokenParamDto: LinkedInTokenParamDto;
+
+    @ApiProperty({
+        description: 'Facebook page connection details',
+        type: FacebookConnectProfileParamDto,
+    })
+    facebookConnectProfileParamDto: FacebookConnectProfileParamDto;
 }

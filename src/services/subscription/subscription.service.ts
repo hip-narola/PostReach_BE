@@ -149,9 +149,7 @@ export class SubscriptionService {
 		const postRepository = this.unitOfWork.getRepository(PostRepository, Post, true);
 
 		const tempDate = new Date();
-		tempDate.setDate(tempDate.getDate() + 3);
-		console.log("NEW tempDate: ", tempDate);
-		console.log("new Date(): ", new Date());
+		tempDate.setDate(tempDate.getDate() + 3)
 		// Step 1: Create PostTask
 		const postTask = new PostTask();
 		postTask.user = { id: userId } as any;
@@ -192,9 +190,6 @@ export class SubscriptionService {
 
 					const nextPostGenerationDate = new Date(subscriptionDetail.start_Date);
 					nextPostGenerationDate.setDate(subscriptionDetail.start_Date.getDate() + 14);
-
-					console.log("new Date() ", new Date());
-					console.log("nextPostGenerationDate ", nextPostGenerationDate);
 
 					if ((new Date() == new Date(subscriptionDetail.start_Date))) {
 
@@ -555,6 +550,7 @@ export class SubscriptionService {
 			const stripeSubscription = await this.stripe.subscriptions.create({
 				customer: user.stripeCustomerId,
 				items: [{ price: subscription.stripePriceId }], // Replace with your trial price ID
+				// trial_period_days: 3,
 				trial_period_days: 1,
 				payment_behavior: 'default_incomplete', // Ensure the subscription waits for payment completion
 				expand: ['latest_invoice.payment_intent'], // Optional: Include payment intent details

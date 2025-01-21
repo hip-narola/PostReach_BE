@@ -37,22 +37,21 @@ export class CalenderRepository extends GenericRepository<PostTask> {
                     startDate: paginatedParams.startWeekDate,
                     endDate: paginatedParams.endWeekDate,
                 })
+                .addSelect('pt.scheduled_at::text AS scheduled_at_date')
                 .orderBy('pt.scheduled_at', 'DESC')
                 .getRawMany();
-
 
             const data = postTasks.map(queryResult => ({
                 id: queryResult.post_task_id,
                 channel: Object.keys(SocialMediaPlatformNames).find(key => SocialMediaPlatformNames[key] == queryResult.socialimage),
-                start: queryResult.start,
-                end: queryResult.end,
+                start: queryResult.scheduled_at_date,
+                end: queryResult.scheduled_at_date,
                 time: queryResult.time,
                 user: queryResult.user,
                 profileImage: queryResult.profileimage,
                 content: queryResult.content,
                 image: queryResult.image,
             }));
-            
             return data;
         }
         catch (error) {

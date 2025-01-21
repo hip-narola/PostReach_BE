@@ -72,7 +72,7 @@ export class InstagramService {
       expires_in: null,
       scope: null
     });
-  
+
     await this.socialMediaAccountService.storeTokenDetails(userId, tokenDataDTO, platform);
     return true;
   }
@@ -210,9 +210,10 @@ export class InstagramService {
 
 
       const userSocialAccount = await this.socialMediaAccountService.findSocialAccountForConnectAndDisconnectProfile(instagramPageDetailsDTO.userId, SocialMediaPlatformNames[SocialMediaPlatform.INSTAGRAM], false);
+      await this.unitOfWork.startTransaction();
+      const socialMediaInsightsRepo = this.unitOfWork.getRepository(SocialMediaAccountRepository, SocialMediaAccount, true);
       if (!userSocialAccount) {
-        await this.unitOfWork.startTransaction();
-        const socialMediaInsightsRepo = this.unitOfWork.getRepository(SocialMediaAccountRepository, SocialMediaAccount, true);
+
         const instagramDetails = new SocialMediaAccount();
         instagramDetails.encrypted_access_token = instagramPageDetailsDTO.access_token;
         instagramDetails.facebook_Profile = instagramPageDetailsDTO.faceBookId;
@@ -225,9 +226,24 @@ export class InstagramService {
         instagramDetails.token_type = TOKEN_TYPE.INSTAGRAM_ID;
         instagramDetails.facebook_Profile_access_token = instagramPageDetailsDTO.facebook_Profile_access_token;
         await socialMediaInsightsRepo.create(instagramDetails);
-        await this.unitOfWork.completeTransaction();
+
         return 'instagram profile connected successfully.';
       }
+      else {
+        userSocialAccount.encrypted_access_token = instagramPageDetailsDTO.access_token;
+        userSocialAccount.facebook_Profile = instagramPageDetailsDTO.faceBookId;
+        userSocialAccount.page_id = instagramPageDetailsDTO.faceBookPageID;
+        userSocialAccount.platform = SocialMediaPlatformNames[SocialMediaPlatform.INSTAGRAM];
+        userSocialAccount.user_id = instagramPageDetailsDTO.userId;
+        userSocialAccount.user_name = instagramPageDetailsDTO.pageName;
+        userSocialAccount.user_profile = instagramPageDetailsDTO.logoUrl;
+        userSocialAccount.instagram_Profile = instagramPageDetailsDTO.instagramId;
+        userSocialAccount.token_type = TOKEN_TYPE.INSTAGRAM_ID;
+        userSocialAccount.facebook_Profile_access_token = instagramPageDetailsDTO.facebook_Profile_access_token;
+        await socialMediaInsightsRepo.update(userSocialAccount.id, userSocialAccount);
+
+      }
+      await this.unitOfWork.completeTransaction();
     } catch (error: any) {
       await this.unitOfWork.rollbackTransaction();
       throw new Error(`Failed to save connected page: ${error.message}`);

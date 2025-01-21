@@ -40,8 +40,8 @@ export class ApprovalQueueRepository extends GenericRepository<PostTask> {
                 .where('pt.status = :status', { status: POST_TASK_STATUS.PENDING })
                 .andWhere('pt.user_id = :userid', { userid: paginatedParams.userId })
                 .andWhere('pt.scheduled_at > :now', { now: new Date() })
+                .addSelect('pt.scheduled_at::text AS scheduled_at')
                 .getRawMany();
-
             const data = postTasks.map(queryResult => ({
                 id: queryResult.post_task_id,
                 postId: queryResult.post_id,
@@ -54,7 +54,7 @@ export class ApprovalQueueRepository extends GenericRepository<PostTask> {
                     (key) =>
                         SocialMediaPlatformNames[key] == queryResult.channel,
                 ),
-                scheduled_at: queryResult.schedule_date,
+                scheduled_at: queryResult.scheduled_at,
                 user: queryResult.user,
                 profileImage: queryResult.profileimage || null,
                 analytics: [
@@ -63,7 +63,6 @@ export class ApprovalQueueRepository extends GenericRepository<PostTask> {
                     { views: queryResult.no_of_views },
                 ],
             }));
-
             const totalCount = postTasks.length;
             const offset =
                 (paginatedParams.pageNumber - 1) * paginatedParams.limit;
@@ -115,7 +114,7 @@ export class ApprovalQueueRepository extends GenericRepository<PostTask> {
                 .leftJoin('p.assets', 'a', 'a.type = :type', { type: 'image' })
                 .leftJoin('pt.socialMediaAccount', 'sm')
                 .leftJoin('pt.user', 'ur')
-                .where('pt.status = :status', { status:POST_TASK_STATUS.SCHEDULED })
+                .where('pt.status = :status', { status: POST_TASK_STATUS.SCHEDULED })
                 .andWhere('pt.id = :id', { id })
                 .orderBy('pt.scheduled_at', 'DESC')
                 .getRawOne();
@@ -148,7 +147,7 @@ export class ApprovalQueueRepository extends GenericRepository<PostTask> {
                     { likes: queryResult.no_of_likes },
                     { views: queryResult.no_of_views },
                 ],
-                
+
             };
             return data;
         } catch (error) {
