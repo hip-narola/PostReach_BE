@@ -30,8 +30,10 @@ export class SchedulePostProcessor extends WorkerHost {
 	}
 
 	async process(job: Job<any>): Promise<void> {
+		console.log(" SchedulePostProcessor started job : ", job);
 		const { Id, channel, PostId, accessToken, message, hashtags, imageUrl, pageId, SocialMediauserId, instagramId, userId } = job.data;
 		try {
+			console.log(" SchedulePostProcessor Id : ", Id, " channel :", channel, " PostId : ", PostId);
 			// throw new Error('Failed to publish post');
 			switch (channel) {
 				case `${SocialMediaPlatformNames[SocialMediaPlatform['FACEBOOK']]}`:
@@ -62,6 +64,7 @@ export class SchedulePostProcessor extends WorkerHost {
 			}
 		}
 		catch (error) {
+			console.log("SchedulePostProcessor exception: ", error);
 			if (job.attemptsMade >= 4) {
 				await this.approvalQueueService.updateStatusAfterPostExecution(Id, POST_TASK_STATUS.FAIL);
 				await this.notificationService.saveData(userId, NotificationType.POST_FAILED, NotificationMessage[NotificationType.POST_FAILED]);

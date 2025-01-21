@@ -69,6 +69,7 @@ export class JobSchedulerService {
         userId?: number,
         post_created_at?: Date
     ): Promise<void> {
+        console.log("schedulePost started. Id: ", Id, " channel : ", channel, " PostId : ", PostId);
         const now = moment();
         const publishAt = moment(scheduleTime, 'YYYY-MM-DD HH:mm:ss');
 
@@ -119,6 +120,8 @@ export class JobSchedulerService {
                 },
             },
         );
+
+        console.log("schedulePost finish. post queue : ", this.postQueue);
     }
 
     async removeExpiredScheduledPosts(
