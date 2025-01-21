@@ -149,16 +149,18 @@ export class SubscriptionService {
 		const postRepository = this.unitOfWork.getRepository(PostRepository, Post, true);
 
 		const tempDate = new Date();
-		tempDate.setDate(tempDate.getDate() + 3)
+		tempDate.setDate(tempDate.getDate() + 3);
+		console.log("NEW tempDate: ", tempDate);
+		console.log("new Date(): ", new Date());
 		// Step 1: Create PostTask
 		const postTask = new PostTask();
 		postTask.user = { id: userId } as any;
 		postTask.socialMediaAccount = { id: socialMediaAccountId } as any;
 		postTask.task_type = 'Auto_Creation';
-		postTask.scheduled_at = new Date();
+		postTask.scheduled_at = tempDate;
 		postTask.status = 'Pending';
 		postTask.created_By = userId;
-		postTask.created_at = tempDate;
+		postTask.created_at = new Date();
 
 		const savedPostTask = await postTaskRepository.create(postTask);
 
@@ -169,7 +171,7 @@ export class SubscriptionService {
 		post.content = `This is an auto-generated post for subscription ${subscriptionId}`;
 		post.hashtags = '#auto #generated #post';
 		post.created_By = userId;
-		post.created_at = tempDate;
+		post.created_at = new Date();
 
 		await postRepository.create(post);
 	}
