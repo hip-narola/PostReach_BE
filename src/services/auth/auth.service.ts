@@ -118,12 +118,12 @@ export class AuthService {
     );
     return new Promise((resolve, reject) => {
       cognitoUser.authenticateUser(authenticationDetails, {
-        onSuccess: (session) => {
+        onSuccess: (result) => {
           const expiresIn = rememberMe ? 60 * 60 * 24 * 7 : 60 * 60; // 7 days for "Remember Me", 1 hour otherwise
           resolve({
-            idToken: session.getIdToken().getJwtToken(),
-            accessToken: session.getAccessToken().getJwtToken(),
-            refreshToken: session.getRefreshToken().getToken(),
+            idToken: result.getIdToken().getJwtToken(),
+            accessToken: result.getAccessToken().getJwtToken(),
+            refreshToken: result.getRefreshToken().getToken(),
             expiresIn, // Send expiration time along with the tokens
             rememberMe,
             userId: userDetails.id,

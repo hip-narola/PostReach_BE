@@ -115,7 +115,7 @@ export class AuthController {
 				signInDto.password,
 				signInDto.rememberMe,
 			);
-			req.session.userId = data.userId.toString();
+			
 			GlobalConfig.secrets = { userId: data.userId.toString() };
 
 			this.setCookie(res, data.accessToken);
