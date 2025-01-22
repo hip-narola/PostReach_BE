@@ -53,6 +53,7 @@ export class PageInsightProcessor extends WorkerHost {
             const insights: SocialMediaInsightParamDTO[] = [];
 
             for (const userID of userids) {
+                console.log("page-insight fetchData userID::", userID)
                 try {
                     const facebookData = await this.dashboardInsightsService.getFacebookInsights(userID, 'facebook');
                     if (facebookData) {

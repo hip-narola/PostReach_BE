@@ -117,23 +117,29 @@ export class DashboardInsightsService {
 
             // const socialMediaAccounts = await socialMediaAccountRepo.findListByUserAndPlatform(userID, platform);
             const socialMediaAccounts = await socialMediaAccountRepo.findActiveCreditsByUser(userID, platform);
-            console.log("getFacebookInsights : socialMediaAccounts ,", socialMediaAccounts);
+            console.log("getFacebookInsights : socialMediaAccounts ,", socialMediaAccounts, " userID: ", userID, " platform: ", platform);
+
             // Initialize aggregates
             let totalImpressions = 0;
             let totalEngagements = 0;
             let totalFollowers = 0;
 
-            await Promise.all(socialMediaAccounts.map(async account => {
-                console.log("getFacebookInsights : socialMediaAccounts Promise,", account);
-                // Fetch insights for each account
-                const insightsData = await this.fetchPageInsights(account.page_id, account.encrypted_access_token);
 
-                // Aggregate the data
-                totalImpressions += insightsData.impressions || 0;
-                totalEngagements += insightsData.engagements || 0;
-                totalFollowers += insightsData.followers || 0;
+            if (socialMediaAccounts.length > 0) {
 
-            }));
+                await Promise.all(socialMediaAccounts.map(async account => {
+                    console.log("getFacebookInsights : socialMediaAccounts Promise,", account);
+                    // Fetch insights for each account
+                    const insightsData = await this.fetchPageInsights(account.page_id, account.encrypted_access_token);
+
+                    // Aggregate the data
+                    totalImpressions += insightsData.impressions || 0;
+                    totalEngagements += insightsData.engagements || 0;
+                    totalFollowers += insightsData.followers || 0;
+
+                }));
+            }
+
             const result: SocialMediaInsightParamDTO = {
                 platform: platform,
                 impressions: totalImpressions,
