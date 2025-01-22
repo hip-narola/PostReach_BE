@@ -22,8 +22,8 @@ export class SocialMediaAccountRepository extends GenericRepository<SocialMediaA
                 .where('socialMediaAccount.platform = :platform', { platform })
                 .andWhere('userCredit.user_id = :userId', { userId })
                 .andWhere('userCredit.status = :status', { status: UserCreditStatusType.ACTIVE })
-                .andWhere('userCredit.start_Date <= CURRENT_TIMESTAMP')
-                .andWhere('(userCredit.end_Date IS NULL OR userCredit.end_Date >= CURRENT_TIMESTAMP)')
+                // .andWhere('userCredit.start_Date <= CURRENT_TIMESTAMP')
+                // .andWhere('(userCredit.end_Date IS NULL OR userCredit.end_Date >= CURRENT_TIMESTAMP)')
                 .getOne();
         }
         
@@ -66,8 +66,8 @@ export class SocialMediaAccountRepository extends GenericRepository<SocialMediaA
             .where('socialMediaAccount.platform = :platform', { platform })
             .andWhere('userCredit.user_id = :userId', { userId })
             .andWhere('userCredit.status = :status', { status: UserCreditStatusType.ACTIVE })
-            .andWhere('userCredit.start_Date <= CURRENT_TIMESTAMP')
-            .andWhere('(userCredit.end_Date IS NULL OR userCredit.end_Date >= CURRENT_TIMESTAMP)')
+            // .andWhere('userCredit.start_Date <= CURRENT_TIMESTAMP')
+            // .andWhere('(userCredit.end_Date IS NULL OR userCredit.end_Date >= CURRENT_TIMESTAMP)')
             .getMany();
         }
         
@@ -95,11 +95,14 @@ export class SocialMediaAccountRepository extends GenericRepository<SocialMediaA
         }
         
         async findUniqueUserIds(): Promise<number[]> {
+            const test = false;
             const uniqueUserIds = await this.repository
-            .createQueryBuilder('sma')
-            .select('DISTINCT sma.user_id', 'user_id')
+            .createQueryBuilder('socialMediaAccount')
+            .select('DISTINCT socialMediaAccount.user_id', 'user_id')
+            .where('socialMediaAccount.isDisconnect = :isDisconnect', { test })
             .getRawMany();
             
+            console.log("socialMediaAccount uniqueUserIds:", uniqueUserIds);
             return uniqueUserIds.map(record => record.user_id);
         }
         

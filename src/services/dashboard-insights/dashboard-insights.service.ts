@@ -117,12 +117,14 @@ export class DashboardInsightsService {
 
             // const socialMediaAccounts = await socialMediaAccountRepo.findListByUserAndPlatform(userID, platform);
             const socialMediaAccounts = await socialMediaAccountRepo.findActiveCreditsByUser(userID, platform);
+            console.log("getFacebookInsights : socialMediaAccounts ,", socialMediaAccounts);
             // Initialize aggregates
             let totalImpressions = 0;
             let totalEngagements = 0;
             let totalFollowers = 0;
 
             await Promise.all(socialMediaAccounts.map(async account => {
+                console.log("getFacebookInsights : socialMediaAccounts Promise,", account);
                 // Fetch insights for each account
                 const insightsData = await this.fetchPageInsights(account.page_id, account.encrypted_access_token);
 
@@ -144,6 +146,7 @@ export class DashboardInsightsService {
             return result;
         }
         catch (error) {
+            console.log("getFacebookInsights : error ", error);
             throw error;
         }
     }
