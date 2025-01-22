@@ -20,19 +20,22 @@ export class PageInsightProcessor extends WorkerHost {
             const data = await this.fetchData();
             console.log("page-insight data::", data);
 
-            if (this.isNewDay()) {
-                for (const insight of data) {
-                    await this.createDataForNewDay(insight);
-                }
-            } else {
+            // if (this.isNewDay()) {
+            //     for (const insight of data) {
+            //         await this.createDataForNewDay(insight);
+            //     }
+            // } else {
                 const todayStart = new Date();
                 todayStart.setHours(0, 0, 0, 0);
 
                 for (const insight of data) {
+                    console.log("page-insight insight::", insight);
+
                     const existingEntry = await this.socialMediaService.findEntryByDate(
                         todayStart, 
                         insight.social_media_account_id
                     );
+                    console.log("page-insight existingEntry::", existingEntry);
 
                     if (!existingEntry) {
                         await this.createDataForNewDay(insight);
@@ -40,7 +43,7 @@ export class PageInsightProcessor extends WorkerHost {
                         await this.updateDatabase(insight, existingEntry.id);
                     }
                 }
-            }
+            // }
         } catch (error) {
             console.error("page-insight error::", error); // Changed to console.error for better visibility
         }
