@@ -196,10 +196,10 @@ export class AuthController {
 	@Post('signup/resendConfirmationCode')
 	@ApiBody({ type: ResendConfirmationCodeParamDto })
 	async resendConfirmationCode(@Body() ResendConfirmationCodeParamDto: { email: string; }) {
-		const details = await this.authService.ResendConfirmationCode(ResendConfirmationCodeParamDto.email);
+		await this.authService.ResendConfirmationCode(ResendConfirmationCodeParamDto.email);
 		return {
 			message: 'Confirmation code resend successfully',
-			data: details,
+			data: null,
 		};
 	}
 
@@ -207,10 +207,10 @@ export class AuthController {
 	@Post('forgotPassword')
 	@ApiBody({ type: ForgotPasswordParamDto })
 	async forgotPassword(@Body() ForgotPasswordParamDto: { email: string }) {
-		const details = await this.authService.forgotPassword(ForgotPasswordParamDto.email);
+		await this.authService.forgotPassword(ForgotPasswordParamDto.email);
 		return {
 			message: 'Password forgot successfully',
-			data: details,
+			data: null,
 		};
 	}
 
@@ -218,10 +218,10 @@ export class AuthController {
 	@Post('resetPassword')
 	@ApiBody({ type: ResetPasswordParamsDto })
 	async resetPassword(@Body() ResetPasswordParamsDto: { email: string, password: string, code: string }) {
-		const details = await this.authService.resetPassword(ResetPasswordParamsDto.email, ResetPasswordParamsDto.password, ResetPasswordParamsDto.code);
+		await this.authService.resetPassword(ResetPasswordParamsDto.email, ResetPasswordParamsDto.password, ResetPasswordParamsDto.code);
 		return {
 			message: 'Password reset successfully',
-			data: details,
+			data: null,
 		};
 	}
 

@@ -74,7 +74,7 @@ import { RedisService } from './redis-service';
     QuestionnaireModule,
     PostHistoryModule,
     NotificationModule,
-    PaymentModule
+    PaymentModule,
   ],
   controllers: [AppController, LinkPageController],
   providers: [

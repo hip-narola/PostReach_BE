@@ -223,10 +223,10 @@ export class FacebookService {
     }
 
 
-    async connectedFacebookAccount(userId:number): Promise<SocialMediaAccount> {
+    async connectedFacebookAccount(userId: number): Promise<SocialMediaAccount> {
         try {
             const userSocialAccount = await this.socialMediaAccountService.findSocialAccountForConnectAndDisconnectProfile(userId, SocialMediaPlatformNames[SocialMediaPlatform.FACEBOOK], false);
-            return  userSocialAccount;
+            return userSocialAccount;
         } catch (error: any) {
             throw new Error(`Failed to save connected page: ${error.message}`);
         }
