@@ -172,6 +172,7 @@ export class FacebookService {
 
 
     async fetchAndUpdatePostData() {
+        console.log("post-insight :: fetchAndUpdatePostData started");
         await this.unitOfWork.startTransaction();
         const postRepository = this.unitOfWork.getRepository(PostRepository, Post, true);
         try {

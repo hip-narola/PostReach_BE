@@ -52,12 +52,14 @@ export class PageInsightProcessor extends WorkerHost {
     private async fetchData(): Promise<any[]> {
         console.log("page-insight fetchData started::");
         try {
+            // TODO : Get active subscription users & conncted social media accounts.
             const userids = await this.socialMediaService.getUniqueUserIds();
             const insights: SocialMediaInsightParamDTO[] = [];
 
             for (const userID of userids) {
                 console.log("page-insight fetchData userID::", userID)
                 try {
+                    // TODO:  change function request parameter
                     const facebookData = await this.dashboardInsightsService.getFacebookInsights(userID, 'facebook');
                     if (facebookData) {
                         insights.push(this.mapToDto(facebookData, 'facebook'));

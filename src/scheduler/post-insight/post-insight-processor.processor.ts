@@ -14,6 +14,7 @@ export class PostInsightProcessor extends WorkerHost {
 
 	) {
 		super(); // Call the constructor of WorkerHost
+		console.log("post-insight initied:: ");
 	}
 
 	async process(job: Job) {
@@ -21,6 +22,7 @@ export class PostInsightProcessor extends WorkerHost {
 		try {
 			//to-do
 			//call if user has subscription
+
 			await this.facebookService.fetchAndUpdatePostData();
 			await this.instagramService.fetchAndUpdateInstagramPostData();
 			await this.linkedinService.fetchAndUpdatePostData();

@@ -18,10 +18,10 @@ export class SocialMediaAccountRepository extends GenericRepository<SocialMediaA
         async findByPlatformAndUser(userId: number, platform: string): Promise<SocialMediaAccount | null> {
             return this.repository
                 .createQueryBuilder('socialMediaAccount')
-                .innerJoin('socialMediaAccount.userCredits', 'userCredit')
+                // .innerJoin('socialMediaAccount.userCredits', 'userCredit')
                 .where('socialMediaAccount.platform = :platform', { platform })
-                .andWhere('userCredit.user_id = :userId', { userId })
-                .andWhere('userCredit.status = :status', { status: UserCreditStatusType.ACTIVE })
+                .andWhere('socialMediaAccount.user_id = :userId', { userId })
+                // .andWhere('userCredit.status = :status', { status: UserCreditStatusType.ACTIVE })
                 // .andWhere('userCredit.start_Date <= CURRENT_TIMESTAMP')
                 // .andWhere('(userCredit.end_Date IS NULL OR userCredit.end_Date >= CURRENT_TIMESTAMP)')
                 .getOne();
@@ -62,10 +62,10 @@ export class SocialMediaAccountRepository extends GenericRepository<SocialMediaA
         async findActiveCreditsByUser(userId: number, platform: string): Promise<SocialMediaAccount[]> {
             return this.repository
             .createQueryBuilder('socialMediaAccount')
-            .innerJoin('socialMediaAccount.userCredits', 'userCredit')
+            // .innerJoin('socialMediaAccount.userCredits', 'userCredit')
             .where('socialMediaAccount.platform = :platform', { platform })
-            .andWhere('userCredit.user_id = :userId', { userId })
-            .andWhere('userCredit.status = :status', { status: UserCreditStatusType.ACTIVE })
+            .andWhere('socialMediaAccount.user_id = :userId', { userId })
+            // .andWhere('userCredit.status = :status', { status: UserCreditStatusType.ACTIVE })
             // .andWhere('userCredit.start_Date <= CURRENT_TIMESTAMP')
             // .andWhere('(userCredit.end_Date IS NULL OR userCredit.end_Date >= CURRENT_TIMESTAMP)')
             .getMany();
