@@ -518,41 +518,55 @@ export class DashboardInsightsService {
     }
 
     async getTwitterInsights(userID: number, platform: string): Promise<SocialMediaInsightParamDTO> {
-        const socialMediaAccountRepo = this.unitOfWork.getRepository(
-            SocialMediaAccountRepository,
-            SocialMediaAccount,
-            false
-        );
-        // const socialMediaAccounts = await socialMediaAccountRepo.findListByUserAndPlatform(userID, platform);
-        const socialMediaAccounts = await socialMediaAccountRepo.findActiveCreditsByUser(userID, platform);
+        console.log("page-insight getTwitterInsights::", userID, platform);
+        try {
 
-        // Initialize aggregates
-        let totalImpressions = 0;
-        let totalEngagements = 0;
-        let totalFollowers = 0;
+            const socialMediaAccountRepo = this.unitOfWork.getRepository(
+                SocialMediaAccountRepository,
+                SocialMediaAccount,
+                false
+            );
 
-        await Promise.all(socialMediaAccounts.map(async account => {
-            // Fetch insights for each account
+            // const socialMediaAccounts = await socialMediaAccountRepo.findListByUserAndPlatform(userID, platform);
+            const socialMediaAccounts = await socialMediaAccountRepo.findActiveCreditsByUser(userID, platform);
 
-            const insightsData = await this.fetchTwitterInsights(account.id, account.encrypted_access_token);
 
-            // Aggregate the data
-            totalImpressions += insightsData.impressions || 0;
-            totalEngagements += insightsData.engagements || 0;
-            totalFollowers += insightsData.newFollowers || 0;
+            // Initialize aggregates
+            let totalImpressions = 0;
+            let totalEngagements = 0;
+            let totalFollowers = 0;
 
-        }));
+            await Promise.all(socialMediaAccounts.map(async account => {
 
-        // Return aggregated results along with individual account insights
-        const result: SocialMediaInsightParamDTO = {
-            platform: platform,
-            impressions: totalImpressions,
-            newFollowers: totalFollowers,
-            engagements: totalEngagements,
-            social_media_account_id: socialMediaAccounts[0].id, // First account's ID
-        };
+            console.log("page-insight findActiveCreditsByUser account::", account);
 
-        return result;
+                // Fetch insights for each account
+
+                const insightsData = await this.fetchTwitterInsights(account.id, account.encrypted_access_token);
+
+                console.log("page-insight findActiveCreditsByUser insightsData::", insightsData);
+                // Aggregate the data
+                totalImpressions += insightsData.impressions || 0;
+                totalEngagements += insightsData.engagements || 0;
+                totalFollowers += insightsData.newFollowers || 0;
+
+            }));
+
+            // Return aggregated results along with individual account insights
+            const result: SocialMediaInsightParamDTO = {
+                platform: platform,
+                impressions: totalImpressions,
+                newFollowers: totalFollowers,
+                engagements: totalEngagements,
+                social_media_account_id: socialMediaAccounts[0].id, // First account's ID
+            };
+
+            console.log("page-insight findActiveCreditsByUser result::", result);
+
+            return result;
+        } catch (error) {
+            console.log("page-insight error::", error)
+        }
     }
 
     @Throttle({ default: { limit: 25, ttl: 86400000 } })
