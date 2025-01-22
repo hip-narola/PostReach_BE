@@ -284,7 +284,8 @@ export class JobSchedulerService {
         try {
 
 
-            const existingJobs = await this.postInsightQueue.getRepeatableJobs();
+            const existingJobs = await this.postInsightQueue.getJobSchedulers();
+            console.log("postInsightQueue  existingJobs:", existingJobs);
             const jobName = 'fetch-and-update-likes-comments-views';
 
             // Prevent duplicate job schedules
