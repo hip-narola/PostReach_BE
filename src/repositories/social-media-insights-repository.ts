@@ -25,7 +25,7 @@ export class SocialMediaInsightsRepository extends GenericRepository<SocialMedia
 
         const entry= this.repository.findOne({
             where: {
-                // created_at: Between(startOfDay, endOfDay),
+                created_at: Between(startOfDay, endOfDay),
                 socialMediaAccount: { id: social_media_account_id },
             },
         });

@@ -20,11 +20,11 @@ export class PageInsightProcessor extends WorkerHost {
             const data = await this.fetchData();
             console.log("page-insight data::", data);
 
-            // if (this.isNewDay()) {
-            //     for (const insight of data) {
-            //         await this.createDataForNewDay(insight);
-            //     }
-            // } else {
+            if (this.isNewDay()) {
+                for (const insight of data) {
+                    await this.createDataForNewDay(insight);
+                }
+            } else {
                 const todayStart = new Date();
                 todayStart.setHours(0, 0, 0, 0);
 
@@ -43,7 +43,7 @@ export class PageInsightProcessor extends WorkerHost {
                         await this.updateDatabase(insight, existingEntry.id);
                     }
                 }
-            // }
+            }
         } catch (error) {
             console.error("page-insight error::", error); // Changed to console.error for better visibility
         }
