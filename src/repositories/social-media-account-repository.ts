@@ -94,17 +94,30 @@ export class SocialMediaAccountRepository extends GenericRepository<SocialMediaA
             });
         }
         
-        async findUniqueUserIds(): Promise<number[]> {
-            const test = false;
-            const uniqueUserIds = await this.repository
-            .createQueryBuilder('socialMediaAccount')
-            .select('DISTINCT socialMediaAccount.user_id', 'user_id')
-            .where('socialMediaAccount.isDisconnect = :isDisconnect', { test })
-            .getRawMany();
-            
-            console.log("socialMediaAccount uniqueUserIds:", uniqueUserIds);
-            return uniqueUserIds.map(record => record.user_id);
-        }
+        async findUniqueUserIds(isDisconnect: boolean = false): Promise<number[]> {
+            try {
+                const uniqueUserIdss = await this.repository
+                .createQueryBuilder('sma')
+                .select('DISTINCT sma.user_id', 'user_id')
+                .where('sma.isDisconnect = :isDisconnect', { isDisconnect })
+                .getRawMany();
+
+                console.log("socialMediaAccount uniqueUserIdss:", uniqueUserIdss);
+
+              const uniqueUserIds = await this.repository
+                .createQueryBuilder('socialMediaAccount')
+                .select('DISTINCT socialMediaAccount.user_id', 'user_id')
+                .where('socialMediaAccount.isDisconnect = :isDisconnect', { isDisconnect })
+                .getRawMany();
+          
+              console.log("socialMediaAccount uniqueUserIds:", uniqueUserIds);
+              return uniqueUserIds.map(record => record.user_id);
+          
+            } catch (error) {
+              console.error("Error fetching unique user IDs:", error);
+              throw error; // Re-throw the error to be handled by the calling function
+            }
+          }
         
         async findPlatformsOfUser(userId: number): Promise<SocialMediaAccount[] | null> {
             return this.repository.find({ where: { user_id: userId } });
