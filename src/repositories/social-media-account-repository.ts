@@ -96,20 +96,12 @@ export class SocialMediaAccountRepository extends GenericRepository<SocialMediaA
         
         async findUniqueUserIds(isDisconnect: boolean = false): Promise<number[]> {
             try {
-                const uniqueUserIdss = await this.repository
+                const uniqueUserIds = await this.repository
                 .createQueryBuilder('sma')
                 .select('DISTINCT sma.user_id', 'user_id')
                 .where('sma.isDisconnect = :isDisconnect', { isDisconnect })
                 .getRawMany();
 
-                console.log("socialMediaAccount uniqueUserIdss:", uniqueUserIdss);
-
-              const uniqueUserIds = await this.repository
-                .createQueryBuilder('socialMediaAccount')
-                .select('DISTINCT socialMediaAccount.user_id', 'user_id')
-                .where('socialMediaAccount.isDisconnect = :isDisconnect', { isDisconnect })
-                .getRawMany();
-          
               console.log("socialMediaAccount uniqueUserIds:", uniqueUserIds);
               return uniqueUserIds.map(record => record.user_id);
           

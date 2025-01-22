@@ -87,12 +87,14 @@ export class PageInsightProcessor extends WorkerHost {
     }
 
     private mapToDto(data: any, platform: string): SocialMediaInsightParamDTO {
+        console.log("map to: data", data);
         const dto = new SocialMediaInsightParamDTO();
         dto.platform = platform;
         dto.impressions = data.impressions || 0;
         dto.newFollowers = data.newFollowers || 0;
         dto.engagements = data.engagements || 0;
         dto.social_media_account_id = data.social_media_account_id;
+        console.log("map to: dto", dto);
         return dto;
     }
 

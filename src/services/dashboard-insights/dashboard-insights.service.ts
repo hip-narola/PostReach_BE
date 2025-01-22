@@ -162,6 +162,7 @@ export class DashboardInsightsService {
             const metricsUrl = `https://graph.facebook.com/v15.0/${pageId}/insights?metric=page_impressions_unique,page_post_engagements,page_fan_adds&access_token=${accessToken}`;
             const { data } = await firstValueFrom(this.httpService.get(metricsUrl));
 
+            console.log("fetchPageInsights: ", metricsUrl, " data : ", data);
             const insights = data.data.reduce((result: any, metric: any) => {
                 const latestValue = metric.values[0]?.value || 0;
                 switch (metric.name) {
@@ -181,6 +182,7 @@ export class DashboardInsightsService {
             }, { impressions: 0, engagements: 0, followers: 0 });
             return insights;
         } catch (error) {
+            console.log("dashboard insights: fetchPageInsights error", error);
             throw error;
         }
     }
