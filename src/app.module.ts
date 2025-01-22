@@ -43,6 +43,7 @@ import { PaymentModule } from './modules/payment/payment.module';
 import { SubscriptionService } from './services/subscription/subscription.service';
 import { ConfigModule } from '@nestjs/config';
 import { RedisService } from './redis-service';
+import { PageInsightProcessor } from './scheduler/page-insight/page-insight-processor';
 
 @Module({
   imports: [
@@ -75,6 +76,7 @@ import { RedisService } from './redis-service';
     PostHistoryModule,
     NotificationModule,
     PaymentModule,
+    PageInsightProcessor 
   ],
   controllers: [AppController, LinkPageController],
   providers: [
