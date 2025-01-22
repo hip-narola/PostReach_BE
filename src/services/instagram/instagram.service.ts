@@ -205,47 +205,11 @@ export class InstagramService {
 
 
 
-  async connectedInstagramAccount(instagramPageDetailsDTO: InstagramPageDetailsDTO): Promise<string> {
+  async connectedInstagramAccount(userId: number): Promise<SocialMediaAccount> {
     try {
-
-
-      const userSocialAccount = await this.socialMediaAccountService.findSocialAccountForConnectAndDisconnectProfile(instagramPageDetailsDTO.userId, SocialMediaPlatformNames[SocialMediaPlatform.INSTAGRAM], false);
-      await this.unitOfWork.startTransaction();
-      const socialMediaInsightsRepo = this.unitOfWork.getRepository(SocialMediaAccountRepository, SocialMediaAccount, true);
-      if (!userSocialAccount) {
-
-        const instagramDetails = new SocialMediaAccount();
-        instagramDetails.encrypted_access_token = instagramPageDetailsDTO.access_token;
-        instagramDetails.facebook_Profile = instagramPageDetailsDTO.faceBookId;
-        instagramDetails.page_id = instagramPageDetailsDTO.faceBookPageID;
-        instagramDetails.platform = SocialMediaPlatformNames[SocialMediaPlatform.INSTAGRAM];
-        instagramDetails.user_id = instagramPageDetailsDTO.userId;
-        instagramDetails.user_name = instagramPageDetailsDTO.pageName;
-        instagramDetails.user_profile = instagramPageDetailsDTO.logoUrl;
-        instagramDetails.instagram_Profile = instagramPageDetailsDTO.instagramId;
-        instagramDetails.token_type = TOKEN_TYPE.INSTAGRAM_ID;
-        instagramDetails.facebook_Profile_access_token = instagramPageDetailsDTO.facebook_Profile_access_token;
-        await socialMediaInsightsRepo.create(instagramDetails);
-
-        return 'instagram profile connected successfully.';
-      }
-      else {
-        userSocialAccount.encrypted_access_token = instagramPageDetailsDTO.access_token;
-        userSocialAccount.facebook_Profile = instagramPageDetailsDTO.faceBookId;
-        userSocialAccount.page_id = instagramPageDetailsDTO.faceBookPageID;
-        userSocialAccount.platform = SocialMediaPlatformNames[SocialMediaPlatform.INSTAGRAM];
-        userSocialAccount.user_id = instagramPageDetailsDTO.userId;
-        userSocialAccount.user_name = instagramPageDetailsDTO.pageName;
-        userSocialAccount.user_profile = instagramPageDetailsDTO.logoUrl;
-        userSocialAccount.instagram_Profile = instagramPageDetailsDTO.instagramId;
-        userSocialAccount.token_type = TOKEN_TYPE.INSTAGRAM_ID;
-        userSocialAccount.facebook_Profile_access_token = instagramPageDetailsDTO.facebook_Profile_access_token;
-        await socialMediaInsightsRepo.update(userSocialAccount.id, userSocialAccount);
-
-      }
-      await this.unitOfWork.completeTransaction();
+      const userSocialAccount = await this.socialMediaAccountService.findSocialAccountForConnectAndDisconnectProfile(userId, SocialMediaPlatformNames[SocialMediaPlatform.INSTAGRAM], false);
+      return userSocialAccount
     } catch (error: any) {
-      await this.unitOfWork.rollbackTransaction();
       throw new Error(`Failed to save connected page: ${error.message}`);
     }
   }

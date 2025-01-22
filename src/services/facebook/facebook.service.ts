@@ -223,44 +223,11 @@ export class FacebookService {
     }
 
 
-    async connectedFacebookAccount(facebookPageDetailsDTO: FacebookPageDetailsDTO): Promise<string> {
+    async connectedFacebookAccount(userId:number): Promise<SocialMediaAccount> {
         try {
-            const userSocialAccount = await this.socialMediaAccountService.findSocialAccountForConnectAndDisconnectProfile(facebookPageDetailsDTO.userId, SocialMediaPlatformNames[SocialMediaPlatform.FACEBOOK], false);
-            await this.unitOfWork.startTransaction();
-            const socialMediaInsightsRepo = this.unitOfWork.getRepository(SocialMediaAccountRepository, SocialMediaAccount, true);
-            if (!userSocialAccount) {
-
-                const facebookDetails = new SocialMediaAccount();
-                facebookDetails.encrypted_access_token = facebookPageDetailsDTO.access_token;
-                facebookDetails.facebook_Profile = facebookPageDetailsDTO.faceBookId;
-                facebookDetails.page_id = facebookPageDetailsDTO.id;
-                facebookDetails.platform = SocialMediaPlatformNames[SocialMediaPlatform.FACEBOOK];
-                facebookDetails.user_id = facebookPageDetailsDTO.userId;
-                facebookDetails.user_name = facebookPageDetailsDTO.pageName;
-                facebookDetails.user_profile = facebookPageDetailsDTO.logoUrl;
-                facebookDetails.file_name = facebookPageDetailsDTO.filePath;
-                facebookDetails.token_type = TOKEN_TYPE.PAGE_ACCESS_TOKEN;
-                facebookDetails.facebook_Profile_access_token = facebookPageDetailsDTO.facebook_Profile_access_token;
-                await socialMediaInsightsRepo.create(facebookDetails);
-            }
-            else {
-                userSocialAccount.encrypted_access_token = facebookPageDetailsDTO.access_token;
-                userSocialAccount.facebook_Profile = facebookPageDetailsDTO.faceBookId;
-                userSocialAccount.page_id = facebookPageDetailsDTO.id;
-                userSocialAccount.platform = SocialMediaPlatformNames[SocialMediaPlatform.FACEBOOK];
-                userSocialAccount.user_id = facebookPageDetailsDTO.userId;
-                userSocialAccount.user_name = facebookPageDetailsDTO.pageName;
-                userSocialAccount.user_profile = facebookPageDetailsDTO.logoUrl;
-                userSocialAccount.file_name = facebookPageDetailsDTO.filePath;
-                userSocialAccount.token_type = TOKEN_TYPE.PAGE_ACCESS_TOKEN;
-                userSocialAccount.facebook_Profile_access_token = facebookPageDetailsDTO.facebook_Profile_access_token;
-
-                await socialMediaInsightsRepo.update(userSocialAccount.id, userSocialAccount);
-            }
-            await this.unitOfWork.completeTransaction();
-            return 'Facebook profile connected successfully.';
+            const userSocialAccount = await this.socialMediaAccountService.findSocialAccountForConnectAndDisconnectProfile(userId, SocialMediaPlatformNames[SocialMediaPlatform.FACEBOOK], false);
+            return  userSocialAccount;
         } catch (error: any) {
-            await this.unitOfWork.rollbackTransaction();
             throw new Error(`Failed to save connected page: ${error.message}`);
         }
     }

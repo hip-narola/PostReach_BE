@@ -17,6 +17,7 @@ export class PostInsightProcessor extends WorkerHost {
 	}
 
 	async process(job: Job) {
+		console.log("post-insight started:: ", job);
 		try {
 			//to-do
 			//call if user has subscription
@@ -25,6 +26,7 @@ export class PostInsightProcessor extends WorkerHost {
 			await this.linkedinService.fetchAndUpdatePostData();
 			await this.twitterService.fetchAndUpdateTwitterPostData();
 		} catch (error) {
+			console.log("post-insight error:: ", error);
 			throw error;
 		}
 	}

@@ -17,8 +17,8 @@ import { RedisService } from 'src/redis-service';
 @Controller('auth')
 export class AuthController {
 
-	constructor(private configService: ConfigService, 
-		private readonly authService: AuthService, 
+	constructor(private configService: ConfigService,
+		private readonly authService: AuthService,
 		private readonly redisService: RedisService
 	) { }
 
@@ -127,6 +127,8 @@ export class AuthController {
 				Data: data,
 			});
 		} catch (error) {
+			console.log(error);
+
 			if (error.name === 'NotAuthorizedException') {
 				return res.status(HttpStatus.UNAUTHORIZED).json({
 					StatusCode: HttpStatus.UNAUTHORIZED,
@@ -134,7 +136,16 @@ export class AuthController {
 					IsSuccess: false,
 					Data: null,
 				});
-			} else {
+			}
+			else if (error.name == 'UserNotConfirmedException') {
+				return res.status(HttpStatus.BAD_REQUEST).json({
+					StatusCode: HttpStatus.BAD_REQUEST,
+					Message: 'User is not confirmed.',
+					IsSuccess: false,
+					Data: null,
+				});
+			}
+			else {
 				return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
 					StatusCode: HttpStatus.INTERNAL_SERVER_ERROR,
 					Message: 'An error occurred during sign-in.',
@@ -161,12 +172,23 @@ export class AuthController {
 			});
 		}
 		catch (error) {
-			return res.json({
-				StatusCode: HttpStatus.BAD_REQUEST,
-				Message: error,
-				IsSuccess: false,
-				Data: null,
-			});
+
+			if (error.name == "ExpiredCodeException" || error.name == "CodeMismatchException") {
+				return res.json({
+					StatusCode: HttpStatus.BAD_REQUEST,
+					Message: "OTP is invalid. Please send again",
+					IsSuccess: false,
+					Data: null,
+				});
+			}
+			else {
+				return res.json({
+					StatusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+					Message: "Internal server error",
+					IsSuccess: false,
+					Data: null,
+				});
+			}
 		}
 	}
 
@@ -224,7 +246,7 @@ export class AuthController {
 		} catch (error) {
 			return res.json({
 				StatusCode: HttpStatus.BAD_REQUEST,
-				Message: error,
+				Message: "Internal server error",
 				IsSuccess: false,
 				Data: null,
 			});

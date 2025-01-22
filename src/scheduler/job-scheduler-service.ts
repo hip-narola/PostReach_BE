@@ -280,52 +280,65 @@ export class JobSchedulerService {
     }
 
     private async scheduleHalfHourlyJobs() {
-        const existingJobs = await this.postInsightQueue.getRepeatableJobs();
-        const jobName = 'fetch-and-update-likes-comments-views';
+        console.log("postInsightQueue  started:");
+        try {
 
-        // Prevent duplicate job schedules
-        if (existingJobs.some((job) => job.name === jobName)) {
-            return;
-        }
 
-        await this.postInsightQueue.add(
-            jobName,
-            {}, // Empty payload for the job
-            {
-                repeat: {
-                    //   pattern: '0,30 * * * *', // Correct cron syntax for half-hourly schedule
-                    pattern: '0,30 * * * *',
-                    tz: 'UTC', // Optional timezone
-                },
-                removeOnComplete: true,
-                removeOnFail: true,
+            const existingJobs = await this.postInsightQueue.getRepeatableJobs();
+            const jobName = 'fetch-and-update-likes-comments-views';
+
+            // Prevent duplicate job schedules
+            if (existingJobs.some((job) => job.name === jobName)) {
+                return;
             }
-        );
 
-        console.log('Half-hourly likesCommentsViews job scheduled successfully.');
+            await this.postInsightQueue.add(
+                jobName,
+                {}, // Empty payload for the job
+                {
+                    repeat: {
+                        //   pattern: '0,30 * * * *', // Correct cron syntax for half-hourly schedule
+                        pattern: '0,30 * * * *',
+                        tz: 'UTC', // Optional timezone
+                    },
+                    removeOnComplete: true,
+                    removeOnFail: true,
+                }
+            );
+            console.log("postInsightQueue  postInsightQueue:", this.postInsightQueue);
+            console.log('Half-hourly likesCommentsViews job scheduled successfully.');
+        } catch (error) {
+            console.log("postInsightQueue  error:", error);
+        }
     }
 
     private async scheduleHourlyJob(): Promise<void> {
-
-        const jobId = 'fetch-and-update-hourly';
-        const existingJobs = await this.pageInsightQueue.getJobs(['waiting', 'active', 'delayed', 'paused']);
-        for (const job of existingJobs) {
-            if (job.id === jobId) {
-                await job.remove();
-                break;
+        console.log("pageInsightQueue  started:");
+        try {
+            const jobId = 'fetch-and-update-hourly';
+            const existingJobs = await this.pageInsightQueue.getJobs(['waiting', 'active', 'delayed', 'paused']);
+            for (const job of existingJobs) {
+                if (job.id === jobId) {
+                    await job.remove();
+                    break;
+                }
             }
+
+            await this.pageInsightQueue.add(
+                'fetch-and-update',
+                {},
+                {
+                    repeat: {
+                        pattern: '*/30 * * * *',
+                    },
+                    jobId,
+                }
+            );
+
+            console.log("pageInsightQueue  pageInsightQueue:", this.pageInsightQueue);
+        } catch (error) {
+            console.log("pageInsightQueue  error:", error);
         }
-
-        await this.pageInsightQueue.add(
-            'fetch-and-update',
-            {},
-            {
-                repeat: {
-                    pattern: '*/30 * * * *',
-                },
-                jobId,
-            }
-        );
     }
 
     // private async subscriptionSchedulerJob(): Promise<void> {
@@ -349,6 +362,6 @@ export class JobSchedulerService {
     //             }
     //         },
     //     );
-       
+
     // }
 }
