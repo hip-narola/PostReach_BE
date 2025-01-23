@@ -1,6 +1,5 @@
 // twitter.module.ts
 import { Module } from '@nestjs/common';
-import { SocialMediaAccountService } from 'src/services/social-media-account/social-media-account.service';
 import { TwitterService } from 'src/services/twitter/twitter.service';
 import { SocialMediaAccountModule } from '../social-media-account/social-media-account.module';
 import { UserService } from 'src/services/user/user.service';

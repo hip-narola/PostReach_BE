@@ -284,29 +284,29 @@ export class JobSchedulerService {
         try {
 
 
-            const existingJobs = await this.postInsightQueue.getJobSchedulers();
-            console.log("postInsightQueue  existingJobs:", existingJobs);
-            const jobName = 'fetch-and-update-likes-comments-views';
+        const existingJobs = await this.postInsightQueue.getJobSchedulers();
+        console.log("postInsightQueue  existingJobs:", existingJobs);
+        const jobName = 'fetch-and-update-likes-comments-views';
 
-            // Prevent duplicate job schedules
-            if (existingJobs.some((job) => job.name === jobName)) {
-                return;
+        // Prevent duplicate job schedules
+        if (existingJobs.some((job) => job.name === jobName)) {
+            return;
+        }
+
+        await this.postInsightQueue.add(
+            jobName,
+            {}, // Empty payload for the job
+            {
+                repeat: {
+                    //   pattern: '0,30 * * * *', // Correct cron syntax for half-hourly schedule
+                    pattern: '0,30 * * * *',
+                    tz: 'UTC', // Optional timezone
+                },
+                removeOnComplete: true,
+                removeOnFail: true,
             }
-
-            await this.postInsightQueue.add(
-                jobName,
-                {}, // Empty payload for the job
-                {
-                    repeat: {
-                        //   pattern: '0,30 * * * *', // Correct cron syntax for half-hourly schedule
-                        pattern: '0,30 * * * *',
-                        tz: 'UTC', // Optional timezone
-                    },
-                    removeOnComplete: true,
-                    removeOnFail: true,
-                }
-            );
-            console.log("postInsightQueue  postInsightQueue:", this.postInsightQueue);
+        );
+        console.log("postInsightQueue  postInsightQueue:", this.postInsightQueue);
             console.log('Half-hourly likesCommentsViews job scheduled successfully.');
         } catch (error) {
             console.log("postInsightQueue  error:", error);
@@ -316,30 +316,30 @@ export class JobSchedulerService {
     private async scheduleHourlyJob(): Promise<void> {
         console.log("pageInsightQueue  started:");
         try {
-            const jobId = 'fetch-and-update-hourly';
-            const existingJobs = await this.pageInsightQueue.getJobs(['waiting', 'active', 'delayed', 'paused']);
-            for (const job of existingJobs) {
-                if (job.id === jobId) {
-                    await job.remove();
-                    break;
-                }
+        const jobId = 'fetch-and-update-hourly';
+        const existingJobs = await this.pageInsightQueue.getJobs(['waiting', 'active', 'delayed', 'paused']);
+        for (const job of existingJobs) {
+            if (job.id === jobId) {
+                await job.remove();
+                break;
             }
-
-            await this.pageInsightQueue.add(
-                'fetch-and-update',
-                {},
-                {
-                    repeat: {
-                        pattern: '*/30 * * * *',
-                    },
-                    jobId,
-                }
-            );
-
-            console.log("pageInsightQueue  pageInsightQueue:", this.pageInsightQueue);
-        } catch (error) {
-            console.log("pageInsightQueue  error:", error);
         }
+
+        await this.pageInsightQueue.add(
+            'fetch-and-update',
+            {},
+            {
+                repeat: {
+                    pattern: '*/30 * * * *',
+                },
+                jobId,
+            }
+        );
+        
+        console.log("pageInsightQueue  pageInsightQueue:", this.pageInsightQueue);
+    } catch (error) {
+        console.log("pageInsightQueue  error:", error);
+    }
     }
 
     // private async subscriptionSchedulerJob(): Promise<void> {
@@ -363,6 +363,6 @@ export class JobSchedulerService {
     //             }
     //         },
     //     );
-
+       
     // }
 }

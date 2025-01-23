@@ -157,6 +157,6 @@ export class SocialMediaInsightsService {
 
     async getUniqueUserIds(): Promise<number[]> {
         const socialAccountRepository = this.unitOfWork.getRepository(SocialMediaAccountRepository, SocialMediaAccount, false);
-        return socialAccountRepository.findUniqueUserIds(false);
+        return socialAccountRepository.findUniqueUserIds();
     }
 }

@@ -29,7 +29,7 @@ export class SocialMediaInsightsRepository extends GenericRepository<SocialMedia
                 socialMediaAccount: { id: social_media_account_id },
             },
         });
-console.log("findEntryByDate entry: ", entry);
+
          return entry;
     }
 

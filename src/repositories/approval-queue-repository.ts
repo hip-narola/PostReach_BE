@@ -6,6 +6,7 @@ import { PaginationParamDto } from 'src/dtos/params/pagination-param.dto';
 import { PaginatedResponseDto } from 'src/dtos/response/pagination-response.dto';
 import { SocialMediaPlatformNames } from 'src/shared/constants/social-media.constants';
 import { POST_TASK_STATUS } from 'src/shared/constants/post-task-status-constants';
+import { ASSET_TYPE } from 'src/shared/constants/asset-type-constants';
 
 @Injectable()
 export class ApprovalQueueRepository extends GenericRepository<PostTask> {
@@ -34,7 +35,7 @@ export class ApprovalQueueRepository extends GenericRepository<PostTask> {
                     'p.no_of_views AS no_of_views',
                 ])
                 .leftJoin('pt.post', 'p')
-                .leftJoin('p.assets', 'a', 'a.type = :type', { type: 'image' })
+                .leftJoin('p.assets', 'a', 'a.type = :type', { type: ASSET_TYPE.IMAGE })
                 .leftJoin('pt.socialMediaAccount', 'sm')
                 .leftJoin('pt.user', 'ur')
                 .where('pt.status = :status', { status: POST_TASK_STATUS.PENDING })
@@ -111,7 +112,7 @@ export class ApprovalQueueRepository extends GenericRepository<PostTask> {
                     'p.no_of_views AS no_of_views',
                 ])
                 .leftJoin('pt.post', 'p')
-                .leftJoin('p.assets', 'a', 'a.type = :type', { type: 'image' })
+                .leftJoin('p.assets', 'a', 'a.type = :type', { type: ASSET_TYPE.IMAGE })
                 .leftJoin('pt.socialMediaAccount', 'sm')
                 .leftJoin('pt.user', 'ur')
                 .where('pt.status = :status', { status: POST_TASK_STATUS.SCHEDULED })

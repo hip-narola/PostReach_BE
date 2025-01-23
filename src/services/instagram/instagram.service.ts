@@ -5,7 +5,6 @@ import { SocialMediaAccountService } from '../social-media-account/social-media-
 import { UnitOfWork } from 'src/unitofwork/unitofwork';
 import { PostRepository } from 'src/repositories/post-repository';
 import { Post } from 'src/entities/post.entity';
-import { InstagramPageDetailsDTO } from 'src/entities/instagram-page-details.entity';
 import { SocialMediaAccountRepository } from 'src/repositories/social-media-account-repository';
 import { SocialMediaAccount } from 'src/entities/social-media-account.entity';
 import { SocialMediaPlatform, SocialMediaPlatformNames } from 'src/shared/constants/social-media.constants';

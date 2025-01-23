@@ -5,6 +5,7 @@ import { PostTask } from 'src/entities/post-task.entity';
 import { CalenderParamDto } from 'src/dtos/params/calender-param.dto';
 import { SocialMediaPlatformNames } from 'src/shared/constants/social-media.constants';
 import { POST_TASK_STATUS } from 'src/shared/constants/post-task-status-constants';
+import { ASSET_TYPE } from 'src/shared/constants/asset-type-constants';
 
 @Injectable()
 export class CalenderRepository extends GenericRepository<PostTask> {
@@ -28,7 +29,7 @@ export class CalenderRepository extends GenericRepository<PostTask> {
                     'sm.user_profile AS profileimage',
                 ])
                 .leftJoin('pt.post', 'p')
-                .leftJoin('p.assets', 'a', 'a.type = :type', { type: 'image' })
+                .leftJoin('p.assets', 'a', 'a.type = :type', { type: ASSET_TYPE.IMAGE })
                 .leftJoin('pt.socialMediaAccount', 'sm')
                 .leftJoin('pt.user', 'ur')
                 .where('pt.status IN (:...statuses)', { statuses: [POST_TASK_STATUS.EXECUTE_SUCCESS, POST_TASK_STATUS.SCHEDULED] })

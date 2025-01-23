@@ -127,7 +127,6 @@ export class AuthController {
 				Data: data,
 			});
 		} catch (error) {
-			console.log(error);
 
 			if (error.name === 'NotAuthorizedException') {
 				return res.status(HttpStatus.UNAUTHORIZED).json({

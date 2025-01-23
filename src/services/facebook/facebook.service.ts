@@ -6,7 +6,6 @@ import { UnitOfWork } from 'src/unitofwork/unitofwork';
 import { PostRepository } from 'src/repositories/post-repository';
 import { Post } from 'src/entities/post.entity';
 import { SocialMediaPlatform, SocialMediaPlatformNames } from 'src/shared/constants/social-media.constants';
-import { FacebookPageDetailsDTO } from 'src/entities/facebook-page-details.entity';
 import { SocialMediaAccountRepository } from 'src/repositories/social-media-account-repository';
 import { SocialMediaAccount } from 'src/entities/social-media-account.entity';
 import { ConfigService } from '@nestjs/config';

@@ -8,6 +8,7 @@ import {
     SocialMediaPlatformNames,
 } from 'src/shared/constants/social-media.constants';
 import { UserSubscriptionStatusType } from 'src/shared/constants/user-subscription-status-constants';
+import { POST_TASK_STATUS } from 'src/shared/constants/post-task-status-constants';
 
 @Injectable()
 export class PostRepository extends GenericRepository<Post> {
@@ -39,8 +40,8 @@ export class PostRepository extends GenericRepository<Post> {
                     ],
                 }
             )
-            .where('socialMediaAccount.platform = :platform', { platform: 'facebook' })
-            .andWhere('postTask.status = :status', { status: 'Execute_Success' })
+            .where('socialMediaAccount.platform = :platform', { platform: SocialMediaPlatformNames[SocialMediaPlatform['FACEBOOK']] })
+            .andWhere('postTask.status = :status', { status: POST_TASK_STATUS.EXECUTE_SUCCESS })
             .getMany();
         return posts;
     }
@@ -82,7 +83,7 @@ export class PostRepository extends GenericRepository<Post> {
                 platform: 'instagram',
             })
             .andWhere('postTask.status = :status', {
-                status: 'Execute_Success',
+                status: POST_TASK_STATUS.EXECUTE_SUCCESS,
             })
             .getMany();
 
@@ -111,7 +112,7 @@ export class PostRepository extends GenericRepository<Post> {
             )
             .where('socialMediaAccount.platform = :platform', { platform })
             .andWhere('postTask.status = :status', {
-                status: 'Execute_Success',
+                status: POST_TASK_STATUS.EXECUTE_SUCCESS,
             })
             .getMany();
 

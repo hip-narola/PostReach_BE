@@ -5,6 +5,8 @@ import { PostTask } from 'src/entities/post-task.entity';
 import { PaginationParamDto } from 'src/dtos/params/pagination-param.dto';
 import { PaginatedResponseDto } from 'src/dtos/response/pagination-response.dto';
 import { SocialMediaPlatformNames } from 'src/shared/constants/social-media.constants';
+import { ASSET_TYPE } from 'src/shared/constants/asset-type-constants';
+import { POST_TASK_STATUS } from 'src/shared/constants/post-task-status-constants';
 
 @Injectable()
 export class PostHistoryRepository extends GenericRepository<PostTask> {
@@ -32,10 +34,10 @@ export class PostHistoryRepository extends GenericRepository<PostTask> {
                 ])
                 .addSelect('pt.scheduled_at::text AS scheduled_at')
                 .leftJoin('pt.post', 'p')
-                .leftJoin('p.assets', 'a', 'a.type = :type', { type: 'image' })
+                .leftJoin('p.assets', 'a', 'a.type = :type', { type: ASSET_TYPE.IMAGE })
                 .leftJoin('pt.socialMediaAccount', 'sm')
                 .leftJoin('pt.user', 'ur')
-                .where('pt.status = :status', { status: 'Execute_Success' })
+                .where('pt.status = :status', { status:POST_TASK_STATUS.EXECUTE_SUCCESS })
                 .andWhere('pt.user_id = :userid', { userid: paginatedParams.userId })
                 .orderBy('pt.scheduled_at', 'DESC')
                 .getRawMany();
