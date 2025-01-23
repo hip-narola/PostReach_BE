@@ -1,9 +1,7 @@
 import { Body, Controller, Get, Post, Query } from '@nestjs/common';
 import { ApiBody, ApiQuery } from '@nestjs/swagger';
 import { GetSocilInsightsParamDto } from 'src/dtos/params/get-social-insights-param.dto';
-import { InsightsParamDto } from 'src/dtos/params/insights-param.dto';
 import { PostToInstagramDto } from 'src/dtos/params/post-to-instagram.dto';
-import { SocialMediaInsightParamDTO } from 'src/dtos/params/social-media-insights-param.dto';
 import { CheckUserSubscriptionService } from 'src/services/check-user-subscription/check-user-subscription.service';
 import { DashboardInsightsService } from 'src/services/dashboard-insights/dashboard-insights.service';
 import { FacebookService } from 'src/services/facebook/facebook.service';
@@ -103,20 +101,6 @@ export class DashboardInsightsController {
     @ApiBody({ type: GetSocilInsightsParamDto })
     async getSocialinsightsList(@Body() GetSocilInsightsParamDto: { days: number, userId: number, platform: number | null }): Promise<any> {
         return await this.socialMediaInsightsService.getSocialinsightsList(GetSocilInsightsParamDto);
-    }
-
-    @Post('getTwitterInsights')
-    @ApiBody({ type: InsightsParamDto })
-    async getTwitterInsights(@Body() insightsDto: InsightsParamDto): Promise<SocialMediaInsightParamDTO> {
-        const { userid, platform } = insightsDto;
-        return await this.dashboardInsightsService.getTwitterInsights(userid, platform);
-    }
-
-    @Post('getLinkedinInsights')
-    @ApiBody({ type: InsightsParamDto })
-    async getLinkedinInsights(@Body() insightsDto: InsightsParamDto): Promise<SocialMediaInsightParamDTO> {
-        const { userid, platform } = insightsDto;
-        return await this.dashboardInsightsService.gelinkedInInsights(userid, platform);
     }
 
     @Get('post-details')

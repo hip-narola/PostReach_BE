@@ -41,9 +41,13 @@ export class JobSchedulerService {
                     // repeat: {
                     //     every: 5 * 60 * 1000, // Run every 5 minute
                     // },
+                    // repeat: {
+
+                    //     every: 24 * 60 * 60 * 1000, // Every 24 hours
+                    //     startDate: new Date().setHours(0, 1, 0, 0), // Start at 12:01 AM
+                    // }
                     repeat: {
-                        every: 24 * 60 * 60 * 1000, // Every 24 hours
-                        startDate: new Date().setHours(0, 1, 0, 0), // Start at 12:01 AM
+                        pattern: '0 0 * * *', // Every 24 hours
                     }
                 },
             );
@@ -69,7 +73,6 @@ export class JobSchedulerService {
         userId?: number,
         post_created_at?: Date
     ): Promise<void> {
-        console.log("schedulePost started. Id: ", Id, " channel : ", channel, " PostId : ", PostId);
         const now = moment();
         const publishAt = moment(scheduleTime, 'YYYY-MM-DD HH:mm:ss');
 
@@ -120,8 +123,6 @@ export class JobSchedulerService {
                 },
             },
         );
-
-        console.log("schedulePost finish. post queue : ", this.postQueue);
     }
 
     async removeExpiredScheduledPosts(
@@ -282,8 +283,6 @@ export class JobSchedulerService {
     private async scheduleHalfHourlyJobs() {
         console.log("postInsightQueue  started:");
         try {
-
-
         const existingJobs = await this.postInsightQueue.getJobSchedulers();
         console.log("postInsightQueue  existingJobs:", existingJobs);
         const jobName = 'fetch-and-update-likes-comments-views';
@@ -307,15 +306,14 @@ export class JobSchedulerService {
             }
         );
         console.log("postInsightQueue  postInsightQueue:", this.postInsightQueue);
-            console.log('Half-hourly likesCommentsViews job scheduled successfully.');
-        } catch (error) {
-            console.log("postInsightQueue  error:", error);
-        }
+        console.log('Half-hourly likesCommentsViews job scheduled successfully.');
+    } catch (error) {
+        console.log("postInsightQueue  error:", error);
+    }
     }
 
     private async scheduleHourlyJob(): Promise<void> {
-        console.log("pageInsightQueue  started:");
-        try {
+
         const jobId = 'fetch-and-update-hourly';
         const existingJobs = await this.pageInsightQueue.getJobs(['waiting', 'active', 'delayed', 'paused']);
         for (const job of existingJobs) {
@@ -335,11 +333,6 @@ export class JobSchedulerService {
                 jobId,
             }
         );
-        
-        console.log("pageInsightQueue  pageInsightQueue:", this.pageInsightQueue);
-    } catch (error) {
-        console.log("pageInsightQueue  error:", error);
-    }
     }
 
     // private async subscriptionSchedulerJob(): Promise<void> {
@@ -363,6 +356,6 @@ export class JobSchedulerService {
     //             }
     //         },
     //     );
-       
+
     // }
 }

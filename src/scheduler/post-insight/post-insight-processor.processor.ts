@@ -14,21 +14,17 @@ export class PostInsightProcessor extends WorkerHost {
 
 	) {
 		super(); // Call the constructor of WorkerHost
-		console.log("post-insight initied:: ");
 	}
 
 	async process(job: Job) {
-		console.log("post-insight started:: ", job);
 		try {
 			//to-do
 			//call if user has subscription
-
 			await this.facebookService.fetchAndUpdatePostData();
 			await this.instagramService.fetchAndUpdateInstagramPostData();
 			await this.linkedinService.fetchAndUpdatePostData();
 			await this.twitterService.fetchAndUpdateTwitterPostData();
 		} catch (error) {
-			console.log("post-insight error:: ", error);
 			throw error;
 		}
 	}

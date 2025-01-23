@@ -458,4 +458,31 @@ export class TwitterService {
 			throw new Error(`Failed to fetch tweet metrics: ${error.response?.data || error.message}`);
 		}
 	}
+
+	async refreshToken(refreshToken: string): Promise<any> {
+		const tokenUrl = `${TWITTER_CONST.ENDPOINT}/oauth2/token`;
+		const clientId = this.clientId;
+	
+		const params = new URLSearchParams();
+		params.append('grant_type', 'refresh_token');
+		params.append('refresh_token', refreshToken);
+		params.append('client_id', clientId);
+	
+		try {
+			const response = await axios.post(tokenUrl, params, {
+				headers: {
+					'Content-Type': 'application/x-www-form-urlencoded',
+				},
+			});
+	
+			if (response.status === 200) {
+				console.log(response.data, 'response.data');
+				return response.data; // Returns new access_token and refresh_token if applicable
+			} else {
+				throw new Error('Failed to refresh token.');
+			}
+		} catch (error) {
+			throw new Error(`Failed to refresh token: ${JSON.stringify(error.response?.data || error.message)}`);
+		}
+	}
 }

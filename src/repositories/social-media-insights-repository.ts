@@ -15,7 +15,7 @@ export class SocialMediaInsightsRepository extends GenericRepository<SocialMedia
         super(repository);
     }
 
-    async findEntryByDate(date: Date,social_media_account_id:number): Promise<any> {
+    async findEntryByDate(date: Date, social_media_account_id: number): Promise<any> {
 
         const startOfDay = new Date(date);
         startOfDay.setHours(0, 0, 0, 0);
@@ -23,20 +23,20 @@ export class SocialMediaInsightsRepository extends GenericRepository<SocialMedia
         const endOfDay = new Date(date);
         endOfDay.setHours(23, 59, 59, 999);
 
-        const entry= this.repository.findOne({
+        const entry = this.repository.findOne({
             where: {
                 created_at: Between(startOfDay, endOfDay),
                 socialMediaAccount: { id: social_media_account_id },
             },
         });
 
-         return entry;
+        return entry;
     }
 
     async getSocialinsightsList(GetSocilInsightsParamDto: { days: number, userId: number; platform: number | null; }) {
 
         const { days, userId, platform } = GetSocilInsightsParamDto;
-        
+
         const platformName = platform ? SocialMediaPlatformNames[platform] : null;
         // Calculate the date for the 'days' parameter
         const dateCondition = new Date();
@@ -181,4 +181,14 @@ export class SocialMediaInsightsRepository extends GenericRepository<SocialMedia
 
         return result;
     }
+    async userAccountInsight(socia_media_account_id: number): Promise<SocialMediaInsight> {
+        const currentDate = new Date();
+        const formattedDate = currentDate.toISOString().split('T')[0]; // Format as 'YYYY-MM-DD'
+
+        return this.repository.createQueryBuilder('insight')
+            .where('DATE(insight.created_at) = :createdAt', { createdAt: formattedDate })
+            .andWhere('insight.socia_media_account_id = :socia_media_account_id', { socia_media_account_id })
+            .getOne();
+    }
+
 }

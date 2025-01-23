@@ -19,9 +19,9 @@ export class SocialMediaInsight {
     @Column()
     engagements: number;
 
-    @CreateDateColumn({ type: 'timestamp' })
+    @CreateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
     created_at: Date;
 
-    @UpdateDateColumn({ type: 'timestamp' })
+    @UpdateDateColumn({ type: 'timestamp', nullable: true })
     updated_at: Date;
 }

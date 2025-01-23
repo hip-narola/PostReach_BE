@@ -2,6 +2,7 @@ import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, OneToMan
 import { User } from './user.entity';
 import { PostTask } from './post-task.entity';
 import { UserCredit } from './user_credit.entity';
+import { UserSubscription } from './user_subscription.entity';
 
 @Entity('social_media_accounts')
 export class SocialMediaAccount {
@@ -80,4 +81,8 @@ export class SocialMediaAccount {
 
     @OneToMany(() => UserCredit, (userCredit) => userCredit.social_media)
     userCredits: UserCredit[];
+
+    @OneToMany(() => UserSubscription, (userSubscription) => userSubscription.user)
+    @JoinColumn({ name: 'user_id' })
+    userSubscriptions: UserSubscription[];
 }

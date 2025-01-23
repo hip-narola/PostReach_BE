@@ -24,6 +24,7 @@ export class SocialMediaInsightsService {
             const socialMediaAccount = await socialMediaAccountRepository.findOne(createStudentDto.social_media_account_id);
             socialMediaInsightsData.socialMediaAccount = socialMediaAccount;
             const socialMediaInsightsRepo = this.unitOfWork.getRepository(SocialMediaInsightsRepository, SocialMediaInsight, true);
+            socialMediaInsightsData.updated_at = null;
             await socialMediaInsightsRepo.create(socialMediaInsightsData);
             await this.unitOfWork.completeTransaction();
         } catch (error) {
@@ -33,7 +34,6 @@ export class SocialMediaInsightsService {
     }
 
     async update(id: number, updateStudentDto: SocialMediaInsightParamDTO): Promise<any> {
-
         await this.unitOfWork.startTransaction();
         try {
             const socialMediaInsightsRepo = this.unitOfWork.getRepository(SocialMediaInsightsRepository, SocialMediaInsight, true);
@@ -44,6 +44,7 @@ export class SocialMediaInsightsService {
             record.engagements = updateStudentDto.engagements;
             record.impressions = updateStudentDto.impressions;
             record.newFollowers = updateStudentDto.newFollowers;
+            record.updated_at = new Date();
             await socialMediaInsightsRepo.update(id, record);
             await this.unitOfWork.completeTransaction();
         } catch (error) {
@@ -155,8 +156,13 @@ export class SocialMediaInsightsService {
         return result;
     }
 
-    async getUniqueUserIds(): Promise<number[]> {
+    async getUniqueUserIds(): Promise<SocialMediaAccount[]> {
         const socialAccountRepository = this.unitOfWork.getRepository(SocialMediaAccountRepository, SocialMediaAccount, false);
         return socialAccountRepository.findUniqueUserIds();
+    }
+
+    async userAccountInsight(socia_media_account_id: number): Promise<SocialMediaInsight> {
+        const socialMediaInsightsRepo = this.unitOfWork.getRepository(SocialMediaInsightsRepository, SocialMediaInsight, false);
+        return await socialMediaInsightsRepo.userAccountInsight(socia_media_account_id);
     }
 }
