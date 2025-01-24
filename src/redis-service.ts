@@ -1,17 +1,22 @@
 import { Injectable, OnApplicationShutdown, OnModuleInit } from '@nestjs/common';
-import { createClient } from 'redis';
+import { createClient, RedisClientType } from 'redis';  // Added RedisClientType for type safety
 import { AwsSecretsService } from './services/aws-secrets/aws-secrets.service';
 import { AWS_SECRET } from './shared/constants/aws-secret-name-constants';
 
 @Injectable()
 export class RedisService implements OnApplicationShutdown, OnModuleInit {
-  private client;
+  private client: RedisClientType | null = null;  // Redis client should be initially null
+  private initialized = false; // Flag to check if Redis is initialized
 
   constructor(private readonly secretService: AwsSecretsService) {}
 
   async onModuleInit() {
-    // Proper lifecycle hook for initialization
-    await this.initialize();
+    console.log('Redis connection onModuleInit calling...');
+    // Initialize Redis client only once
+    if (!this.initialized) {
+      await this.initialize();
+      this.initialized = true;
+    }
   }
 
   async onApplicationShutdown() {
@@ -21,8 +26,17 @@ export class RedisService implements OnApplicationShutdown, OnModuleInit {
   }
 
   private async initialize() {
+    console.log('Redis connection initialize calling...');
+
+    // Don't initialize if the client already exists
+    if (this.client) {
+      console.log('Redis client already initialized.');
+      return;
+    }
+
     const secretData = await this.secretService.getSecret(AWS_SECRET.AWSSECRETNAME);
 
+    // Initialize the Redis client
     this.client = createClient({
       username: 'default',
       password: '4ijX6KOTVR6biLMpMIOu6H7qI40OIWcg', // secretData.REDIS_PASSWORD,
@@ -32,24 +46,35 @@ export class RedisService implements OnApplicationShutdown, OnModuleInit {
       },
     });
 
+    // Handle Redis client events
+    this.client.on('end', async () => {
+      console.log('Redis connection closed. Reconnecting...');
+      await this.client.connect();
+    });
     this.client.on('error', (err) => console.error('Redis Client Error', err));
-    await this.client.connect(); // Wait for connection to be established
+
+    // Wait for the Redis client connection to be established
+    await this.client.connect();
+    console.log('Redis connection established.');
   }
 
   async get(key: string): Promise<string | null> {
+    if (!this.client) throw new Error('Redis client not initialized');
     return await this.client.get(key);
   }
 
   async set(key: string, value: string): Promise<void> {
+    if (!this.client) throw new Error('Redis client not initialized');
     await this.client.set(key, value);
   }
 
   async del(key: string): Promise<number> {
+    if (!this.client) throw new Error('Redis client not initialized');
     return await this.client.del(key);
   }
 
   /**
-   * Close the Redis connection gracefully.
+   * Gracefully close the Redis connection
    */
   async close(): Promise<void> {
     if (this.client) {
