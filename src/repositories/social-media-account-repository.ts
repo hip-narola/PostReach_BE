@@ -112,4 +112,8 @@ export class SocialMediaAccountRepository extends GenericRepository<SocialMediaA
     async findPlatformsOfUser(userId: number): Promise<SocialMediaAccount[] | null> {
         return this.repository.find({ where: { user_id: userId } });
     }
+
+    async findByPlatformAndConnected(platform: string): Promise<SocialMediaAccount[] | null> {
+        return this.repository.find({ where: { platform, isDisconnect: false } });
+    }
 }

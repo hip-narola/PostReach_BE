@@ -4,10 +4,16 @@ import { SocialMediaInsightsService } from '../../services/social-media-insights
 import { SocialMediaInsightParamDTO } from 'src/dtos/params/social-media-insights-param.dto';
 import { DashboardInsightsService } from '../../services/dashboard-insights/dashboard-insights.service';
 import { SocialMediaPlatform, SocialMediaPlatformNames } from 'src/shared/constants/social-media.constants';
+import { TwitterService } from 'src/services/twitter/twitter.service';
+import { SocialMediaAccountService } from 'src/services/social-media-account/social-media-account.service';
 
 @Processor('page-insight')
 export class PageInsightProcessor extends WorkerHost {
-    constructor(private readonly socialMediaService: SocialMediaInsightsService, private readonly dashboardInsightsService: DashboardInsightsService) {
+    constructor(private readonly socialMediaService: SocialMediaInsightsService, private readonly dashboardInsightsService: DashboardInsightsService,
+        private readonly twitterService: TwitterService,
+        private readonly socialMediaAccountService: SocialMediaAccountService
+
+    ) {
         super();
     }
     async process(job: Job<any>): Promise<void> {
@@ -26,6 +32,16 @@ export class PageInsightProcessor extends WorkerHost {
             } catch (error) {
                 console.error(`Error processing account ${socia_media_account.id}:`, error);
             }
+        }
+
+        try {
+            const twitterAccounts = await this.socialMediaAccountService.userTwitterAccounts();
+            twitterAccounts.forEach(twitterAccount => {
+                this.twitterService.refreshToken(twitterAccount);
+            });
+
+        } catch (error) {
+            console.log(`Error in twitter refresh token`, error);
         }
     }
 
@@ -47,14 +63,14 @@ export class PageInsightProcessor extends WorkerHost {
                 if (linkedinData) {
                     return this.mapToDto(linkedinData, SocialMediaPlatformNames[SocialMediaPlatform['LINKEDIN']]);
                 }
-            } 
+            }
             else if (socia_media_account.platform === SocialMediaPlatformNames[SocialMediaPlatform['TWITTER']]) {
                 const twitterData = await this.dashboardInsightsService.getTwitterInsights(socia_media_account);
                 if (twitterData) {
                     return this.mapToDto(twitterData, SocialMediaPlatformNames[SocialMediaPlatform['TWITTER']]);
                 }
 
-              
+
             } else {
                 console.warn('Unknown platform:', socia_media_account.platform);
                 return null;
@@ -63,7 +79,7 @@ export class PageInsightProcessor extends WorkerHost {
             console.error(`Error fetching data for account ${socia_media_account.id}:`, error);
             throw error;
         }
-    }    
+    }
 
     private async updateDatabase(data: any, id: number): Promise<void> {
         const socialMediaData = new SocialMediaInsightParamDTO();

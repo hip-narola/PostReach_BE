@@ -493,6 +493,7 @@ export class DashboardInsightsService {
         }
     }
 
+    @Throttle({ default: { limit: 25, ttl: 86400000 } })
     async fetchTweetMetrics(tweetId: string, accessToken: string): Promise<PageInsightsDTO> {
         try {
             const response = await axios.get(`${TWITTER_CONST.ENDPOINT}/tweets/${tweetId}`, {

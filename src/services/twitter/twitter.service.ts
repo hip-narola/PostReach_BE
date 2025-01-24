@@ -47,7 +47,8 @@ export class TwitterService {
 		this.consumerSecret = secretData.TWITTER_API_KEY_SECRET;
 		this.accessToken = secretData.TWITTER_ACCESS_TOKEN;
 		this.accessTokenSecret = secretData.TWITTER_ACCESS_TOKEN_SECRET;
-		this.twitterCallBack = secretData.TWITTER_CALLBACK_URL;
+		this.twitterCallBack = 'http://localhost:3000/link-page/twitter-callback';
+		// this.twitterCallBack = secretData.TWITTER_CALLBACK_URL;
 	}
 
 
@@ -96,7 +97,6 @@ export class TwitterService {
 		params.append('client_id', clientId);
 		params.append('redirect_uri', redirectUri);
 		params.append('code_verifier', codeverifier_value.codeVerifier);
-
 
 		try {
 			const response = await axios.post(tokenUrl, params, {
@@ -459,30 +459,61 @@ export class TwitterService {
 		}
 	}
 
-	async refreshToken(refreshToken: string): Promise<any> {
+	async refreshToken(twitterAccount: SocialMediaAccount): Promise<void> {
 		const tokenUrl = `${TWITTER_CONST.ENDPOINT}/oauth2/token`;
 		const clientId = this.clientId;
-	
+
 		const params = new URLSearchParams();
 		params.append('grant_type', 'refresh_token');
-		params.append('refresh_token', refreshToken);
-		params.append('client_id', clientId);
-	
+		params.append('refresh_token', twitterAccount.refresh_token);
+		params.append('client_id', clientId); 
+
 		try {
+			// Start the transaction
+			await this.unitOfWork.startTransaction();
+
 			const response = await axios.post(tokenUrl, params, {
 				headers: {
 					'Content-Type': 'application/x-www-form-urlencoded',
 				},
 			});
-	
-			if (response.status === 200) {
-				console.log(response.data, 'response.data');
-				return response.data; // Returns new access_token and refresh_token if applicable
+
+			const socialMediaAccountRepository = this.unitOfWork.getRepository(
+				SocialMediaAccountRepository,
+				SocialMediaAccount,
+				true
+			);
+			if (response.status === 200 && response.data) {
+				const { access_token, token_type, expires_in, refresh_token, scope } = response.data;
+				// Update the SocialMediaAccount entity with new token details
+				twitterAccount.encrypted_access_token = access_token;
+				twitterAccount.token_type = token_type;
+				twitterAccount.expires_in = expires_in;
+				twitterAccount.refresh_token = refresh_token;
+				twitterAccount.scope = scope;
+
+				// Persist changes to the repository
+				await socialMediaAccountRepository.update(twitterAccount.id, twitterAccount);
 			} else {
-				throw new Error('Failed to refresh token.');
+				throw new Error('Failed to refresh token: Unexpected response from server.');
 			}
+
+			// Complete the transaction after the update
+			await this.unitOfWork.completeTransaction();
 		} catch (error) {
-			throw new Error(`Failed to refresh token: ${JSON.stringify(error.response?.data || error.message)}`);
+			const errorDetails = error.response?.data || error.message;
+			console.log(`Failed to refresh token: ${errorDetails}`);
+
+			// Rollback the transaction in case of an error
+			if (this.unitOfWork['queryRunner']) {  // Access queryRunner privately for rollback
+				try {
+					await this.unitOfWork.rollbackTransaction();
+				} catch (rollbackError) {
+					console.log('Rollback failed:', rollbackError.message);
+				}
+			} else {
+				console.log('No active transaction to rollback.');
+			}
 		}
 	}
 }

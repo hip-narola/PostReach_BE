@@ -281,10 +281,7 @@ export class JobSchedulerService {
     }
 
     private async scheduleHalfHourlyJobs() {
-        console.log("postInsightQueue  started:");
-        try {
-        const existingJobs = await this.postInsightQueue.getJobSchedulers();
-        console.log("postInsightQueue  existingJobs:", existingJobs);
+        const existingJobs = await this.postInsightQueue.getRepeatableJobs();
         const jobName = 'fetch-and-update-likes-comments-views';
 
         // Prevent duplicate job schedules
@@ -305,11 +302,8 @@ export class JobSchedulerService {
                 removeOnFail: true,
             }
         );
-        console.log("postInsightQueue  postInsightQueue:", this.postInsightQueue);
+
         console.log('Half-hourly likesCommentsViews job scheduled successfully.');
-    } catch (error) {
-        console.log("postInsightQueue  error:", error);
-    }
     }
 
     private async scheduleHourlyJob(): Promise<void> {

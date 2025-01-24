@@ -14,13 +14,14 @@ export class SocialMediaAccountService {
         private readonly socialMediaAccountRepository: SocialMediaAccountRepository,
         private readonly unitOfWork: UnitOfWork,
     ) { }
-    
+
     async storeTokenDetails(userId: number, tokenData: SocialTokenDataDTO, platform: string): Promise<SocialMediaAccount> {
         await this.unitOfWork.startTransaction();
         try {
             tokenData.platform = platform;
             tokenData.user_id = userId;
             const data = plainToInstance(SocialMediaAccount, tokenData);
+            data.connected_at = new Date();
             const socialMediaAccountRepo = this.unitOfWork.getRepository(
                 SocialMediaAccountRepository,
                 SocialMediaAccount,
@@ -55,6 +56,8 @@ export class SocialMediaAccountService {
             }
             else if (platform == SocialMediaPlatformNames[SocialMediaPlatform.LINKEDIN]) {
                 // const socialMediaAccountExists = await this.findSocialAccountOfUserForInstagram(userId, platform, tokenData.instagram_Profile, tokenData.page_id, tokenData.facebook_Profile);
+                data.created_at = new Date();
+                data.updated_at = null;
                 const updatedSocialMediaAccount = await socialMediaAccountRepo.create(data);
                 await this.unitOfWork.completeTransaction();
                 return updatedSocialMediaAccount;
@@ -65,6 +68,7 @@ export class SocialMediaAccountService {
                     // Create new account if it doesn't exist
                     updatedSocialMediaAccount = await socialMediaAccountRepo.create(data);
                 } else {
+                    data.updated_at = new Date();
                     // Update the existing account
                     await socialMediaAccountRepo.update(socialMediaAccountExists.id, data);
                     // After update, fetch the updated entity to return
@@ -78,7 +82,7 @@ export class SocialMediaAccountService {
             throw error;
         }
     }
-    
+
     async findSocialAccountOfUser(userId: number, platform: string): Promise<SocialMediaAccount | null> {
         const socialMediaAccountRepo = this.unitOfWork.getRepository(
             SocialMediaAccountRepository,
@@ -87,9 +91,9 @@ export class SocialMediaAccountService {
         );
         const socialMediaAccount = await socialMediaAccountRepo.findByUserAndPlatform(userId, platform);
         return socialMediaAccount;
-        
+
     }
-    
+
     async findSocialAccountOfUserForFacebook(userId: number, platform: string, facebookpageId: string, facebook_Profile: string): Promise<SocialMediaAccount | null> {
         const socialMediaAccountRepo = this.unitOfWork.getRepository(
             SocialMediaAccountRepository,
@@ -99,7 +103,7 @@ export class SocialMediaAccountService {
         const socialMediaAccount = await socialMediaAccountRepo.findByUserAndPlatformAndFacebookId(userId, platform, facebookpageId, facebook_Profile);
         return socialMediaAccount;
     }
-    
+
     async findSocialAccountOfUserForInstagram(userId: number, platform: string, instagramId: string, facebookpageId: string, facebook_Profile: string): Promise<SocialMediaAccount | null> {
         const socialMediaAccountRepo = this.unitOfWork.getRepository(
             SocialMediaAccountRepository,
@@ -109,8 +113,8 @@ export class SocialMediaAccountService {
         const socialMediaAccount = await socialMediaAccountRepo.findByUserAndPlatformAndInstagramId(userId, platform, instagramId, facebookpageId, facebook_Profile);
         return socialMediaAccount;
     }
-    
-    
+
+
     async socialLinks(userId: number): Promise<any> {
         try {
             return await this.socialMediaAccountRepository.findByFields({
@@ -125,27 +129,27 @@ export class SocialMediaAccountService {
         }
     }
     async findSocialAccountOfUserForLinkedIn(userId: number, platform: string):
-    Promise<SocialMediaAccount | null> {
-        
+        Promise<SocialMediaAccount | null> {
+
         const socialMediaAccountRepo = this.unitOfWork.getRepository(
             SocialMediaAccountRepository,
             SocialMediaAccount,
             false
         );
         const socialMediaAccount = await socialMediaAccountRepo.findByUserAndPlatform(userId, platform);
-        
+
         return socialMediaAccount;
     }
-    
+
     async findSocialAccountForConnectAndDisconnectProfile(userId: number, platform: string, isDisconnect: boolean):
-    Promise<SocialMediaAccount | null> {
+        Promise<SocialMediaAccount | null> {
         const socialMediaAccountRepo = this.unitOfWork.getRepository(
             SocialMediaAccountRepository,
             SocialMediaAccount,
             false
         );
         const socialMediaAccount = await socialMediaAccountRepo.findByUserAndPlatformAndisDiConnect(userId, platform, isDisconnect);
-        
+
         return socialMediaAccount;
     }
 
@@ -192,5 +196,14 @@ export class SocialMediaAccountService {
         } catch (error) {
             throw error;
         }
+    }
+
+    async userTwitterAccounts(): Promise<SocialMediaAccount[]> {
+        const socialMediaAccountRepository = this.unitOfWork.getRepository(
+            SocialMediaAccountRepository,
+            SocialMediaAccount,
+            false
+        );
+        return await socialMediaAccountRepository.findByPlatformAndConnected(SocialMediaPlatformNames[SocialMediaPlatform['TWITTER']]);
     }
 }
