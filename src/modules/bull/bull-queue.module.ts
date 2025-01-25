@@ -32,9 +32,9 @@ async function getRedisConfig() {
     const secretsService = new AwsSecretsService(configService);
     const secrets = await secretsService.getSecret(AWS_SECRET.AWSSECRETNAME);
     return {
-        host:  'redis-11619.c114.us-east-1-4.ec2.redns.redis-cloud.com',// secrets.REDIS_HOST,
-        port: 11619,//parseInt(secrets.REDIS_PORT, 10),
-        password: '4ijX6KOTVR6biLMpMIOu6H7qI40OIWcg', //secrets.REDIS_PASSWORD,
+        host: secrets.REDIS_HOST,
+        port: parseInt(secrets.REDIS_PORT, 10),
+        password: secrets.REDIS_PASSWORD,
         connectTimeout: 10000,
     };
 }
