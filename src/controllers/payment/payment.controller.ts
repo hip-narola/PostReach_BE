@@ -50,12 +50,14 @@ export class PaymentController {
         }
     }
 
-    //for ref. : create customer portal
-    @Post('portal')
-    async customerPortal(@Body() body: { customerId: string }) {
-        const portal = await this.subscriptionService.createCustomerPortal(
-            body.customerId,
+    @Post('get-coustomer-payment-link')
+    async getCoustomerPaymentLink(@Body() body: { userId: number }) {
+        const portal = await this.subscriptionService.generateCustomerPortalLink(
+            body.userId,
         );
-        return { url: portal.url };
+        if (portal != null)
+            return { url: portal.url };
+        else
+            return { url: null };
     }
 }

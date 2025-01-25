@@ -6,13 +6,15 @@ import { NotificationModule } from '../notification/notification.module';
 import { EmailService } from 'src/services/email/email.service';
 import { SocialMediaAccountModule } from '../social-media-account/social-media-account.module';
 import { AwsSecretsServiceModule } from '../aws-secrets-service/aws-secrets-service.module';
+import { UserModule } from '../user/user.module';
 
 @Module({
     imports: [
         UnitOfWorkModule,
         NotificationModule,
         SocialMediaAccountModule,
-        AwsSecretsServiceModule
+        AwsSecretsServiceModule,
+        UserModule
     ],
     controllers: [PaymentController],
     providers: [

@@ -28,6 +28,7 @@ import { PostTaskRepository } from 'src/repositories/post-task-repository';
 import { PostRepository } from 'src/repositories/post-repository';
 import { Post } from 'src/entities/post.entity';
 import { PostTask } from 'src/entities/post-task.entity';
+import { UserService } from '../user/user.service';
 // import { CreatePostDto } from 'src/dtos/params/post-dto';
 // import { CreatePostTaskDto } from 'src/dtos/params/post-task-dto';
 
@@ -43,7 +44,8 @@ export class SubscriptionService {
 		private readonly emailService: EmailService,
 		private readonly socialMediaAccountService: SocialMediaAccountService,
 		private readonly secretService: AwsSecretsService,
-		private configService: ConfigService
+		private configService: ConfigService,
+		private readonly userService: UserService
 
 		// private readonly checkSubscriptionSchedulerService: CheckSubscriptionSchedulerService,
 	) {
@@ -551,7 +553,7 @@ export class SubscriptionService {
 				customer: user.stripeCustomerId,
 				items: [{ price: subscription.stripePriceId }], // Replace with your trial price ID
 				// trial_period_days: 3,
-				trial_period_days: 1,
+				trial_period_days: 7,
 				payment_behavior: 'default_incomplete', // Ensure the subscription waits for payment completion
 				expand: ['latest_invoice.payment_intent'], // Optional: Include payment intent details
 			});
@@ -681,16 +683,20 @@ export class SubscriptionService {
 
 
 
-	async createCustomerPortal(
-		customerId: string,
+	async generateCustomerPortalLink(
+		userId: number,
 	): Promise<Stripe.BillingPortal.Session> {
 
-		const appUrl = this.configService.get<string>('APP_URL_FRONTEND');
-		const data = this.stripe.billingPortal.sessions.create({
-			customer: customerId,
-			return_url: `${appUrl}/user/dashboard`,
-		});
-		return data;
+		const user = await this.userService.findOne(userId);
+
+		if (user.stripeCustomerId != null) {
+			const appUrl = this.configService.get<string>('APP_URL_FRONTEND');
+			return this.stripe.billingPortal.sessions.create({
+				customer: user.stripeCustomerId,
+				return_url: `${appUrl}/user/dashboard`,
+			});
+		}
+		return null;
 	}
 
 	async processWebhook(req: any): Promise<void> {
@@ -721,7 +727,7 @@ export class SubscriptionService {
 				const user = await userRepository.findByField('stripeCustomerId', stripeCustomerId);
 
 				//Create customer portal link
-				const customerPortalLink = await this.createCustomerPortal(stripeCustomerId);
+				const customerPortalLink = await this.generateCustomerPortalLink(user.id);
 
 				const emailData: EmailTemplateDataDto = {
 					userName: user.name,
