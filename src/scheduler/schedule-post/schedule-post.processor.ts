@@ -6,8 +6,6 @@ import { LinkedinService } from '../../services/linkedin/linkedin.service';
 import { InstagramService } from '../../services/instagram/instagram.service';
 import { TwitterService } from '../../services/twitter/twitter.service';
 import { SocialMediaPlatformNames, SocialMediaPlatform } from 'src/shared/constants/social-media.constants';
-import { NotificationService } from '../../services/notification/notification.service';
-import { NotificationMessage, NotificationType } from 'src/shared/constants/notification-constants';
 import { EmailService } from '../../services/email/email.service';
 import { UserService } from '../../services/user/user.service';
 import { EMAIL_SEND, EMAIL_SEND_FILE } from 'src/shared/constants/email-notification-constants';
@@ -21,7 +19,6 @@ export class SchedulePostProcessor extends WorkerHost {
 		private readonly linkedinService: LinkedinService,
 		private readonly instagramService: InstagramService,
 		private readonly twitterService: TwitterService,
-		private readonly notificationService: NotificationService,
 		private readonly emailService: EmailService,
 		private readonly userService: UserService,
 
@@ -41,14 +38,11 @@ export class SchedulePostProcessor extends WorkerHost {
 					await this.facebookService.postToFacebook(PostId, pageId, accessToken, message, hashtags, imageUrl);
 					console.log("post-queue updateStatusAfterPostExecution ", Id, POST_TASK_STATUS.EXECUTE_SUCCESS);
 					await this.approvalQueueService.updateStatusAfterPostExecution(Id, POST_TASK_STATUS.EXECUTE_SUCCESS);
-					console.log("post-queue updateStatusAfterPostExecution ", userId, NotificationType.POST_PUBLISHED, NotificationMessage[NotificationType.POST_PUBLISHED]);
-					await this.notificationService.saveData(userId, NotificationType.POST_PUBLISHED, NotificationMessage[NotificationType.POST_PUBLISHED]);
 					break;
 
 				case `${SocialMediaPlatformNames[SocialMediaPlatform['LINKEDIN']]}`:
 					await this.linkedinService.postToLinkedIn(PostId, pageId, accessToken, SocialMediauserId, message, imageUrl, hashtags);
 					await this.approvalQueueService.updateStatusAfterPostExecution(Id, POST_TASK_STATUS.EXECUTE_SUCCESS);
-					await this.notificationService.saveData(userId, NotificationType.POST_PUBLISHED, NotificationMessage[NotificationType.POST_PUBLISHED]);
 					break;
 
 				case `${SocialMediaPlatformNames[SocialMediaPlatform['INSTAGRAM']]}`:
@@ -57,14 +51,12 @@ export class SchedulePostProcessor extends WorkerHost {
 					console.log("post-queue updateStatusAfterPostExecution ", Id, POST_TASK_STATUS.EXECUTE_SUCCESS);
 					await this.approvalQueueService.updateStatusAfterPostExecution(
 						Id, POST_TASK_STATUS.EXECUTE_SUCCESS);
-						console.log("post-queue updateStatusAfterPostExecution ", userId, NotificationType.POST_PUBLISHED, NotificationMessage[NotificationType.POST_PUBLISHED]);
-					await this.notificationService.saveData(userId, NotificationType.POST_PUBLISHED, NotificationMessage[NotificationType.POST_PUBLISHED]);
+						
 					break;
 
 				case `${SocialMediaPlatformNames[SocialMediaPlatform['TWITTER']]}`:
 					await this.twitterService.postToTwitter(PostId, pageId, accessToken, SocialMediauserId, message, imageUrl, hashtags);
 					await this.approvalQueueService.updateStatusAfterPostExecution(Id, POST_TASK_STATUS.EXECUTE_SUCCESS);
-					await this.notificationService.saveData(userId, NotificationType.POST_PUBLISHED, NotificationMessage[NotificationType.POST_PUBLISHED]);
 					break;
 			}
 		}
@@ -72,7 +64,6 @@ export class SchedulePostProcessor extends WorkerHost {
 			console.log("post-queue error: ", error, job.attemptsMade);
 			if (job.attemptsMade >= 4) {
 				await this.approvalQueueService.updateStatusAfterPostExecution(Id, POST_TASK_STATUS.FAIL);
-				await this.notificationService.saveData(userId, NotificationType.POST_FAILED, NotificationMessage[NotificationType.POST_FAILED]);
 				const user = await this.userService.findOne(userId);
 
 				await this.emailService.sendEmail(user.email, EMAIL_SEND.POST_FAILED, EMAIL_SEND_FILE[EMAIL_SEND.POST_FAILED]);

@@ -11,7 +11,8 @@ import { UnitOfWork } from 'src/unitofwork/unitofwork';
 import { EmailService } from '../email/email.service';
 import { JobSchedulerService } from 'src/scheduler/job-scheduler-service';
 import { POST_TASK_STATUS } from 'src/shared/constants/post-task-status-constants';
-
+import { NotificationService } from '../notification/notification.service';
+import { NotificationMessage, NotificationType } from 'src/shared/constants/notification-constants';
 @Injectable()
 export class ApprovalQueueService {
     constructor(
@@ -19,6 +20,7 @@ export class ApprovalQueueService {
         @Inject(forwardRef(() => JobSchedulerService)) // Use forwardRef here
         private readonly schedulePostService: JobSchedulerService,
         private readonly emailService: EmailService,
+        private readonly notificationService: NotificationService,
     ) { }
 
     async getApprovalQueueList(
@@ -134,7 +136,16 @@ export class ApprovalQueueService {
             );
             const record = await approvalQueueRepository.findOne(id);
             record.status = status;
+
             await approvalQueueRepository.update(id, record);
+
+            console.log("post-queue save notification");
+            // Add notification
+            const notificationType = status == POST_TASK_STATUS.FAIL ? POST_TASK_STATUS.FAIL : POST_TASK_STATUS.EXECUTE_SUCCESS;
+            const notificationContent= status == POST_TASK_STATUS.FAIL ? NotificationMessage[NotificationType.POST_FAILED] : NotificationMessage[NotificationType.POST_PUBLISHED];
+
+            console.log("post-queue save notification : notificationType ", notificationType, notificationContent);
+            await this.notificationService.saveData(record.user.id, notificationType, notificationContent);
 
             // await this.emailService.sendEmail(record.user.email, 'Post Posted', 'post_success');
 

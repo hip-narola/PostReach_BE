@@ -6,11 +6,13 @@ import { ApprovalQueueService } from 'src/services/approval-queue/approval-queue
 import { PostTask } from 'src/entities/post-task.entity';
 import { BullQueueModule } from '../bull/bull-queue.module';
 import { EmailService } from 'src/services/email/email.service';
+import { NotificationModule } from '../notification/notification.module';
 
 @Module({
   imports: [TypeOrmModule.forFeature([PostTask]),
-            UnitOfWorkModule,
-            BullQueueModule],
+    UnitOfWorkModule,
+    BullQueueModule,
+    NotificationModule],
   controllers: [ApprovalQueueController],
   providers: [ApprovalQueueService, EmailService],
   exports: [ApprovalQueueService],
