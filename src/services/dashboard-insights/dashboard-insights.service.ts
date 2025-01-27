@@ -118,7 +118,7 @@ export class DashboardInsightsService {
             const result: SocialMediaInsightParamDTO = {
                 platform: socialTokenDataDTO.platform,
                 impressions: insightsData.impressions,
-                newFollowers: insightsData.engagements,
+                newFollowers: insightsData.followers,
                 engagements: insightsData.engagements,
                 social_media_account_id: data.id, // First account's ID
             };
