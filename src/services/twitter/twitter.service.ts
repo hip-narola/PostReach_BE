@@ -401,11 +401,10 @@ export class TwitterService {
 		}
 	}
 
-	async fetchAndUpdateTwitterPostData() {
+	async fetchAndUpdateTwitterPostData(posts: Post[]) {
 		await this.unitOfWork.startTransaction();
 		const postRepository = this.unitOfWork.getRepository(PostRepository, Post, true);
 		try {
-			const posts = await postRepository.fetchTwitterPosts();
 			for (const post of posts) {
 				const socialMediaAccount = post.postTask?.socialMediaAccount;
 				if (!socialMediaAccount?.encrypted_access_token || !post.external_platform_id) {

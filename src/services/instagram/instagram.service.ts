@@ -127,11 +127,10 @@ export class InstagramService {
   }
 
 
-  async fetchAndUpdateInstagramPostData() {
+  async fetchAndUpdateInstagramPostData(posts: Post[]) {
     await this.unitOfWork.startTransaction();
     const postRepository = this.unitOfWork.getRepository(PostRepository, Post, true);
     try {
-      const posts = await postRepository.fetchInstagramPosts();
       for (const post of posts) {
         const socialMediaAccount = post.postTask?.socialMediaAccount;
         if (!socialMediaAccount?.encrypted_access_token || !post.external_platform_id) {

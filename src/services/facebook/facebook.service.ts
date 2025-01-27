@@ -171,11 +171,10 @@ export class FacebookService {
     }
 
 
-    async fetchAndUpdatePostData() {
+    async fetchAndUpdatePostData(posts: Post[]) {
         await this.unitOfWork.startTransaction();
         const postRepository = this.unitOfWork.getRepository(PostRepository, Post, true);
         try {
-            const posts = await postRepository.fetchFacebookPosts();
             for (const post of posts) {
                 const socialMediaAccount = post.postTask?.socialMediaAccount;
                 if (!socialMediaAccount?.encrypted_access_token || !post.external_platform_id) {
@@ -227,7 +226,6 @@ export class FacebookService {
         try {
             await this.unitOfWork.startTransaction();
             const socialMediaAccountRepository = this.unitOfWork.getRepository(SocialMediaAccountRepository, SocialMediaAccount, true);
-            
             const userSocialAccount = await this.socialMediaAccountService.findSocialAccountForConnectAndDisconnectProfile(facebookPageDetails.userId, SocialMediaPlatformNames[SocialMediaPlatform.FACEBOOK], false);
 
             if (!userSocialAccount) {

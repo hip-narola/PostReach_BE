@@ -103,19 +103,6 @@ export class DashboardInsightsController {
         return await this.socialMediaInsightsService.getSocialinsightsList(GetSocilInsightsParamDto);
     }
 
-    @Get('post-details')
-    async getPostDetails(
-        @Query('postId') postId: string,
-        @Query('accessToken') accessToken: string,
-    ) {
-        if (!postId || !accessToken) {
-            return { message: 'Both postId and accessToken are required.' };
-        }
-        //   return await this.facebookService.getPostDetails(postId, accessToken);
-
-        return await this.facebookService.fetchAndUpdatePostData();
-    }
-
     @Post('post')
     @ApiBody({ type: PostToInstagramDto })
     async postToInstagram(@Body() postToInstagramDto: PostToInstagramDto) {

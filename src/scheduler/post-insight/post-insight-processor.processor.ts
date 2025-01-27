@@ -4,13 +4,16 @@ import { FacebookService } from '../../services/facebook/facebook.service';
 import { LinkedinService } from '../../services/linkedin/linkedin.service';
 import { TwitterService } from '../../services/twitter/twitter.service';
 import { InstagramService } from '../../services/instagram/instagram.service';
+import { PostRepository } from 'src/repositories/post-repository';
+import { SocialMediaPlatform, SocialMediaPlatformNames } from 'src/shared/constants/social-media.constants';
 
 @Processor('post-insight') // Queue name
 export class PostInsightProcessor extends WorkerHost {
 	constructor(private readonly facebookService: FacebookService,
 		private readonly linkedinService: LinkedinService,
 		private readonly twitterService: TwitterService,
-		private readonly instagramService: InstagramService
+		private readonly instagramService: InstagramService,
+		private readonly postRepository: PostRepository,
 
 	) {
 		super(); // Call the constructor of WorkerHost
@@ -18,12 +21,30 @@ export class PostInsightProcessor extends WorkerHost {
 
 	async process(job: Job) {
 		try {
-			//to-do
-			//call if user has subscription
-			await this.facebookService.fetchAndUpdatePostData();
-			await this.instagramService.fetchAndUpdateInstagramPostData();
-			await this.linkedinService.fetchAndUpdatePostData();
-			await this.twitterService.fetchAndUpdateTwitterPostData();
+
+			const posts = await this.postRepository.getPostsWithActiveSubscription();
+
+			const facebookPosts = posts.filter(post =>
+				post.postTask.socialMediaAccount.platform === SocialMediaPlatformNames[SocialMediaPlatform.FACEBOOK]
+			);
+			await this.facebookService.fetchAndUpdatePostData(facebookPosts);
+
+			const instagramPosts = posts.filter(post =>
+				post.postTask.socialMediaAccount.platform === SocialMediaPlatformNames[SocialMediaPlatform.INSTAGRAM]
+			);
+			await this.instagramService.fetchAndUpdateInstagramPostData(instagramPosts);
+
+
+			const twitterPosts = posts.filter(post =>
+				post.postTask.socialMediaAccount.platform === SocialMediaPlatformNames[SocialMediaPlatform.TWITTER]
+			);
+			await this.twitterService.fetchAndUpdateTwitterPostData(twitterPosts);
+
+			const LinkedinPosts = posts.filter(post =>
+				post.postTask.socialMediaAccount.platform === SocialMediaPlatformNames[SocialMediaPlatform.LINKEDIN]
+			);
+			await this.linkedinService.fetchAndUpdatePostData(LinkedinPosts);
+
 		} catch (error) {
 			throw error;
 		}

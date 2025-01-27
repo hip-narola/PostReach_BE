@@ -19,33 +19,6 @@ export class PostRepository extends GenericRepository<Post> {
         super(repository);
     }
 
-    // fetch posts with platform facebook
-    async fetchFacebookPosts() {
-        const posts = await this.repository
-            .createQueryBuilder('post')
-            .leftJoinAndSelect('post.postTask', 'postTask')
-            .leftJoinAndSelect(
-                'postTask.socialMediaAccount',
-                'socialMediaAccount',
-            )
-            .leftJoinAndSelect('socialMediaAccount.user', 'user')
-            .leftJoinAndSelect(
-                'user.userSubscriptions',
-                'userSubscription',
-                'userSubscription.status IN (:...statuses)', // Filter user subscriptions by status
-                {
-                    statuses: [
-                        UserSubscriptionStatusType.TRIAL,
-                        UserSubscriptionStatusType.ACTIVE,
-                    ],
-                }
-            )
-            .where('socialMediaAccount.platform = :platform', { platform: SocialMediaPlatformNames[SocialMediaPlatform['FACEBOOK']] })
-            .andWhere('postTask.status = :status', { status: POST_TASK_STATUS.EXECUTE_SUCCESS })
-            .getMany();
-        return posts;
-    }
-
     async fetchTwitterPosts() {
         return await this.fetchPosts(
             `${SocialMediaPlatformNames[SocialMediaPlatform.TWITTER]}`,
@@ -57,37 +30,6 @@ export class PostRepository extends GenericRepository<Post> {
         return await this.fetchPosts(
             `${SocialMediaPlatformNames[SocialMediaPlatform.LINKEDIN]}`,
         );
-    }
-
-    async fetchInstagramPosts() {
-        const posts = await this.repository
-            .createQueryBuilder('post')
-            .leftJoinAndSelect('post.postTask', 'postTask')
-            .leftJoinAndSelect(
-                'postTask.socialMediaAccount',
-                'socialMediaAccount',
-            )
-            .leftJoinAndSelect('socialMediaAccount.user', 'user')
-            .leftJoinAndSelect(
-                'user.userSubscriptions',
-                'userSubscription',
-                'userSubscription.status IN (:...statuses)', // Filter user subscriptions by status
-                {
-                    statuses: [
-                        UserSubscriptionStatusType.TRIAL,
-                        UserSubscriptionStatusType.ACTIVE,
-                    ],
-                }
-            )
-            .where('socialMediaAccount.platform = :platform', {
-                platform: 'instagram',
-            })
-            .andWhere('postTask.status = :status', {
-                status: POST_TASK_STATUS.EXECUTE_SUCCESS,
-            })
-            .getMany();
-
-        return posts;
     }
 
     async fetchPosts(platform: string) {
@@ -130,5 +72,39 @@ export class PostRepository extends GenericRepository<Post> {
             where: { id: postId },
             relations: ['postTask'],
         });
+    }
+
+    async getPostsWithActiveSubscription() {
+        const posts = await this.repository
+            .createQueryBuilder('post')
+            .leftJoinAndSelect('post.postTask', 'postTask')
+            .leftJoinAndSelect(
+                'postTask.socialMediaAccount',
+                'socialMediaAccount',
+            )
+            .leftJoinAndSelect('socialMediaAccount.user', 'user')
+            .leftJoinAndSelect(
+                'user.userSubscriptions',
+                'userSubscription',
+                'userSubscription.status IN (:...statuses)', // Filter user subscriptions by status
+                {
+                    statuses: [
+                        UserSubscriptionStatusType.TRIAL,
+                        UserSubscriptionStatusType.ACTIVE,
+                    ],
+                }
+            )
+            .andWhere('postTask.status = :status', { status: POST_TASK_STATUS.EXECUTE_SUCCESS })
+            .select([
+                'post.id',
+                'post.external_platform_id',
+                'postTask.id',
+                'postTask.status',
+                'socialMediaAccount.id',
+                'socialMediaAccount.platform',
+                'socialMediaAccount.encrypted_access_token',
+            ])
+            .getMany();
+        return posts;
     }
 }

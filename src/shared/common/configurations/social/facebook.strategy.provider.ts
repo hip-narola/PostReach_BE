@@ -13,7 +13,7 @@ export const FacebookStrategyProvider: Provider = {
     const data = await secretService.getSecret(AWS_SECRET.AWSSECRETNAME);
     const appId = data.APP_ID
     const appSecret = data.APP_SECRET
-    const facebookStartegy = "http://localhost:3000/auth/facebook/callback"
+    const facebookStartegy =  data.FACEBOOK_STRATEGY_CALLBACK
     const message = "Facebook page credentials:   " + "appId:  " + appId + " appSecret:  " + appSecret + "  callBackUrl:  " + facebookStartegy;
     logs.log(message);
     return new FacebookStrategy(userService, cognitoIdentityService, unitOfWork, appId, appSecret, facebookStartegy);
