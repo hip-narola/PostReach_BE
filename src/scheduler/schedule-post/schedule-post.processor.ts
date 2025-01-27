@@ -33,10 +33,15 @@ export class SchedulePostProcessor extends WorkerHost {
 		const { Id, channel, PostId, accessToken, message, hashtags, imageUrl, pageId, SocialMediauserId, instagramId, userId } = job.data;
 		try {
 			// throw new Error('Failed to publish post');
+			console.log("post-queue job.attemptsMade : ", job.attemptsMade);
+			console.log("post-queue job Id : ", Id);
 			switch (channel) {
 				case `${SocialMediaPlatformNames[SocialMediaPlatform['FACEBOOK']]}`:
+					console.log("post-queue postToFacebook ", PostId, pageId, accessToken, message, hashtags, imageUrl);
 					await this.facebookService.postToFacebook(PostId, pageId, accessToken, message, hashtags, imageUrl);
+					console.log("post-queue updateStatusAfterPostExecution ", Id, POST_TASK_STATUS.EXECUTE_SUCCESS);
 					await this.approvalQueueService.updateStatusAfterPostExecution(Id, POST_TASK_STATUS.EXECUTE_SUCCESS);
+					console.log("post-queue updateStatusAfterPostExecution ", userId, NotificationType.POST_PUBLISHED, NotificationMessage[NotificationType.POST_PUBLISHED]);
 					await this.notificationService.saveData(userId, NotificationType.POST_PUBLISHED, NotificationMessage[NotificationType.POST_PUBLISHED]);
 					break;
 
@@ -47,10 +52,12 @@ export class SchedulePostProcessor extends WorkerHost {
 					break;
 
 				case `${SocialMediaPlatformNames[SocialMediaPlatform['INSTAGRAM']]}`:
-
+					console.log("post-queue postToInstagram ", PostId, pageId, accessToken, message, hashtags, imageUrl);
 					await this.instagramService.postToInstagram(PostId, instagramId, accessToken, imageUrl, message, hashtags);
+					console.log("post-queue updateStatusAfterPostExecution ", Id, POST_TASK_STATUS.EXECUTE_SUCCESS);
 					await this.approvalQueueService.updateStatusAfterPostExecution(
 						Id, POST_TASK_STATUS.EXECUTE_SUCCESS);
+						console.log("post-queue updateStatusAfterPostExecution ", userId, NotificationType.POST_PUBLISHED, NotificationMessage[NotificationType.POST_PUBLISHED]);
 					await this.notificationService.saveData(userId, NotificationType.POST_PUBLISHED, NotificationMessage[NotificationType.POST_PUBLISHED]);
 					break;
 
@@ -62,6 +69,7 @@ export class SchedulePostProcessor extends WorkerHost {
 			}
 		}
 		catch (error) {
+			console.log("post-queue error: ", error, job.attemptsMade);
 			if (job.attemptsMade >= 4) {
 				await this.approvalQueueService.updateStatusAfterPostExecution(Id, POST_TASK_STATUS.FAIL);
 				await this.notificationService.saveData(userId, NotificationType.POST_FAILED, NotificationMessage[NotificationType.POST_FAILED]);
