@@ -25,6 +25,9 @@ import { JobSchedulerService } from 'src/scheduler/job-scheduler-service';
 import { SubscriptionProcessor } from 'src/scheduler/subscription/subscription-processor';
 import { GeneratePostProcessor } from 'src/scheduler/generate-post/generate-processor';
 import { CacheModule } from '../cache/cache-module';
+import { PostRepository } from 'src/repositories/post-repository';
+import { Post } from 'src/entities/post.entity';
+import { TypeOrmModule } from '@nestjs/typeorm';
 
 async function getRedisConfig() {
     const configService = new ConfigService();
@@ -40,6 +43,7 @@ async function getRedisConfig() {
 
 @Module({
     imports: [
+        TypeOrmModule.forFeature([Post]),
         BullModule.forRootAsync({
             useFactory: async () => {
                 const redisConfig = await getRedisConfig();
@@ -65,6 +69,7 @@ async function getRedisConfig() {
         CacheModule
     ],
     providers: [
+
         JobSchedulerService,
         SchedulePostProcessor,
         PostInsightProcessor,
@@ -79,7 +84,8 @@ async function getRedisConfig() {
         TwitterService,
         SubscriptionService,
         EmailService,
-        CheckUserSubscriptionService
+        CheckUserSubscriptionService,
+        PostRepository
     ],
     exports: [
         BullModule,
