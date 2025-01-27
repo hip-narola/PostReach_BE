@@ -12,6 +12,7 @@ import { ConfigService } from '@nestjs/config';
 import { AWS_SECRET } from 'src/shared/constants/aws-secret-name-constants';
 import { AwsSecretsService } from '../aws-secrets/aws-secrets.service';
 import { TOKEN_TYPE } from 'src/shared/constants/token-type-constants';
+import { FacebookPageDetailsDTO } from 'src/entities/facebook-page-details.entity';
 
 @Injectable()
 export class FacebookService {
@@ -222,11 +223,45 @@ export class FacebookService {
     }
 
 
-    async connectedFacebookAccount(userId: number): Promise<SocialMediaAccount> {
+    async connectedFacebookAccount(facebookPageDetails: FacebookPageDetailsDTO) {
         try {
-            const userSocialAccount = await this.socialMediaAccountService.findSocialAccountForConnectAndDisconnectProfile(userId, SocialMediaPlatformNames[SocialMediaPlatform.FACEBOOK], false);
-            return userSocialAccount;
+            await this.unitOfWork.startTransaction();
+            const socialMediaAccountRepository = this.unitOfWork.getRepository(SocialMediaAccountRepository, SocialMediaAccount, true);
+            
+            const userSocialAccount = await this.socialMediaAccountService.findSocialAccountForConnectAndDisconnectProfile(facebookPageDetails.userId, SocialMediaPlatformNames[SocialMediaPlatform.FACEBOOK], false);
+
+            if (!userSocialAccount) {
+
+                const facebookDetails = new SocialMediaAccount();
+                facebookDetails.encrypted_access_token = facebookPageDetails.access_token;
+                facebookDetails.facebook_Profile = facebookPageDetails.faceBookId;
+                facebookDetails.page_id = facebookPageDetails.id;
+                facebookDetails.platform = SocialMediaPlatformNames[SocialMediaPlatform.FACEBOOK];
+                facebookDetails.user_id = facebookPageDetails.userId;
+                facebookDetails.user_name = facebookPageDetails.pageName;
+                facebookDetails.user_profile = facebookPageDetails.logoUrl;
+                facebookDetails.file_name = facebookPageDetails.filePath;
+                facebookDetails.token_type = TOKEN_TYPE.PAGE_ACCESS_TOKEN;
+                facebookDetails.facebook_Profile_access_token = facebookPageDetails.facebook_Profile_access_token;
+                await socialMediaAccountRepository.create(facebookDetails);
+            }
+            else {
+                userSocialAccount.encrypted_access_token = facebookPageDetails.access_token;
+                userSocialAccount.facebook_Profile = facebookPageDetails.faceBookId;
+                userSocialAccount.page_id = facebookPageDetails.id;
+                userSocialAccount.platform = SocialMediaPlatformNames[SocialMediaPlatform.FACEBOOK];
+                userSocialAccount.user_id = facebookPageDetails.userId;
+                userSocialAccount.user_name = facebookPageDetails.pageName;
+                userSocialAccount.user_profile = facebookPageDetails.logoUrl;
+                userSocialAccount.file_name = facebookPageDetails.filePath;
+                userSocialAccount.token_type = TOKEN_TYPE.PAGE_ACCESS_TOKEN;
+                userSocialAccount.facebook_Profile_access_token = facebookPageDetails.facebook_Profile_access_token;
+
+                await socialMediaAccountRepository.update(userSocialAccount.id, userSocialAccount);
+            }
+            await this.unitOfWork.completeTransaction();
         } catch (error: any) {
+            await this.unitOfWork.rollbackTransaction();
             throw new Error(`Failed to save connected page: ${error.message}`);
         }
     }

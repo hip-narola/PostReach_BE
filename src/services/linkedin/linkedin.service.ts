@@ -408,6 +408,9 @@ export class LinkedinService {
 				userSocialAccount.token_type = Ispage ? LINKEDIN_CONST.PAGE_ACCESS_TOKEN : LINKEDIN_CONST.LINKEDINID
 				userSocialAccount.user_profile = logoUrl;
 				userSocialAccount.page_id = Ispage ? pageId : null;
+				userSocialAccount.connected_at =  new Date();
+				userSocialAccount.created_at = new Date();
+                userSocialAccount.updated_at = new Date();
 				await socialMediaAccountRepo.update(userSocialAccount.id, userSocialAccount);
 			}
 			await this.unitOfWork.completeTransaction();

@@ -270,7 +270,7 @@ export class DashboardInsightsService {
             }
         }
         catch (error) {
-            throw new Error(`Error fetching Twitter user statssadasd: ${error}`);
+            throw new Error(`Error fetching LinkedIn insight: ${error}`);
         }
     }
 
@@ -402,6 +402,7 @@ export class DashboardInsightsService {
     //     }
     // }
 
+    @Throttle({ default: { limit: 100, ttl: 86400000 } })
     async fetchUserInsights(socialMediaAccountId: number, linkedinAccessToken: string): Promise<SocialMediaInsightParamDTO> {
         const url = `${LINKEDIN_CONST.ENDPOINT}/organizationAcls?q=roleAssignee`;
 

@@ -439,9 +439,6 @@ export class LinkPageController {
 
         const { userId, pageId, isPage, platform, logoUrl } = body;
         try {
-            await this.unitOfWork.startTransaction();
-            const socialMediaInsightsRepo = this.unitOfWork.getRepository(SocialMediaAccountRepository, SocialMediaAccount, true);
-
             if (platform == SocialMediaPlatform.LINKEDIN) {
                 const { linkedInTokenParamDto } = body;
                 await this.linkedinService.connectedLinkedinAccount(
@@ -464,47 +461,15 @@ export class LinkPageController {
                 facebookPageDetails.userId = userId;
                 facebookPageDetails.logoUrl = logoUrl;
                 facebookPageDetails.filePath = facebookConnectProfileParamDto.filePath;
-                facebookPageDetails.facebook_Profile_access_token =
-                    facebookConnectProfileParamDto.facebook_Profile_access_token;
-                const userSocialAccount = await this.facebookService.connectedFacebookAccount(
-                    facebookPageDetails.userId,
-                );
+                facebookPageDetails.facebook_Profile_access_token = facebookConnectProfileParamDto.facebook_Profile_access_token;
 
-
-                if (!userSocialAccount) {
-
-                    const facebookDetails = new SocialMediaAccount();
-                    facebookDetails.encrypted_access_token = facebookPageDetails.access_token;
-                    facebookDetails.facebook_Profile = facebookPageDetails.faceBookId;
-                    facebookDetails.page_id = facebookPageDetails.id;
-                    facebookDetails.platform = SocialMediaPlatformNames[SocialMediaPlatform.FACEBOOK];
-                    facebookDetails.user_id = facebookPageDetails.userId;
-                    facebookDetails.user_name = facebookPageDetails.pageName;
-                    facebookDetails.user_profile = facebookPageDetails.logoUrl;
-                    facebookDetails.file_name = facebookPageDetails.filePath;
-                    facebookDetails.token_type = TOKEN_TYPE.PAGE_ACCESS_TOKEN;
-                    facebookDetails.facebook_Profile_access_token = facebookPageDetails.facebook_Profile_access_token;
-                    await socialMediaInsightsRepo.create(facebookDetails);
-                }
-                else {
-                    userSocialAccount.encrypted_access_token = facebookPageDetails.access_token;
-                    userSocialAccount.facebook_Profile = facebookPageDetails.faceBookId;
-                    userSocialAccount.page_id = facebookPageDetails.id;
-                    userSocialAccount.platform = SocialMediaPlatformNames[SocialMediaPlatform.FACEBOOK];
-                    userSocialAccount.user_id = facebookPageDetails.userId;
-                    userSocialAccount.user_name = facebookPageDetails.pageName;
-                    userSocialAccount.user_profile = facebookPageDetails.logoUrl;
-                    userSocialAccount.file_name = facebookPageDetails.filePath;
-                    userSocialAccount.token_type = TOKEN_TYPE.PAGE_ACCESS_TOKEN;
-                    userSocialAccount.facebook_Profile_access_token = facebookPageDetails.facebook_Profile_access_token;
-
-                    await socialMediaInsightsRepo.update(userSocialAccount.id, userSocialAccount);
-                }
-
+                await this.facebookService.connectedFacebookAccount(facebookPageDetails);
 
             } else if (platform == SocialMediaPlatform.INSTAGRAM) {
                 const { facebookConnectProfileParamDto } = body;
+
                 const instagramPageData = new InstagramPageDetailsDTO();
+
                 instagramPageData.access_token = facebookConnectProfileParamDto.access_token;
                 instagramPageData.faceBookId = facebookConnectProfileParamDto.faceBookId;
                 instagramPageData.instagramId = facebookConnectProfileParamDto.instagramId;
@@ -514,47 +479,13 @@ export class LinkPageController {
                 instagramPageData.logoUrl = logoUrl;
                 instagramPageData.faceBookPageID = pageId;
                 instagramPageData.facebook_Profile_access_token = facebookConnectProfileParamDto.facebook_Profile_access_token;
-                const userSocialAccount = await this.instagramService.connectedInstagramAccount(instagramPageData.userId);
 
-                if (!userSocialAccount) {
-
-                    const instagramDetails = new SocialMediaAccount();
-                    instagramDetails.encrypted_access_token = instagramPageData.access_token;
-                    instagramDetails.facebook_Profile = instagramPageData.faceBookId;
-                    instagramDetails.page_id = instagramPageData.faceBookPageID;
-                    instagramDetails.platform = SocialMediaPlatformNames[SocialMediaPlatform.INSTAGRAM];
-                    instagramDetails.user_id = instagramPageData.userId;
-                    instagramDetails.user_name = instagramPageData.pageName;
-                    instagramDetails.user_profile = instagramPageData.logoUrl;
-                    instagramDetails.instagram_Profile = instagramPageData.instagramId;
-                    instagramDetails.token_type = TOKEN_TYPE.INSTAGRAM_ID;
-                    instagramDetails.facebook_Profile_access_token = instagramPageData.facebook_Profile_access_token;
-                    await socialMediaInsightsRepo.create(instagramDetails);
-
-
-                }
-                else {
-                    userSocialAccount.encrypted_access_token = instagramPageData.access_token;
-                    userSocialAccount.facebook_Profile = instagramPageData.faceBookId;
-                    userSocialAccount.page_id = instagramPageData.faceBookPageID;
-                    userSocialAccount.platform = SocialMediaPlatformNames[SocialMediaPlatform.INSTAGRAM];
-                    userSocialAccount.user_id = instagramPageData.userId;
-                    userSocialAccount.user_name = instagramPageData.pageName;
-                    userSocialAccount.user_profile = instagramPageData.logoUrl;
-                    userSocialAccount.instagram_Profile = instagramPageData.instagramId;
-                    userSocialAccount.token_type = TOKEN_TYPE.INSTAGRAM_ID;
-                    userSocialAccount.facebook_Profile_access_token = instagramPageData.facebook_Profile_access_token;
-                    await socialMediaInsightsRepo.update(userSocialAccount.id, userSocialAccount);
-
-                }
+                await this.instagramService.connectedInstagramAccount(instagramPageData);
             }
-            else if (platform == SocialMediaPlatform.TWITTER) {
-                return 'Twitter profile connected successfully.';
-            }
-            else {
+            // else if (platform == SocialMediaPlatform.TWITTER) {
+            //     return 'Twitter profile connected successfully.';
+            // }
 
-            }
-            await this.unitOfWork.completeTransaction();
             //added condition to check user is able to create trial period
             const userHasSubscription = await this.subscriptionService.checkUserHasSubscription(userId);
 
@@ -568,8 +499,7 @@ export class LinkPageController {
             return `${SocialMediaPlatformNames[platform]} connected successfully`;
 
         } catch (error) {
-            await this.unitOfWork.rollbackTransaction();
-            throw new HttpException(
+                throw new HttpException(
                 error.message || 'Failed to connect profile',
                 error.status || HttpStatus.INTERNAL_SERVER_ERROR,
             );

@@ -192,8 +192,8 @@ export class SubscriptionService {
 
 					const nextPostGenerationDate = new Date(subscriptionDetail.start_Date);
 					nextPostGenerationDate.setDate(subscriptionDetail.start_Date.getDate() + 14);
-
-					if ((new Date() == new Date(subscriptionDetail.start_Date))) {
+					//to-do
+					// if ((new Date() == new Date(subscriptionDetail.start_Date))) {
 
 						// TODO: Generate Post
 						await this.createPostForSubscription(
@@ -207,7 +207,7 @@ export class SubscriptionService {
 						userCreditDetails.last_trigger_date = new Date();
 						userCreditDetails.current_credit_amount = userCreditDetails.current_credit_amount - 1;
 						await userCreditRepository.update(userCreditDetails.id, userCreditDetails);
-					}
+					// }
 				}
 				// }
 			}
@@ -452,6 +452,7 @@ export class SubscriptionService {
 			// Save the single UserCredit instance
 			await userCreditRepository.create(userCredit);
 		}
+
 	}
 
 	/**
@@ -467,13 +468,10 @@ export class SubscriptionService {
 		userCredit.id = generateId(IdType.USER_SUBSCRIPTION_CREDIT);
 		userCredit.user = user;
 		userCredit.subscription = subscription;
-
-		if (userSubscription.cycle == 1) {
-			userCredit.current_credit_amount = subscription.creditAmount * 2;
-		} else {
-			userCredit.current_credit_amount = subscription.creditAmount;
-		}
-
+		userCredit.current_credit_amount =
+        userSubscription.cycle === 1
+            ? subscription.creditAmount * 2
+            : subscription.creditAmount;
 		// Add 3 days to start_Date
 		// userCredit.start_Date = new Date(
 		// 	new Date(userSubscription.start_Date).setDate(
@@ -488,11 +486,13 @@ export class SubscriptionService {
 		// );
 
 		// Add 3 days to today's date for start_Date
-		userCredit.start_Date = new Date();
+		// userCredit.start_Date = new Date();
+		userCredit.start_Date = new Date(userSubscription.start_Date);
 		userCredit.start_Date.setDate(userCredit.start_Date.getDate() + 3);
 
 		// Add 1 month and 3 days to today's date for end_Date
-		userCredit.end_Date = new Date();
+		// userCredit.end_Date = new Date();
+		userCredit.end_Date  = new Date(userSubscription.start_Date);
 		userCredit.end_Date.setMonth(userCredit.end_Date.getMonth() + 1);
 		userCredit.end_Date.setDate(userCredit.end_Date.getDate() + 3);
 		userCredit.cancel_Date = null;
@@ -552,6 +552,7 @@ export class SubscriptionService {
 			const stripeSubscription = await this.stripe.subscriptions.create({
 				customer: user.stripeCustomerId,
 				items: [{ price: subscription.stripePriceId }], // Replace with your trial price ID
+				// items: [{ price: 'price_1QaH70DeQp3ZMZcw42IeHkSt' }], // Replace with your trial price ID
 				// trial_period_days: 3,
 				trial_period_days: 7,
 				payment_behavior: 'default_incomplete', // Ensure the subscription waits for payment completion
@@ -636,7 +637,6 @@ export class SubscriptionService {
 	async saveUserSubscription(user: User, subscription: Subscription, invoice?: Stripe.Invoice, stripeSubscription?: Stripe.Subscription) {
 		try {
 			await this.unitOfWork.startTransaction();
-
 			const userSubscriptionRepository = this.unitOfWork.getRepository(
 				UserSubscriptionRepository,
 				UserSubscription,
@@ -655,7 +655,6 @@ export class SubscriptionService {
 					userSubscription.id,
 					userSubscription,
 				);
-
 			}
 
 			const userSubscriptionCreate = await this.createUserSubscription(
@@ -664,7 +663,7 @@ export class SubscriptionService {
 				invoice,
 				stripeSubscription
 			);
-
+			
 			await userSubscriptionRepository.create(userSubscriptionCreate);
 
 
@@ -739,7 +738,7 @@ export class SubscriptionService {
 				const html = await this.emailService.loadTemplateWithData(EMAIL_SEND_FILE[EMAIL_SEND.TRIAL_EXPIRING_SOON], emailData);
 
 				await this.emailService.sendEmail(user.email, EMAIL_SEND.TRIAL_EXPIRING_SOON, html);
-
+				console.log(customerPortalLink.url, 'customerPortalLinkURL')
 				break;
 
 			case 'customer.subscription.updated': // Handle subscription updates
@@ -771,26 +770,44 @@ export class SubscriptionService {
 					const invoicePaid = event.data.object as Stripe.Invoice;
 					// The  customer ID
 					const customerId = invoicePaid.customer;
-
 					//Get user by stripe customer ID
-					const existingUser = await userRepository.findByField('stripeCustomerId', customerId);
+
+					let existingUser;
+					try {
+						existingUser = await userRepository.findByField('stripeCustomerId', customerId);
+					} catch (findUserError) {
+						console.error('Error fetching user by Stripe customer ID:', findUserError);
+						throw new Error('Failed to retrieve user.'); // Re-throw to propagate the error
+					}
+					// const existingUser = await userRepository.findByField('stripeCustomerId', customerId);
+
 					//stripe subscription object
 					const stripeSubscription = await this.stripe.subscriptions.retrieve(
 						typeof invoicePaid.subscription === 'string'
 							? invoicePaid.subscription
 							: invoicePaid.subscription.id,
 					);
+					if (stripeSubscription.trial_end && invoicePaid.total == 0) {
+						await this.saveSubAndCredit(existingUser, stripeSubscription);
 
-					// invoicePaid.total != 0 && 
-					if (existingUser && !stripeSubscription.trial_end) {
+						//find user SocialMediaAccount Without Active Credit
+						const socialMediaAccount = await this.socialMediaAccountService.findFirstSocialMediaAccountWithoutActiveCredit(existingUser.id);
+
+						//save user credit for trial
+						await this.findByUserAndPlatformAndSaveCredit(existingUser.id, socialMediaAccount);
+					}
+					else {
 						const subscriptionRepository = this.unitOfWork.getRepository(
 							SubscriptionRepository,
 							Subscription,
 							false,
 						);
 
+						const subscription = await subscriptionRepository.findSubscriptionByName(
+							planType.STARTER_PACKAGE,
+						);
 						//Fetch subscription using price id
-						const subscription = await subscriptionRepository.findSubscriptionByPriceId(stripeSubscription.items.data[0].price.id);
+						// const subscription = await subscriptionRepository.findSubscriptionByPriceId(stripeSubscription.items.data[0].price.id);
 
 						//subscription for first time or recurring
 						if (invoicePaid.billing_reason == 'subscription_create' || invoicePaid.billing_reason == 'subscription_cycle') {
@@ -803,18 +820,11 @@ export class SubscriptionService {
 
 						}
 					}
-					else {
-						if (stripeSubscription.trial_end && invoicePaid.amount_due == 0 && invoicePaid.total == 0) {
-							await this.saveSubAndCredit(existingUser, stripeSubscription);
 
-							//find user SocialMediaAccount Without Active Credit
-							const socialMediaAccount = await this.socialMediaAccountService.findFirstSocialMediaAccountWithoutActiveCredit(existingUser.id);
+					// invoicePaid.total != 0 && 
 
-							//save user credit for trial
-							await this.findByUserAndPlatformAndSaveCredit(existingUser.id, socialMediaAccount);
-						}
-					}
 				} catch (error) {
+					console.log(error, 'errro in stripe');
 					throw error;
 				}
 				break;
