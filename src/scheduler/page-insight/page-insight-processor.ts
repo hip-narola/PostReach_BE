@@ -30,7 +30,6 @@ export class PageInsightProcessor extends WorkerHost {
                     await this.createDataForNewDay(data);
                 }
             } catch (error) {
-                console.error(`Error processing account ${socia_media_account.id}:`, error);
             }
         }
 
@@ -41,7 +40,6 @@ export class PageInsightProcessor extends WorkerHost {
             });
 
         } catch (error) {
-            console.log(`Error in twitter refresh token`, error);
         }
     }
 
@@ -72,11 +70,9 @@ export class PageInsightProcessor extends WorkerHost {
 
 
             } else {
-                console.warn('Unknown platform:', socia_media_account.platform);
                 return null;
             }
         } catch (error) {
-            console.error(`Error fetching data for account ${socia_media_account.id}:`, error);
             throw error;
         }
     }

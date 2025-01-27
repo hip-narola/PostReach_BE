@@ -55,7 +55,6 @@ export class LinkedinService {
 	}
 
 	async getAccessToken(code: string): Promise<any> {
-		// console.log(userId, 'userId');
 		const clientId = this.linkedinClientID;
 		const clientSecret = this.linkedinClientSecret;
 		const redirectUri = this.linkedinCallBack;

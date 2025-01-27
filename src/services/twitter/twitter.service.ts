@@ -501,17 +501,13 @@ export class TwitterService {
 			await this.unitOfWork.completeTransaction();
 		} catch (error) {
 			const errorDetails = error.response?.data || error.message;
-			console.log(`Failed to refresh token: ${errorDetails}`);
-
 			// Rollback the transaction in case of an error
 			if (this.unitOfWork['queryRunner']) {  // Access queryRunner privately for rollback
 				try {
 					await this.unitOfWork.rollbackTransaction();
 				} catch (rollbackError) {
-					console.log('Rollback failed:', rollbackError.message);
 				}
 			} else {
-				console.log('No active transaction to rollback.');
 			}
 		}
 	}

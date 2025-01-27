@@ -10,14 +10,15 @@ import { JwtAuthGuard } from 'src/shared/common/guards/jwt/jwt.guard';
 import { FacebookModule } from '../facebook/facebook.module';
 import { CognitoIdentityService } from 'src/services/cognito-identity/cognito-identity.service';
 import { UnitOfWork } from 'src/unitofwork/unitofwork';
-import { GoogleStrategyProvider } from 'src/shared/common/configurations/social/google.strategy.provider';
 import { AwsSecretsService } from 'src/services/aws-secrets/aws-secrets.service';
 import { FacebookStrategyProvider } from 'src/shared/common/configurations/social/facebook.strategy.provider';
+import { Logger } from 'src/services/logger/logger.service';
+import { GoogleStrategyProvider } from 'src/shared/common/configurations/social/google.strategy.provider';
 
 @Module({
   imports: [PassportModule,ConfigModule,UserModule,FacebookModule],
-  providers: [AuthService,GoogleStrategyProvider,EmailService,JwtStrategy,JwtAuthGuard,FacebookStrategyProvider,CognitoIdentityService,UnitOfWork,AwsSecretsService],
+  providers: [AuthService, GoogleStrategyProvider, Logger, EmailService, JwtStrategy, JwtAuthGuard, FacebookStrategyProvider, CognitoIdentityService, UnitOfWork, AwsSecretsService],
   controllers: [AuthController],
-  exports: [AuthService,JwtAuthGuard,JwtStrategy,CognitoIdentityService],
+  exports: [AuthService, JwtAuthGuard, JwtStrategy, CognitoIdentityService],
 })
-export class AuthModule {}
+export class AuthModule { }

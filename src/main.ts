@@ -19,7 +19,7 @@ async function bootstrap() {
   // Helmet for securing HTTP headers
   app.use(helmet());
 
-  // Configure sessions with more secure options
+  //Configure sessions with more secure options
   app.use(
     session({
       secret: configService.get('SESSION_SECRET') || '0716f5f0-4c0d-41d5-9564-a93f38b5a931',

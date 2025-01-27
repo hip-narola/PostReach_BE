@@ -52,7 +52,6 @@ export class JobSchedulerService {
                 },
             );
         } catch (error) {
-            console.error('Error during job scheduling:', error.message);
         }
     }
 
@@ -237,14 +236,12 @@ export class JobSchedulerService {
                         if (jobId !== null) {
                             ids.push(jobId); // Collect valid job IDs
                         } else {
-                            console.warn('Job ID is missing or invalid:', job);
                         }
                         await job.remove();
 
 
                     } catch (error) {
                         // Handle any error during job removal
-                        console.error(`Error removing job ID ${job?.data?.Id ?? 'unknown'}:`, error);
                     }
                 } else {
                     // Warn if job is undefined or doesn't have a remove method
@@ -303,7 +300,6 @@ export class JobSchedulerService {
             }
         );
 
-        console.log('Half-hourly likesCommentsViews job scheduled successfully.');
     }
 
     private async scheduleHourlyJob(): Promise<void> {

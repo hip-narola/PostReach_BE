@@ -11,8 +11,8 @@ import { ResendConfirmationCodeParamDto } from 'src/dtos/params/resend-confirmat
 import { GlobalConfig } from 'src/config/global-config';
 import { ConfigService } from '@nestjs/config';
 import { FacebookSignupAuthGuard } from 'src/shared/common/guards/facebook-signup/facebook-signup.guard';
-import { GoogleSignupGuard } from 'src/shared/common/guards/google-signup/google-signup.guard';
 import { LogoutParamDto } from 'src/dtos/params/logout-param.dto';
+import { GoogleSignupGuard } from 'src/shared/common/guards/google-signup/google-signup.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -24,7 +24,8 @@ export class AuthController {
 	// Google Login
 	@Get('google')
 	@UseGuards(GoogleSignupGuard)
-	googleLogin() { }
+	googleLogin() {
+	}
 
 	// Google Login Callback
 	@Get('google/callback')
@@ -42,8 +43,19 @@ export class AuthController {
 				res.redirect(redirectUrl);
 				return;
 			}
+			const isSuccess = false;
+			const redirectUrl =
+				`${appUrl}/auth/signin?` +
+				`isSuccess=${encodeURIComponent(isSuccess)}`;
+			res.redirect(redirectUrl);
+			return;
 		}
-
+		if (!req.user) {
+			const isSuccess = false;
+			const redirectUrl = `${appUrl}/auth/signin?isSuccess=${encodeURIComponent(isSuccess)}`;
+			res.redirect(redirectUrl);
+			return;
+		}
 		const redirectUrl = `${appUrl}/auth/signin?` +
 			`userId=${encodeURIComponent(req.user.userId)}&` +
 			`firstName=${encodeURIComponent(req.user.firstName)}&` +
@@ -54,7 +66,6 @@ export class AuthController {
 			`refresh_token=${encodeURIComponent(req.user.refreshToken)}`;
 
 		this.setCookie(res, req.user.cognitoIdToken);
-
 		res.redirect(redirectUrl);
 	}
 
@@ -114,7 +125,7 @@ export class AuthController {
 				signInDto.password,
 				signInDto.rememberMe,
 			);
-			
+
 			GlobalConfig.secrets = { userId: data.userId.toString() };
 
 			this.setCookie(res, data.accessToken);
