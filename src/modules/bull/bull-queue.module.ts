@@ -13,6 +13,7 @@ import { PostInsightProcessor } from 'src/scheduler/post-insight/post-insight-pr
 import { InstagramService } from 'src/services/instagram/instagram.service';
 import { TwitterService } from 'src/services/twitter/twitter.service';
 import { UserModule } from '../user/user.module';
+import { NotificationModule } from '../notification/notification.module';
 import { SubscriptionService } from 'src/services/subscription/subscription.service';
 import { CheckUserSubscriptionService } from 'src/services/check-user-subscription/check-user-subscription.service';
 import { EmailService } from 'src/services/email/email.service';
@@ -59,6 +60,7 @@ async function getRedisConfig() {
         DashboardInsightsModule,
         SocialMediaAccountModule,
         UserModule,
+        NotificationModule,
         AwsSecretsServiceModule,
         CacheModule
     ],
