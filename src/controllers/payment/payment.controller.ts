@@ -51,13 +51,23 @@ export class PaymentController {
     }
 
     @Post('get-coustomer-payment-link')
-    async getCoustomerPaymentLink(@Body() body: { userId: number }) {
+    async getCoustomerPaymentLink(@Body() body: { userId: number }, @Res() res: Response) {
         const portal = await this.subscriptionService.generateCustomerPortalLink(
             body.userId,
         );
         if (portal != null)
-            return { url: portal.url };
+            return res.status(HttpStatus.OK).json({
+                StatusCode: HttpStatus.OK,
+                Message: 'Please check Stripe redirection to manage your subscription.',
+                IsSuccess: false,
+                Data: { url: null },
+            });
         else
-            return { url: null };
+            return res.status(HttpStatus.OK).json({
+                StatusCode: HttpStatus.OK,
+                Message: 'Subscription is not started yet.',
+                IsSuccess: false,
+                Data: { url: null },
+            });
     }
 }

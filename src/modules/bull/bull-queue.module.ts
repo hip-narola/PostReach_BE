@@ -24,26 +24,31 @@ import { ConfigService } from '@nestjs/config';
 import { JobSchedulerService } from 'src/scheduler/job-scheduler-service';
 import { SubscriptionProcessor } from 'src/scheduler/subscription/subscription-processor';
 import { GeneratePostProcessor } from 'src/scheduler/generate-post/generate-processor';
-import { RedisService } from 'src/redis-service';
-
+import { CacheModule } from '../cache/cache-module';
 
 async function getRedisConfig() {
     const configService = new ConfigService();
     const secretsService = new AwsSecretsService(configService);
     const secrets = await secretsService.getSecret(AWS_SECRET.AWSSECRETNAME);
     return {
-        host: secrets.REDIS_HOST,
-        port: parseInt(secrets.REDIS_PORT, 10),
-        password: secrets.REDIS_PASSWORD,
+        host: 'redis-11619.c114.us-east-1-4.ec2.redns.redis-cloud.com',//secrets.REDIS_HOST,
+        port: 11619, //parseInt(secrets.REDIS_PORT, 10),
+        password: '4ijX6KOTVR6biLMpMIOu6H7qI40OIWcg', //secrets.REDIS_PASSWORD,
         connectTimeout: 10000,
     };
 }
+
+
 
 @Module({
     imports: [
         BullModule.forRootAsync({
             useFactory: async () => {
+                console.log("BULL config");
+                // const redisClient = redisService.getClient();
                 const redisConfig = await getRedisConfig();
+                console.log("BULL config redisClient, ", redisConfig);
+
                 return {
                     connection: redisConfig,
                 };
@@ -62,7 +67,8 @@ async function getRedisConfig() {
         SocialMediaAccountModule,
         UserModule,
         NotificationModule,
-        AwsSecretsServiceModule
+        AwsSecretsServiceModule,
+        CacheModule
     ],
     providers: [
         JobSchedulerService,
@@ -79,8 +85,7 @@ async function getRedisConfig() {
         TwitterService,
         SubscriptionService,
         EmailService,
-        CheckUserSubscriptionService,
-        RedisService
+        CheckUserSubscriptionService
     ],
     exports: [
         BullModule,

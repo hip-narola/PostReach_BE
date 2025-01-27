@@ -42,7 +42,8 @@ import { NotificationModule } from './modules/notification/notification.module';
 import { PaymentModule } from './modules/payment/payment.module';
 import { SubscriptionService } from './services/subscription/subscription.service';
 import { ConfigModule } from '@nestjs/config';
-import { RedisService } from './redis-service';
+import { RedisModule } from './modules/redis/redis-module';
+import { CacheModule } from './modules/cache/cache-module';
 
 @Module({
   imports: [
@@ -79,6 +80,8 @@ import { RedisService } from './redis-service';
     PostHistoryModule,
     NotificationModule,
     PaymentModule,
+    RedisModule,
+    CacheModule
   ],
   controllers: [AppController, LinkPageController],
   providers: [
@@ -113,8 +116,7 @@ import { RedisService } from './redis-service';
     CalenderService,
     DashboardInsightsService,
     SocialMediaInsightsService,
-    SubscriptionService,
-    RedisService
+    SubscriptionService
   ],
   exports: [AwsSecretsService],
 })

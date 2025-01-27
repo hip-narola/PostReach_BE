@@ -13,13 +13,12 @@ import { ConfigService } from '@nestjs/config';
 import { FacebookSignupAuthGuard } from 'src/shared/common/guards/facebook-signup/facebook-signup.guard';
 import { GoogleSignupGuard } from 'src/shared/common/guards/google-signup/google-signup.guard';
 import { LogoutParamDto } from 'src/dtos/params/logout-param.dto';
-import { RedisService } from 'src/redis-service';
+
 @Controller('auth')
 export class AuthController {
 
 	constructor(private configService: ConfigService,
-		private readonly authService: AuthService,
-		private readonly redisService: RedisService
+		private readonly authService: AuthService
 	) { }
 
 	// Google Login

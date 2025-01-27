@@ -11,7 +11,7 @@ import { ImageUploadService } from 'src/services/image-upload/image-upload.servi
 import { QuestionnaireModule } from '../questionnaire/questionnaire.module'; // Import the module
 import { NotificationModule } from '../notification/notification.module';
 import { AwsSecretsServiceModule } from '../aws-secrets-service/aws-secrets-service.module';
-import { RedisService } from 'src/redis-service';
+import { CacheModule } from '../cache/cache-module';
 
 @Module({
   imports: [
@@ -20,10 +20,10 @@ import { RedisService } from 'src/redis-service';
     UnitOfWorkModule,
     QuestionnaireModule,
     NotificationModule,
-    AwsSecretsServiceModule
+    AwsSecretsServiceModule,
+    CacheModule
   ],
-  providers: [TwitterService, UserService, ImageUploadService,
-    RedisService
+  providers: [TwitterService, UserService, ImageUploadService
   ],
   exports: [UserService],
 })

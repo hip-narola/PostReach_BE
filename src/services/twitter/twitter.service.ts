@@ -17,8 +17,8 @@ import { TwitterUserDataDto } from 'src/dtos/response/twitter-user-data-dto';
 import { PostInsightsDTO } from 'src/dtos/response/post-insights-dto';
 import { AwsSecretsService } from '../aws-secrets/aws-secrets.service';
 import { AWS_SECRET } from 'src/shared/constants/aws-secret-name-constants';
-import { RedisService } from 'src/redis-service';
 import { REDIS_STORAGE } from 'src/shared/constants/redis_storage_contstants';
+import { CacheService } from 'src/modules/cache/cache-service';
 
 @Injectable()
 export class TwitterService {
@@ -35,7 +35,7 @@ export class TwitterService {
 		private readonly socialMediaAccountService: SocialMediaAccountService,
 		private readonly unitOfWork: UnitOfWork,
 		private readonly secretService: AwsSecretsService,
-		private redisService: RedisService,
+		private cacheSerive: CacheService,
 	) {
 
 		this.initialize();
@@ -58,7 +58,7 @@ export class TwitterService {
 		const codeChallenge = await this.generateCodeChallenge(codeVerifier);
 		const state = userId.toString();
 
-		await this.redisService.set(REDIS_STORAGE.TWITTER_CODEVERIFIER.replace('{0}', state), JSON.stringify({ codeVerifier, state }));
+		await this.cacheSerive.setCache(REDIS_STORAGE.TWITTER_CODEVERIFIER.replace('{0}', state), JSON.stringify({ codeVerifier, state }));
 
 		const clientId = this.clientId;
 		const redirectUri = this.twitterCallBack;
@@ -78,12 +78,12 @@ export class TwitterService {
 	async exchangeCodeForToken(code: string, state: string): Promise<any> {
 
 		// Exchange authorization code for access token
-		const codeverifier_json = await this.redisService.get(REDIS_STORAGE.TWITTER_CODEVERIFIER.replace('{0}', state));
+		const codeverifier_json = await this.cacheSerive.getCache(REDIS_STORAGE.TWITTER_CODEVERIFIER.replace('{0}', state));
 		const codeverifier_value = JSON.parse(codeverifier_json);
 
 		// Ensure the session data and state are valid
 		if (!codeverifier_value || codeverifier_value.state !== state) {
-			this.redisService.del(REDIS_STORAGE.TWITTER_CODEVERIFIER.replace('{0}', state));
+			this.cacheSerive.deleteCache(REDIS_STORAGE.TWITTER_CODEVERIFIER.replace('{0}', state));
 			throw new BadRequestException('Invalid or expired state parameter.');
 		}
 
@@ -118,12 +118,12 @@ export class TwitterService {
 
 				// Store token and user details
 				await this.socialMediaAccountService.storeTokenDetails(parseInt(state), tokenDataDTO, 'twitter');
-				this.redisService.del(REDIS_STORAGE.TWITTER_CODEVERIFIER.replace('{0}', state));
+				this.cacheSerive.deleteCache(REDIS_STORAGE.TWITTER_CODEVERIFIER.replace('{0}', state));
 				return response;
 			}
 		} catch (error) {
 
-			this.redisService.del(REDIS_STORAGE.TWITTER_CODEVERIFIER.replace('{0}', state));
+			this.cacheSerive.deleteCache(REDIS_STORAGE.TWITTER_CODEVERIFIER.replace('{0}', state));
 			throw new Error(`Failed to exchange code for token: ${JSON.stringify(error.response?.data || error.message)}`);
 		}
 	}
