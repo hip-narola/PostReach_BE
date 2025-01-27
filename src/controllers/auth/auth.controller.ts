@@ -13,12 +13,14 @@ import { ConfigService } from '@nestjs/config';
 import { FacebookSignupAuthGuard } from 'src/shared/common/guards/facebook-signup/facebook-signup.guard';
 import { LogoutParamDto } from 'src/dtos/params/logout-param.dto';
 import { GoogleSignupGuard } from 'src/shared/common/guards/google-signup/google-signup.guard';
+import { Logger } from 'src/services/logger/logger.service';
 
 @Controller('auth')
 export class AuthController {
 
 	constructor(private configService: ConfigService,
-		private readonly authService: AuthService
+		private readonly authService: AuthService,
+		private readonly logger:Logger
 	) { }
 
 	// Google Login
@@ -35,6 +37,8 @@ export class AuthController {
 		const appUrl = this.configService.get<string>('APP_URL_FRONTEND');
 		const error = req.query.error;
 		if (error) {
+
+			
 			if (error === 'access_denied') {
 				const isSuccess = false;
 				const redirectUrl =
