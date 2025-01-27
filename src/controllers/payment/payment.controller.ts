@@ -60,7 +60,7 @@ export class PaymentController {
                 StatusCode: HttpStatus.OK,
                 Message: 'Please check Stripe redirection to manage your subscription.',
                 IsSuccess: false,
-                Data: { url: null },
+                Data: { url: portal.url },
             });
         else
             return res.status(HttpStatus.OK).json({
