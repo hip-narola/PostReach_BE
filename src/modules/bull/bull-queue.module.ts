@@ -38,17 +38,11 @@ async function getRedisConfig() {
     };
 }
 
-
-
 @Module({
     imports: [
         BullModule.forRootAsync({
             useFactory: async () => {
-                console.log("BULL config");
-                // const redisClient = redisService.getClient();
                 const redisConfig = await getRedisConfig();
-                console.log("BULL config redisClient, ", redisConfig);
-
                 return {
                     connection: redisConfig,
                 };

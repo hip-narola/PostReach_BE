@@ -47,8 +47,7 @@ export class TwitterService {
 		this.consumerSecret = secretData.TWITTER_API_KEY_SECRET;
 		this.accessToken = secretData.TWITTER_ACCESS_TOKEN;
 		this.accessTokenSecret = secretData.TWITTER_ACCESS_TOKEN_SECRET;
-		this.twitterCallBack = 'http://localhost:3000/link-page/twitter-callback';
-		// this.twitterCallBack = secretData.TWITTER_CALLBACK_URL;
+		this.twitterCallBack = secretData.TWITTER_CALLBACK_URL;
 	}
 
 

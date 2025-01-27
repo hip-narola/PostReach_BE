@@ -65,7 +65,7 @@ export class PaymentController {
         else
             return res.status(HttpStatus.OK).json({
                 StatusCode: HttpStatus.OK,
-                Message: 'Subscription is not started yet.',
+                Message: 'Subscription is not started yet. Please connect to any social media to start your trail period.',
                 IsSuccess: false,
                 Data: { url: null },
             });
