@@ -142,7 +142,7 @@ export class ApprovalQueueService {
             console.log("post-queue save notification");
             // Add notification
             const notificationType = status == POST_TASK_STATUS.FAIL ? POST_TASK_STATUS.FAIL : POST_TASK_STATUS.EXECUTE_SUCCESS;
-            const notificationContent= status == POST_TASK_STATUS.FAIL ? NotificationMessage[NotificationType.POST_FAILED] : NotificationMessage[NotificationType.POST_PUBLISHED];
+            const notificationContent = status == POST_TASK_STATUS.FAIL ? NotificationMessage[NotificationType.POST_FAILED] : NotificationMessage[NotificationType.POST_PUBLISHED];
 
             console.log("post-queue save notification : notificationType ", notificationType, notificationContent);
             await this.notificationService.saveData(record.user.id, notificationType, notificationContent);
