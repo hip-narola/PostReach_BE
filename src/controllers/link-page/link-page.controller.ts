@@ -29,12 +29,8 @@ import { DisconnectProfileDTO } from 'src/dtos/params/disconnect-profile-param.d
 import { UnitOfWork } from 'src/unitofwork/unitofwork';
 import { SubscriptionService } from 'src/services/subscription/subscription.service';
 import { ConfigService } from '@nestjs/config';
-// import * as CryptoJS from 'crypto-js';
 import { LinkedInTokenParamDto } from 'src/dtos/params/linkedin-token-data.dto';
 import { FacebookConnectProfileParamDto } from 'src/dtos/params/facebook-connect-profile-param.dto';
-import { SocialMediaAccountRepository } from 'src/repositories/social-media-account-repository';
-import { SocialMediaAccount } from 'src/entities/social-media-account.entity';
-import { TOKEN_TYPE } from 'src/shared/constants/token-type-constants';
 
 @Controller('link-page')
 export class LinkPageController {
@@ -51,6 +47,7 @@ export class LinkPageController {
         private readonly subscriptionService: SubscriptionService,
     ) { }
 
+    /* Twitter | Started */
     @Get('twitter-login/:userId')
     async login(@Res() res: Response, @Param('userId') userId: number) {
         const { url } = await this.twitterService.getAuthorizationUrl(userId);
@@ -109,7 +106,9 @@ export class LinkPageController {
             res.redirect(redirectUrl);
         }
     }
+    /* Twitter | Finished */
 
+    /* LinkedIn | Started */
     @Get('linkedin-login')
     async linkedinLogin(@Res() res: Response) {
         try {
@@ -164,7 +163,9 @@ export class LinkPageController {
             res.redirect(redirectUrl);
         }
     }
+    /* LinkedIn | Finished */
 
+    /* Facebook | Started */
     // Facebook  login for page link
     @Get('facebook-page')
     @UseGuards(FacebookPageAuthGuard)
@@ -224,7 +225,9 @@ export class LinkPageController {
             `isSuccess=${encodeURIComponent(isSuccess)}`;
         res.redirect(redirectUrl);
     }
+    /* Facebook | Finished */
 
+    /* Instagram | Started */
     // instagram-link
     @Get('instagram-link')
     @UseGuards(InstagramAuthGuard)
@@ -269,7 +272,7 @@ export class LinkPageController {
         }
         res.redirect(redirectUrl);
     }
-
+    
     // connect to the instagram
     @Post('connect-instagram')
     async connectInstagram(
@@ -282,6 +285,7 @@ export class LinkPageController {
         );
         return instagramAccount;
     }
+    /* Instagram | Finished */
 
     @Get('pages/:userId/:platform')
     async getLinkedInPages(
@@ -499,41 +503,13 @@ export class LinkPageController {
             return `${SocialMediaPlatformNames[platform]} connected successfully`;
 
         } catch (error) {
-                throw new HttpException(
+            throw new HttpException(
                 error.message || 'Failed to connect profile',
                 error.status || HttpStatus.INTERNAL_SERVER_ERROR,
             );
         }
     }
 
-    // @Get('twitter-user')
-    // async getTwitterUser(@Query('bearerToken') bearerToken: string, @Query('userID') userID: number): Promise<any> {
-    //     try {
-    //         return await this.twitterService.getTwitterUserData(bearerToken, userID);
-    //     } catch (error) {
-    //         if (error instanceof HttpException) {
-    //             throw error;
-    //         } else {
-    //             throw new HttpException('Unexpected error occurred', HttpStatus.INTERNAL_SERVER_ERROR);
-    //         }
-    //     }
-    // }
-
-    // @Get('tweet-detail')
-    // async getTweet(@Query('bearerToken') bearerToken: string, @Query('id') tweetId: string): Promise<any> {
-    //     if (!tweetId) {
-    //         throw new HttpException('Tweet ID is required', HttpStatus.BAD_REQUEST);
-    //     }
-    //     try {
-    //         return await this.twitterService.getTweetDetails(bearerToken, tweetId);
-    //     } catch (error) {
-    //         if (error instanceof HttpException) {
-    //             throw error;
-    //         } else {
-    //             throw new HttpException('Unexpected error occurred', HttpStatus.INTERNAL_SERVER_ERROR);
-    //         }
-    //     }
-    // }
 
     @Post('disconnectProfile')
     @ApiBody({

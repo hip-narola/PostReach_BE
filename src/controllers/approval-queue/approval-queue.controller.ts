@@ -40,11 +40,11 @@ export class ApprovalQueueController {
         );
         if (data == true) {
             return {
-                message: 'Post are approved successfully',
+                message: 'Post(s) approved successfully.',
             };
         } else {
             return {
-                message: 'Post are rejected successfully',
+                message: 'Post(s) rejected successfully.',
             };
         }
     }

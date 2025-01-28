@@ -21,7 +21,7 @@ export class PostHistoryController {
     async archivePosts(@Body() dto: ArchivePostsDto): Promise<object> {
         await this.postHistoryService.archivePosts(dto.postIds);
         return {
-            message: 'Post are deleted successfully',
+            message: 'Post(s) deleted successfully.',
         };
     }
 
