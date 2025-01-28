@@ -166,7 +166,7 @@ export class AuthService {
   async forgotPassword(email: string): Promise<any> {
     const userExists = await this.userService.findUserByEmail(email);
     if (!userExists) {
-      throw new NotFoundException('User is not exist');
+      throw new NotFoundException('Email does not exists. Please enter registered email.');
     }
     const command = new ForgotPasswordCommand({
       ClientId: this.appClientId,

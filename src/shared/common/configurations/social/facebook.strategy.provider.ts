@@ -16,6 +16,7 @@ export const FacebookStrategyProvider: Provider = {
     const facebookStartegy =  data.FACEBOOK_STRATEGY_CALLBACK
     const message = "Facebook page credentials:   " + "appId:  " + appId + " appSecret:  " + appSecret + "  callBackUrl:  " + facebookStartegy;
     logs.log(message);
+    console.log(message);
     return new FacebookStrategy(userService, cognitoIdentityService, unitOfWork, appId, appSecret, facebookStartegy);
   },
   inject: [UserService, CognitoIdentityService, UnitOfWork, AwsSecretsService, Logger],

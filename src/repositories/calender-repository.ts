@@ -9,6 +9,7 @@ import { ASSET_TYPE } from 'src/shared/constants/asset-type-constants';
 
 @Injectable()
 export class CalenderRepository extends GenericRepository<PostTask> {
+
     constructor(repository: Repository<PostTask>) {
         super(repository);
     }
@@ -58,7 +59,5 @@ export class CalenderRepository extends GenericRepository<PostTask> {
         catch (error) {
             throw error;
         }
-
     }
-
 }

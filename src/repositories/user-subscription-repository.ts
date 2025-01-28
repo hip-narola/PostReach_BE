@@ -122,7 +122,7 @@ export class UserSubscriptionRepository extends GenericRepository<UserSubscripti
 	}
 	
 	
-	async findUserActiveSubscriptionWithoutSubscriptionId(userId) {
+	async findUserActiveSubscriptionWithoutSubscriptionId(userId) : Promise<UserSubscription> {
 		
 		const subscription =  this.repository.findOne({
 			relations: ['subscription', 'user'],
