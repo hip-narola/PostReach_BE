@@ -12,7 +12,6 @@ import { PageInsightsDTO } from 'src/dtos/response/page-insights.dto';
 import { PostRepository } from 'src/repositories/post-repository';
 import { Post } from 'src/entities/post.entity';
 import { TWITTER_CONST } from 'src/shared/constants/twitter-constant';
-import { LinkedinService } from '../linkedin/linkedin.service';
 import { SocialMediaPlatform, SocialMediaPlatformNames } from 'src/shared/constants/social-media.constants';
 import { Throttle } from '@nestjs/throttler';
 import { SocialTokenDataDTO } from 'src/dtos/params/social-token-data-dto';
@@ -23,91 +22,18 @@ export class DashboardInsightsService {
 
     constructor(
         private readonly unitOfWork: UnitOfWork,
-        private readonly httpService: HttpService,
-        private readonly linkedinService: LinkedinService
+        private readonly httpService: HttpService
     ) { }
 
     // services for facebook count
-    async getTotalFacebookPostList(userID: number): Promise<number> {
+    async getTotalPostList(userID: number, platform: string | null = null, statuses: string[]): Promise<number> {
         const postHistoryRepository = this.unitOfWork.getRepository(DashboardInsightsRepository, PostTask, false);
-        const data = await postHistoryRepository.getTotalFacebookPostList(userID);
+        const data = await postHistoryRepository.getTotalPostList(userID, platform, statuses);
         return data;
     }
-
-    async getTotalFacebookApprovedPostList(userID: number): Promise<number> {
-        const postHistoryRepository = this.unitOfWork.getRepository(DashboardInsightsRepository, PostTask, false);
-        const data = await postHistoryRepository.getTotalFacebookApprovedPostList(userID);
-        return data;
-    }
-
-    async getTotalFacebookRejectedPostList(userID: number): Promise<number> {
-        const postHistoryRepository = this.unitOfWork.getRepository(DashboardInsightsRepository, PostTask, false);
-        const data = await postHistoryRepository.getTotalFacebookRejectedPostList(userID);
-        return data;
-    }
-
-
-    // services for linkedin count
-    async getTotalLinkedinPostList(userID: number): Promise<number> {
-        const postHistoryRepository = this.unitOfWork.getRepository(DashboardInsightsRepository, PostTask, false);
-        const data = await postHistoryRepository.getTotalLinkedinPostList(userID);
-        return data;
-    }
-
-    async getTotalLinkedinApprovedPostList(userID: number): Promise<number> {
-        const postHistoryRepository = this.unitOfWork.getRepository(DashboardInsightsRepository, PostTask, false);
-        const data = await postHistoryRepository.getTotalLinkedinApprovedPostList(userID);
-        return data;
-    }
-
-    async getTotalLinkedinRejectedPostList(userID: number): Promise<number> {
-        const postHistoryRepository = this.unitOfWork.getRepository(DashboardInsightsRepository, PostTask, false);
-        const data = await postHistoryRepository.getTotalLinkedinRejectedPostList(userID);
-        return data;
-    }
-
-
-
-    // services for twitter count
-    async getTotalTwitterPostList(userID: number): Promise<number> {
-        const postHistoryRepository = this.unitOfWork.getRepository(DashboardInsightsRepository, PostTask, false);
-        const data = await postHistoryRepository.getTotalTwitterPostList(userID);
-        return data;
-    }
-
-    async getTotalTwitterApprovedPostList(userID: number): Promise<number> {
-        const postHistoryRepository = this.unitOfWork.getRepository(DashboardInsightsRepository, PostTask, false);
-        const data = await postHistoryRepository.getTotalTwitterApprovedPostList(userID);
-        return data;
-    }
-
-    async getTotalTwitterRejectedPostList(userID: number): Promise<number> {
-        const postHistoryRepository = this.unitOfWork.getRepository(DashboardInsightsRepository, PostTask, false);
-        const data = await postHistoryRepository.getTotalTwitterRejectedPostList(userID);
-        return data;
-    }
-
-    // services for instagram
-    async getTotalInstagramPostList(userID: number): Promise<number> {
-        const postHistoryRepository = this.unitOfWork.getRepository(DashboardInsightsRepository, PostTask, false);
-        const data = await postHistoryRepository.getTotalInstagramPostList(userID);
-        return data;
-    }
-
-    async getTotalInstagramApprovedPostList(userID: number): Promise<number> {
-        const postHistoryRepository = this.unitOfWork.getRepository(DashboardInsightsRepository, PostTask, false);
-        const data = await postHistoryRepository.getTotalInstagramApprovedPostList(userID);
-        return data;
-    }
-
-    async getTotalInstagramRejectedPostList(userID: number): Promise<number> {
-        const postHistoryRepository = this.unitOfWork.getRepository(DashboardInsightsRepository, PostTask, false);
-        const data = await postHistoryRepository.getTotalInstagramRejectedPostList(userID);
-        return data;
-    }
+    
 
     // facebook insights
-
     async getFacebookInsights(socialTokenDataDTO: SocialTokenDataDTO): Promise<SocialMediaInsightParamDTO> {
         try {
 

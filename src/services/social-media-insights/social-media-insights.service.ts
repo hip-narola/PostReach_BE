@@ -7,7 +7,8 @@ import { SocialMediaAccountRepository } from 'src/repositories/social-media-acco
 import { SocialMediaInsightsRepository } from 'src/repositories/social-media-insights-repository';
 import { UnitOfWork } from 'src/unitofwork/unitofwork';
 import { DashboardInsightsService } from '../dashboard-insights/dashboard-insights.service';
-import { SocialMediaPlatform, SocialMediaPlatformNames } from 'src/shared/constants/social-media.constants';
+import { POST_TASK_STATUS } from 'src/shared/constants/post-task-status-constants';
+import { SocialMediaPlatformNames } from 'src/shared/constants/social-media.constants';
 
 
 @Injectable()
@@ -66,61 +67,16 @@ export class SocialMediaInsightsService {
 
     async getSocialinsightsList(GetSocilInsightsParamDto: { days: number, userId: number; platform: number | null; }): Promise<any> {
 
-        const { platform } = GetSocilInsightsParamDto;
-
-        const platformName = platform ? SocialMediaPlatformNames[platform] : null;
+        const platformName = GetSocilInsightsParamDto.platform ? SocialMediaPlatformNames[GetSocilInsightsParamDto.platform] : null;
 
         const socialInsightsRepository = this.unitOfWork.getRepository(SocialMediaInsightsRepository, SocialMediaInsight, false);
         const socialMediaInsightsData = await socialInsightsRepository.getSocialinsightsList(GetSocilInsightsParamDto);
 
-        let totalPostList = 0;
-        let approvedPostList = 0;
-        let rejectedPostList = 0;
-
-        if (platformName == SocialMediaPlatformNames[SocialMediaPlatform['FACEBOOK']]) {
-            totalPostList = await this.dashboardInsightsService.getTotalFacebookPostList(GetSocilInsightsParamDto.userId);
-            approvedPostList = await this.dashboardInsightsService.getTotalFacebookApprovedPostList(GetSocilInsightsParamDto.userId);
-            rejectedPostList = await this.dashboardInsightsService.getTotalFacebookRejectedPostList(GetSocilInsightsParamDto.userId);
-        }
-        else if (platformName == SocialMediaPlatformNames[SocialMediaPlatform['INSTAGRAM']]) {
-            totalPostList = await this.dashboardInsightsService.getTotalInstagramPostList(GetSocilInsightsParamDto.userId);
-            approvedPostList = await this.dashboardInsightsService.getTotalInstagramApprovedPostList(GetSocilInsightsParamDto.userId);
-            rejectedPostList = await this.dashboardInsightsService.getTotalInstagramRejectedPostList(GetSocilInsightsParamDto.userId);
-
-        }
-        else if (platformName == SocialMediaPlatformNames[SocialMediaPlatform['LINKEDIN']]) {
-            totalPostList = await this.dashboardInsightsService.getTotalLinkedinPostList(GetSocilInsightsParamDto.userId);
-            approvedPostList = await this.dashboardInsightsService.getTotalLinkedinApprovedPostList(GetSocilInsightsParamDto.userId);
-            rejectedPostList = await this.dashboardInsightsService.getTotalLinkedinRejectedPostList(GetSocilInsightsParamDto.userId);
-        }
-        else if (platformName == SocialMediaPlatformNames[SocialMediaPlatform['TWITTER']]) {
-            totalPostList = await this.dashboardInsightsService.getTotalTwitterPostList(GetSocilInsightsParamDto.userId);
-            approvedPostList = await this.dashboardInsightsService.getTotalTwitterApprovedPostList(GetSocilInsightsParamDto.userId);
-            rejectedPostList = await this.dashboardInsightsService.getTotalTwitterRejectedPostList(GetSocilInsightsParamDto.userId);
-
-        }
-        else {
-            const totalFacebookPostList = await this.dashboardInsightsService.getTotalFacebookPostList(GetSocilInsightsParamDto.userId);
-            const approvedFacebookPostList = await this.dashboardInsightsService.getTotalFacebookApprovedPostList(GetSocilInsightsParamDto.userId);
-            const rejectedFacebookPostList = await this.dashboardInsightsService.getTotalFacebookRejectedPostList(GetSocilInsightsParamDto.userId);
-
-            const totalInstagramPostList = await this.dashboardInsightsService.getTotalInstagramPostList(GetSocilInsightsParamDto.userId);
-            const approvedInstagramPostList = await this.dashboardInsightsService.getTotalInstagramApprovedPostList(GetSocilInsightsParamDto.userId);
-            const rejectedInstagramPostList = await this.dashboardInsightsService.getTotalInstagramRejectedPostList(GetSocilInsightsParamDto.userId);
-
-
-            const totalLinkedinPostList = await this.dashboardInsightsService.getTotalLinkedinPostList(GetSocilInsightsParamDto.userId);
-            const approvedLinkedinPostList = await this.dashboardInsightsService.getTotalLinkedinApprovedPostList(GetSocilInsightsParamDto.userId);
-            const rejectedLinkedinPostList = await this.dashboardInsightsService.getTotalLinkedinRejectedPostList(GetSocilInsightsParamDto.userId);
-
-            const totaltwitterPostList = await this.dashboardInsightsService.getTotalTwitterPostList(GetSocilInsightsParamDto.userId);
-            const approvedtwitterPostList = await this.dashboardInsightsService.getTotalTwitterApprovedPostList(GetSocilInsightsParamDto.userId);
-            const rejectedtwitterPostList = await this.dashboardInsightsService.getTotalTwitterRejectedPostList(GetSocilInsightsParamDto.userId);
-
-            totalPostList = totalFacebookPostList + totalInstagramPostList + totalLinkedinPostList + totaltwitterPostList;
-            approvedPostList = approvedFacebookPostList + approvedInstagramPostList + approvedLinkedinPostList + approvedtwitterPostList;
-            rejectedPostList = rejectedFacebookPostList + rejectedInstagramPostList + rejectedLinkedinPostList + rejectedtwitterPostList;
-        }
+        console.log("platform :", GetSocilInsightsParamDto.platform , platformName);
+        
+        const totalPostList = await this.dashboardInsightsService.getTotalPostList(GetSocilInsightsParamDto.userId, platformName, []);
+        const approvedPostList = await this.dashboardInsightsService.getTotalPostList(GetSocilInsightsParamDto.userId, platformName, [POST_TASK_STATUS.EXECUTE_SUCCESS, POST_TASK_STATUS.SCHEDULED]);
+        const rejectedPostList = await this.dashboardInsightsService.getTotalPostList(GetSocilInsightsParamDto.userId, platformName, [POST_TASK_STATUS.REJECTED]);
 
         const result = {
             "Posts": {
