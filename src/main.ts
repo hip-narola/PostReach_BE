@@ -10,7 +10,7 @@ import { Logger } from './services/logger/logger.service';
 import { GlobalExceptionFilter } from './shared/filters/global-exception/global-exception.filter';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
-import passport from 'passport';
+import * as passport from 'passport';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
