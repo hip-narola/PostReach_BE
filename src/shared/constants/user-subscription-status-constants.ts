@@ -1,11 +1,11 @@
 export const UserSubscriptionStatusType = {
-  TRIAL: 1,
-  ACTIVE: 2,
-  FAILED: 3,
-  CANCELLED: 4,
-  UPGRADED: 5,
-  EXPIRED: 6,
-  INACTIVE: 7,
+  TRIAL: 'trial',
+  ACTIVE: 'active',
+  FAILED: 'failed',
+  CANCELLED: 'cancelled',
+  UPGRADED: 'upgraded',
+  EXPIRED: 'expired',
+  INACTIVE: 'inactive',
 };
 
 export const UserSubscriptionStatusTypeNames = {

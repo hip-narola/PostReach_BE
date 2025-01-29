@@ -7,14 +7,18 @@ import { QuestionnaireRepository } from 'src/repositories/questionnaire-reposito
 import { Questionnaire } from 'src/entities/questionnaire.entity';
 import { UserAnswerRepository } from 'src/repositories/user-answer-repository';
 import { UserAnswer } from 'src/entities/user-answer.entity';
+import { UserBusinessModule } from '../user/user-business.module';
+import { UserQuestionRepository } from 'src/repositories/user-question-repository';
+import { Question } from 'src/entities/question.entity';
 
 @Module({
-    imports: [TypeOrmModule.forFeature([Questionnaire, UserAnswer]),
-        UnitOfWorkModule
+    imports: [TypeOrmModule.forFeature([Questionnaire, UserAnswer, Question]),
+        UnitOfWorkModule,
+        UserBusinessModule
     ],
     controllers: [QuestionnaireController],
-    providers: [QuestionnaireService, QuestionnaireRepository, UserAnswerRepository],
-    exports: [QuestionnaireService, QuestionnaireRepository, UserAnswerRepository],
+    providers: [QuestionnaireService, QuestionnaireRepository, UserAnswerRepository, UserQuestionRepository],
+    exports: [QuestionnaireService, QuestionnaireRepository, UserAnswerRepository, UserQuestionRepository],
 })
 export class QuestionnaireModule {
 

@@ -6,56 +6,21 @@ import { UserAnswerRepository } from 'src/repositories/user-answer-repository';
 import { In, Not } from 'typeorm';
 import { Questionnaire } from 'src/entities/questionnaire.entity';
 import { Question } from 'src/entities/question.entity';
+import { UserBusinessRepository } from 'src/repositories/userBusinessRepository';
+import { UserBusiness } from 'src/entities/user-business.entity';
+import { UserQuestionRepository } from 'src/repositories/user-question-repository';
 @Injectable()
 export class QuestionnaireService {
     constructor(
         private readonly questionnaireRepository: QuestionnaireRepository,
         private readonly UserAnswerRepository: UserAnswerRepository,
         private readonly unitOfWork: UnitOfWork,
+        private readonly userBusinessRepo: UserBusinessRepository,
+        private readonly userQuestionRepository: UserQuestionRepository,
     ) { }
-    private async fetchQuestionnaire(id: number, userId: number) {
-        const questionnaire = await this.questionnaireRepository.findOneByFields({
-            where: { id: id, is_active: true },
-            relations: ['questions', 'questions.options', 'questions.questionValidator', 'questions.answer'],
-            order: {
-                questions: {
-                    step_id: 'ASC',
-                    question_order: 'ASC',
-                },
-            },
-        });
-
-        if (!questionnaire) {
-            throw new NotFoundException(`Questionnaire with module name "${id}" not found.`);
-        }
-        if (userId != null) {
-
-            if (questionnaire.questions) {
-                questionnaire.questions.forEach(question => {
-                    if (question.answer) {
-                        // Filter the answers related to the current user_id
-                        question.answer = question.answer.filter(ans => ans.user_id == userId);
-                    }
-
-                });
-            }
-        }
-
-        return questionnaire;
-    }
-
-    // private formatAnswers(answers): { question_option_id: string, answer_text: string | null } {
-    //     if (!answers || answers.length === 0) {
-    //         return { question_option_id: [], answer_text: null };
-    //     }
-
-    //     return {
-    //         question_option_id: answers.map(ans => ans.question_option_id).join(', '),
-    //         answer_text: answers[0].answer_text || null,
-    //     };
-    // }
 
     private formatAnswers(answers): { question_option_id: string[], answer_text: string | null } {
+        console.time('formatAnswers execution time');
         if (!answers || answers.length === 0) {
             return { question_option_id: [], answer_text: null };
         }
@@ -64,12 +29,13 @@ export class QuestionnaireService {
             .map(ans => ans.question_option_id)
             .filter(id => id)  // Filter out any falsy values like null or empty strings
             .join(', ');
-
+        console.timeEnd('formatAnswers execution time');
         // Return an array with that single comma-separated string
         return {
             question_option_id: questionOptionIds ? [questionOptionIds] : [],
             answer_text: answers[0].answer_text || null,
         };
+
     }
 
     private formatQuestion(question, includeAnswers: boolean) {
@@ -90,17 +56,20 @@ export class QuestionnaireService {
                 name: question.questionValidator.name,
                 message: question.questionValidator.message,
             } : {}),
-            Options: question.options?.map(option => ({
-                id: option.id,
-                QuestionId: option.question_id,
-                Name: option.name,
-                SubQuestionId: option.sub_question_id,
-            })),
+            Options: question.options
+                ?.sort((a, b) => a.id - b.id) // Sort options by `id` in ascending order
+                .map(option => ({
+                    id: option.id,
+                    QuestionId: option.question_id,
+                    Name: option.name,
+                    SubQuestionId: option.sub_question_id,
+                })),
             ...(includeAnswers ? { Answers: this.formatAnswers(question.answer) } : {}),
         };
     }
 
     private groupQuestionsByStep(questions, includeAnswers: boolean) {
+
         return questions.reduce((acc, question) => {
             const stepId = question.step_id;
 
@@ -110,28 +79,38 @@ export class QuestionnaireService {
                     Questions: [],
                 };
             }
-
+            console.time('formatQuestion execution time');
             acc[stepId].Questions.push(this.formatQuestion(question, includeAnswers));
+            console.timeEnd('formatQuestion execution time');
             return acc;
         }, {});
+
     }
 
     async getData(id: number): Promise<any> {
-        const questionnaire = await this.fetchQuestionnaire(id, null);
+        // const questionnaire = await this.fetchQuestionnaire(id, null);
+        const questionnaire = await this.questionnaireRepository.data(id, null);
+        console.time('groupQuestionsByStep execution time');
         const groupedData = this.groupQuestionsByStep(questionnaire.questions, false);
-
+        console.timeEnd('groupQuestionsByStep execution time');
         return Object.values(groupedData);
     }
 
     async getUserData(id: number, userId: number): Promise<any> {
-        const questionnaire = await this.fetchQuestionnaire(id, userId);
+        // const questionnaire = await this.fetchQuestionnaire(id, userId);
+        const questionnaire = await this.questionnaireRepository.data(id, userId);
+        console.time('groupQuestionsByStep execution 2 time');
+
         const groupedData = this.groupQuestionsByStep(questionnaire.questions, true);
+        console.timeEnd('groupQuestionsByStep execution 2 time');
 
         return Object.values(groupedData);
     }
 
     async businessPreference(questionnaireId: number, userId: number): Promise<any> {
-        const questionnaire = await this.fetchQuestionnaire(questionnaireId, userId);
+        // const questionnaire = await this.fetchQuestionnaire(questionnaireId, userId);
+        const questionnaire = await this.questionnaireRepository.data(questionnaireId, userId);
+        console.time('formattedQuestions execution time');
 
         // Format each question without grouping by step_id
         const formattedQuestions = questionnaire.questions.map((question) => {
@@ -179,10 +158,13 @@ export class QuestionnaireService {
                 Answers: formattedAnswers,
             };
         });
+        console.timeEnd('formattedQuestions execution time');
 
         return formattedQuestions;
     }
+
     async storeData(id: number, userId: number, answers: any[]): Promise<any> {
+        console.log(answers, 'answers')
         // Sample answers provided
         // const answers = [
         //     {
@@ -202,6 +184,7 @@ export class QuestionnaireService {
         //         "answer_text": 'true', // answer text for questionId 5
         //     },
         // ];
+        console.time('storeData execution time');
 
         // Start transaction
         await this.unitOfWork.startTransaction();
@@ -215,39 +198,107 @@ export class QuestionnaireService {
             );
 
             const userAnswersToSave: UserAnswer[] = []; // Array to collect user answers for bulk save
+            const createUserBusiness = new UserBusiness();
+            // createUserBusiness.brand_name = '';
+            // createUserBusiness.website = '';
+            // createUserBusiness.use = '';
+            // createUserBusiness.location = '';
+            // createUserBusiness.overview = '';
+            console.time('Remove outdated execution time');
+
+            const questionMapping = {
+                'brand_name': 'brand_name', // Direct field mapping for brand name
+                'personal_website': 'website', // Direct field mapping for website
+                'target_audiance_location': 'location', // Direct field mapping for location
+                // 'overview': 'overview' // Direct field mapping for overview
+            };
 
             // Step 1: Remove outdated answers (those no longer in the request)
+            // for (const answer of answers) {
+            //     if (answer.question_option_id) {
+            //         // If the question has options, check if any options need to be removed
+            //         await userAnswerRepository.deleteByFields({
+            //             user_id: userId,
+            //             question_id: answer.questionId,
+            //             question_option_id: Not(In(answer.question_option_id.map(id => parseInt(id)))), // Remove options not present in the new request
+            //         });
+            //     } else if (answer.answer_text !== undefined) {
+            //         // For text answers, just remove the ones that don't match the current request
+            //         await userAnswerRepository.deleteByFields({
+            //             user_id: userId,
+            //             question_id: answer.questionId,
+            //             question_option_id: null, // No question option for text answers
+            //             answer_text: Not(answer.answer_text), // Remove different text answers
+            //         });
+            //     }
+            // }
+            const optionAnswers = [];
+            const textAnswers = [];
+            console.time('storeData answer execution time');
+
             for (const answer of answers) {
-                if (answer.question_option_id) {
-                    // If the question has options, check if any options need to be removed
-                    await userAnswerRepository.deleteByFields({
-                        user_id: userId,
-                        question_id: answer.questionId,
-                        question_option_id: Not(In(answer.question_option_id.map(id => parseInt(id)))), // Remove options not present in the new request
-                    });
+                if (answer.question_option_id && answer.question_option_id.length > 0) {
+                    // Collect option-based answers
+                    optionAnswers.push(answer);
                 } else if (answer.answer_text !== undefined) {
-                    // For text answers, just remove the ones that don't match the current request
-                    await userAnswerRepository.deleteByFields({
-                        user_id: userId,
-                        question_id: answer.questionId,
-                        question_option_id: null, // No question option for text answers
-                        answer_text: Not(answer.answer_text), // Remove different text answers
-                    });
+                    // Collect text-based answers
+                    textAnswers.push(answer);
                 }
             }
+            console.timeEnd('storeData answer execution time');
+            console.log(optionAnswers, textAnswers, 'textAnswers')
+            // Delete outdated option-based answers in a single batch
+            console.time('deleteOptionData')
+            if (optionAnswers.length > 0) {
+                await userAnswerRepository.deleteOptionData(optionAnswers, userId);
+            }
+            console.timeEnd('deleteOptionData')
+            console.time('deleteTextData')
+
+            // Delete outdated text-based answers in a single batch
+            if (textAnswers.length > 0) {
+                await userAnswerRepository.deleteTextData(textAnswers, userId);
+            }
+            console.timeEnd('deleteTextData')
+            console.timeEnd('Remove outdated execution time');
+
+            console.time('Handle new or updated answers (both options and text-based) execution end time & storeData execution');
 
             // Step 2: Handle new or updated answers (both options and text-based)
             for (const answer of answers) {
+
+                const userAnswerRepository = this.unitOfWork.getRepository(
+                    UserAnswerRepository,
+                    UserAnswer,
+                    true
+                );
+                const q = await this.userQuestionRepository.findOne(answer.questionId)
+                //create business
+                const questionName = q.question_name;
+                console.log(questionName, 'questionName')
+                if (questionMapping.hasOwnProperty(questionName)) {
+                    // Map the answer to the corresponding field in the UserBusiness object
+                    const fieldName = questionMapping[questionName];
+                    console.log(fieldName, 'fieldName');
+                    if (answer.answer_text !== undefined) {
+                        // Save the answer to the mapped field
+                        createUserBusiness[fieldName] = answer.answer_text;
+                    }
+                }
+
                 if (answer.question_option_id) {
                     // If the question has options, process each option
                     for (const optionId of answer.question_option_id) {
-                        let userAnswer = await userAnswerRepository.findOneByFields({
-                            where: {
-                                user_id: userId,
-                                question_id: answer.questionId,
-                                question_option_id: parseInt(optionId), // Match by question_option_id
-                            },
-                        });
+                        // let userAnswer = await userAnswerRepository.findOneByFields({
+                        //     where: {
+                        //         user_id: userId,
+                        //         question_id: answer.questionId,
+                        //         question_option_id: parseInt(optionId), // Match by question_option_id
+                        //     },
+                        // });
+                        let userAnswer = await userAnswerRepository.userAnswerOne(userId, answer.questionId, parseInt(optionId)
+                        );
+
 
                         if (!userAnswer) {
                             // If the record does not exist, create a new one
@@ -287,10 +338,24 @@ export class QuestionnaireService {
                     userAnswersToSave.push(userAnswer); // Collect for bulk save
                 }
             }
+            console.timeEnd('Handle new or updated answers (both options and text-based) execution end time & storeData execution');
 
             // Step 3: Save all collected user answers at once
             if (userAnswersToSave.length > 0) {
+                console.time('storeData save execution time');
+
                 await userAnswerRepository.save(userAnswersToSave); // Bulk save
+                console.timeEnd('storeData save execution time');
+
+            }
+            console.timeEnd('storeData execution time');
+
+            const userBusiness = await this.userBusinessRepo.findUserBusiness(userId);
+
+            if (!userBusiness) {
+                await this.userBusinessRepo.create(createUserBusiness);
+            } else {
+                await this.userBusinessRepo.update(userBusiness.id, createUserBusiness);
             }
 
             // Commit the transaction
@@ -304,20 +369,32 @@ export class QuestionnaireService {
         }
     }
 
+
     async questionnaireUserDetail(userId: number) {
 
         const questionnaireRepository = this.unitOfWork.getRepository(QuestionnaireRepository, Questionnaire, false);
+        console.time('findAllWithRelation execution time');
+        console.log('Fetching all questionnaires with relations...');
+
 
         // Retrieve all questionnaires with their relations
-        const Questionnaires = await questionnaireRepository.findAllWithRelation({
-            relations: ['questions', 'questions.options', 'questions.questionValidator', 'questions.answer'],
-        });
+        // const Questionnaires = await questionnaireRepository.findAllWithRelation({
+        //     relations: ['questions', 'questions.options', 'questions.questionValidator', 'questions.answer'],
+        // });
+        const Questionnaires = await questionnaireRepository.getQuestionnaires(userId);
+        console.timeEnd('findAllWithRelation execution time');
+        console.log(`Fetched ${Questionnaires.length} questionnaires.`);
 
         const result = [];
+        console.time('questionnaire formatting execution time');
 
         for (const questionnaire of Questionnaires) {
+            console.log(`Processing questionnaire: ${questionnaire.name} (ID: ${questionnaire.id})`);
+
             // Filter answers by userId for each question
             questionnaire.questions.forEach(question => {
+                console.log(`Filtering answers for question: ${question.id}`);
+
                 // Filter answers for the specific userId
                 question.answer = question.answer.filter((answer) => answer.user_id == userId);
             });
@@ -331,6 +408,7 @@ export class QuestionnaireService {
                 acc[stepId].push(question);
                 return acc;
             }, {});
+            console.log(`Grouped questions into ${Object.keys(steps).length} steps.`);
 
             // Calculate the total steps and completed steps
             const totalSteps = Object.keys(steps).length;
@@ -360,7 +438,58 @@ export class QuestionnaireService {
                 totalStep: totalSteps,
                 id: questionnaire.id
             });
+            console.log(`Processed questionnaire: ${questionnaire.name} - Completion: ${Math.round(percentage)}%`);
+
         }
+        console.timeEnd('questionnaire formatting execution time');
+        console.log('Finished formatting all questionnaires.');
         return result;
     }
+
+    async questionnaireUserDetail1(userId: number) {
+        const questionnaireRepository = this.unitOfWork.getRepository(QuestionnaireRepository, Questionnaire, false);
+        console.time('getQuestionnaires execution time');
+
+        // Fetch only the required fields and filter at the query level
+        const Questionnaires = await questionnaireRepository.getQuestionnaires(userId);
+        console.timeEnd('getQuestionnaires execution time');
+
+
+        console.time('getQuestionnaires execution format time');
+
+        // Build the response
+        const result = Questionnaires.map(questionnaire => {
+            const steps = questionnaire.questions.reduce((acc, question) => {
+                const stepId = question.step_id;
+                if (!acc[stepId]) {
+                    acc[stepId] = [];
+                }
+                acc[stepId].push(question);
+                return acc;
+            }, {});
+
+            const totalSteps = Object.keys(steps).length;
+            const completedSteps = Object.values(steps).filter((stepQuestions: any[]) =>
+                stepQuestions.some(question => question.answer && question.answer.length > 0)
+            ).length;
+
+            const percentage = (completedSteps / totalSteps) * 100;
+
+            return {
+                icon: questionnaire.image_name || 'default_icon.svg',
+                name: questionnaire.name,
+                time: 'Duration',
+                minutes: questionnaire.duration,
+                percentage: Math.round(percentage),
+                completeStep: completedSteps,
+                totalStep: totalSteps,
+                id: questionnaire.id,
+            };
+        });
+        console.timeEnd('getQuestionnaires execution format time');
+
+        return result;
+    }
+
 }
+

@@ -77,4 +77,7 @@ export class Question {
 
 	@OneToMany(() => UserAnswer, (userAnswer) => userAnswer.question)
 	answer: UserAnswer[];
+	
+	@Column({ type: 'varchar', nullable: true })
+	question_name: string;
 }
