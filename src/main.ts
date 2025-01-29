@@ -10,6 +10,7 @@ import { Logger } from './services/logger/logger.service';
 import { GlobalExceptionFilter } from './shared/filters/global-exception/global-exception.filter';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
+import * as passport from 'passport';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -35,6 +36,8 @@ async function bootstrap() {
     })
   );
 
+  app.use(passport.initialize());
+  app.use(passport.session());
   // Middleware for handling raw body for Stripe webhook
   app.use('/payment/webhook', bodyParser.raw({ type: 'application/json' }));
 
