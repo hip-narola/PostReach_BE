@@ -104,7 +104,8 @@ export class PageInsightProcessor extends WorkerHost {
         dto.platform = platform;
         dto.impressions = data.impressions || 0;
         dto.newFollowers = data.newFollowers || 0;
-        dto.engagements = data.engagements || 0;
+        // dto.engagements = data.engagements || 0;
+        dto.engagements = data.engagements ? parseFloat(data.engagements.toFixed(2)) : 0;
         dto.social_media_account_id = data.social_media_account_id;
         return dto;
     }

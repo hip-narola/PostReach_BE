@@ -41,7 +41,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
                     break;
                 case 'ExpiredCodeException':
                 case 'CodeMismatchException':
-                    message = 'OTP is invalid. Please send again';
+                    message = 'Code you entered is invalid. Please request a new code and try again.';
                     status = HttpStatus.BAD_REQUEST;
                     break;
                 case 'InvalidPasswordException':

@@ -106,7 +106,7 @@ export class AuthController {
 	async signUp(@Body() signUpDto: { username: string; email: string; password: string }) {
 		const details = await this.authService.signUp(signUpDto.username, signUpDto.email, signUpDto.password);
 		return {
-			message: 'Signup successfully',
+			message: 'Your account has been successfully created. Please check your email to verify your account with the provided code.',
 			data: details,
 		};
 	}
@@ -132,7 +132,7 @@ export class AuthController {
 
 			return res.status(HttpStatus.OK).json({
 				StatusCode: 200,
-				Message: 'Sign in successfully',
+				Message: 'You have successfully signed in. Welcome back!',
 				IsSuccess: true,
 				Data: data,
 			});
@@ -141,7 +141,7 @@ export class AuthController {
 			if (error.name === 'NotAuthorizedException') {
 				return res.status(HttpStatus.UNAUTHORIZED).json({
 					StatusCode: HttpStatus.UNAUTHORIZED,
-					Message: 'Incorrect username or password.',
+					Message: 'Incorrect username or password. Please try again.',
 					IsSuccess: false,
 					Data: null,
 				});
@@ -149,7 +149,7 @@ export class AuthController {
 			else if (error.name == 'UserNotConfirmedException') {
 				return res.status(HttpStatus.BAD_REQUEST).json({
 					StatusCode: HttpStatus.BAD_REQUEST,
-					Message: 'User is not confirmed.',
+					Message: 'User account is not confirmed.',
 					IsSuccess: false,
 					Data: null,
 				});
@@ -157,7 +157,7 @@ export class AuthController {
 			else {
 				return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
 					StatusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-					Message: 'An error occurred during sign-in.',
+					Message: 'Internal server error. Please try again later.',
 					IsSuccess: false,
 					Data: null,
 				});
@@ -175,7 +175,7 @@ export class AuthController {
 
 			return res.json({
 				StatusCode: 200,
-				Message: 'Signup confirmation successfully',
+				Message: 'Your signup has been successfully confirmed. Welcome aboard!',
 				IsSuccess: true,
 				Data: details,
 			});
@@ -185,7 +185,7 @@ export class AuthController {
 			if (error.name == "ExpiredCodeException" || error.name == "CodeMismatchException") {
 				return res.json({
 					StatusCode: HttpStatus.BAD_REQUEST,
-					Message: "OTP is invalid. Please send again",
+					Message: "Code you entered is invalid. Please request a new code and try again.",
 					IsSuccess: false,
 					Data: null,
 				});
@@ -193,7 +193,7 @@ export class AuthController {
 			else {
 				return res.json({
 					StatusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-					Message: "Internal server error",
+					Message: "Internal server error. Please try again later.",
 					IsSuccess: false,
 					Data: null,
 				});
@@ -207,7 +207,7 @@ export class AuthController {
 	async resendConfirmationCode(@Body() ResendConfirmationCodeParamDto: { email: string; }) {
 		await this.authService.ResendConfirmationCode(ResendConfirmationCodeParamDto.email);
 		return {
-			message: 'Confirmation code resend successfully',
+			message: 'The confirmation code has been successfully resent to your email.',
 			data: null,
 		};
 	}
@@ -218,7 +218,7 @@ export class AuthController {
 	async forgotPassword(@Body() ForgotPasswordParamDto: { email: string }) {
 		await this.authService.forgotPassword(ForgotPasswordParamDto.email);
 		return {
-			message: 'Password forgot successfully',
+			message: 'Reset link sent to your email.',
 			data: null,
 		};
 	}
@@ -229,7 +229,7 @@ export class AuthController {
 	async resetPassword(@Body() ResetPasswordParamsDto: { email: string, password: string, code: string }) {
 		await this.authService.resetPassword(ResetPasswordParamsDto.email, ResetPasswordParamsDto.password, ResetPasswordParamsDto.code);
 		return {
-			message: 'Password reset successfully',
+			message: 'Your password has been updated. Please sign in with your new password.',
 			data: null,
 		};
 	}
@@ -248,14 +248,14 @@ export class AuthController {
 
 			return res.json({
 				StatusCode: 200,
-				Message: 'Logout successfully',
+				Message: 'You have been logged out.',
 				IsSuccess: true,
 				Data: null,
 			});
 		} catch (error) {
 			return res.json({
-				StatusCode: HttpStatus.BAD_REQUEST,
-				Message: "Internal server error",
+				StatusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+				Message: "Internal server error. Please try again later.",
 				IsSuccess: false,
 				Data: null,
 			});

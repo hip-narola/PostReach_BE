@@ -9,7 +9,7 @@ import { ApprovalQueueRepository } from 'src/repositories/approval-queue-reposit
 import { RejectReasonRepository } from 'src/repositories/reject-reason-repository';
 import { UnitOfWork } from 'src/unitofwork/unitofwork';
 import { EmailService } from '../email/email.service';
-import { JobSchedulerService } from 'src/scheduler/job-scheduler-service';
+// import { JobSchedulerService } from 'src/scheduler/job-scheduler-service';
 import { POST_TASK_STATUS } from 'src/shared/constants/post-task-status-constants';
 import { NotificationService } from '../notification/notification.service';
 import { NotificationMessage, NotificationType } from 'src/shared/constants/notification-constants';
@@ -17,8 +17,8 @@ import { NotificationMessage, NotificationType } from 'src/shared/constants/noti
 export class ApprovalQueueService {
     constructor(
         private readonly unitOfWork: UnitOfWork,
-        @Inject(forwardRef(() => JobSchedulerService)) // Use forwardRef here
-        private readonly schedulePostService: JobSchedulerService,
+        // @Inject(forwardRef(() => JobSchedulerService)) // Use forwardRef here
+        // private readonly schedulePostService: JobSchedulerService,
         private readonly emailService: EmailService,
         private readonly notificationService: NotificationService,
     ) { }
@@ -63,22 +63,22 @@ export class ApprovalQueueService {
                             id,
                         );
 
-                    await this.schedulePostService.schedulePost(
-                        data.id,
-                        data.channel,
-                        data.postId,
-                        data.accessToken,
-                        data.content,
-                        data.scheduled_at,
-                        data.hashtags,
-                        data.image,
-                        data.pageId,
-                        data.social_media_user_id,
-                        data.token_type,
-                        data.instagramId,
-                        data.userId,
-                        data.post_created_at
-                    );
+                    // await this.schedulePostService.schedulePost(
+                    //     data.id,
+                    //     data.channel,
+                    //     data.postId,
+                    //     data.accessToken,
+                    //     data.content,
+                    //     data.scheduled_at,
+                    //     data.hashtags,
+                    //     data.image,
+                    //     data.pageId,
+                    //     data.social_media_user_id,
+                    //     data.token_type,
+                    //     data.instagramId,
+                    //     data.userId,
+                    //     data.post_created_at
+                    // );
                 }
                 // if approved false then else if block executed.
                 else if (updateStatusParam.isApproved == false) {
@@ -142,7 +142,7 @@ export class ApprovalQueueService {
             console.log("post-queue save notification");
             // Add notification
             const notificationType = status == POST_TASK_STATUS.FAIL ? POST_TASK_STATUS.FAIL : POST_TASK_STATUS.EXECUTE_SUCCESS;
-            const notificationContent= status == POST_TASK_STATUS.FAIL ? NotificationMessage[NotificationType.POST_FAILED] : NotificationMessage[NotificationType.POST_PUBLISHED];
+            const notificationContent = status == POST_TASK_STATUS.FAIL ? NotificationMessage[NotificationType.POST_FAILED] : NotificationMessage[NotificationType.POST_PUBLISHED];
 
             console.log("post-queue save notification : notificationType ", notificationType, notificationContent);
             await this.notificationService.saveData(record.user.id, notificationType, notificationContent);

@@ -9,10 +9,11 @@ export class CheckUserSubscriptionService {
     constructor(
         private readonly unitOfWork: UnitOfWork,
     ) { }
-    async isUserSubscriptionActive(userId: number) {
+
+    async isUserSubscriptionActive(userId: number): Promise<boolean> {
         const userSubscriptionRepository = this.unitOfWork.getRepository(UserSubscriptionRepository, UserSubscription, false);
         const usersubscription = await userSubscriptionRepository.findUserActiveSubscriptionWithoutSubscriptionId(userId);
-        // await this.unitOfWork.completeTransaction();
+        
         if (usersubscription) {
             return true;
         }

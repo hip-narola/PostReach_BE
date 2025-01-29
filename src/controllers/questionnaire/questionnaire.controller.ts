@@ -9,7 +9,7 @@ import { QuestionnaireService } from 'src/services/questionnaire/questionnaire.s
 
 @Controller('questionnaire')
 export class QuestionnaireController {
-    constructor(private readonly questionnaireService: QuestionnaireService) {}
+    constructor(private readonly questionnaireService: QuestionnaireService) { }
 
     @Get('user/:userId')
     async get(@Param('userId') userId: number) {
@@ -32,16 +32,6 @@ export class QuestionnaireController {
                 questionnaireId,
                 userId,
             );
-            return data;
-        } catch (error) {
-            throw error;
-        }
-    }
-
-    @Get(':id')
-    async getData(@Param('id') id: number) {
-        try {
-            const data = await this.questionnaireService.getData(id);
             return data;
         } catch (error) {
             throw error;

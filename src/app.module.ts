@@ -44,6 +44,7 @@ import { SubscriptionService } from './services/subscription/subscription.servic
 import { ConfigModule } from '@nestjs/config';
 import { RedisModule } from './modules/redis/redis-module';
 import { CacheModule } from './modules/cache/cache-module';
+import { UserBusinessModule } from './modules/user/user-business.module';
 
 @Module({
   imports: [
@@ -81,7 +82,8 @@ import { CacheModule } from './modules/cache/cache-module';
     NotificationModule,
     PaymentModule,
     RedisModule,
-    CacheModule
+    CacheModule,
+    UserBusinessModule
   ],
   controllers: [AppController, LinkPageController],
   providers: [

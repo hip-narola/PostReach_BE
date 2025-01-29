@@ -16,5 +16,4 @@ export class CalenderService {
     const data = await calenderRepository.getCalenderList(paginatedParams);
     return data;
   }
-
 }

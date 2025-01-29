@@ -19,7 +19,7 @@ export class UserCredit {
     @ManyToOne(() => SocialMediaAccount, (socialMediaAccount) => socialMediaAccount.id, { nullable: false })
     @JoinColumn({ name: 'social_media_id' })
     social_media: SocialMediaAccount;
-    
+
     @ManyToOne(() => Subscription, (subscription) => subscription.id, {})
     @JoinColumn({ name: 'subscription_id' })
     subscription: Subscription;
@@ -39,6 +39,6 @@ export class UserCredit {
     @CreateDateColumn({ type: 'timestamp', nullable: true, default: () => 'NULL' })
     last_trigger_date: Date;
 
-    @Column()
-    status: number;
+    @Column( {nullable: true, default: () => 'NULL'} )
+    status: string;
 }

@@ -1,6 +1,6 @@
 export const UserCreditStatusType = {
-    ACTIVE: 1,
-    EXPIRED: 2,
+    ACTIVE: 'active',
+    EXPIRED: 'expired',
 };
 
 export const UserCreditStatusTypeNames = {
