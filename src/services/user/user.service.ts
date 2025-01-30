@@ -6,7 +6,6 @@ import { UnitOfWork } from 'src/unitofwork/unitofwork';
 import { UserDto } from 'src/dtos/params/user.dto';
 import { ImageUploadService } from '../image-upload/image-upload.service';
 import { SocialMediaAccount } from 'src/entities/social-media-account.entity';
-import { QuestionnaireService } from '../questionnaire/questionnaire.service';
 import { UserAnswerRepository } from 'src/repositories/user-answer-repository';
 import { UserAnswer } from 'src/entities/user-answer.entity';
 import { QuestionnaireRepository } from 'src/repositories/questionnaire-repository';
@@ -18,9 +17,7 @@ export class UserService {
 		@InjectRepository(User)
 		private readonly userRepository: UserRepository,
 		private readonly unitOfWork: UnitOfWork,
-		private readonly imageUploadService: ImageUploadService,
-		private readonly questionnaireService: QuestionnaireService,
-		private readonly UserAnswerRepository: UserAnswerRepository,
+		private readonly imageUploadService: ImageUploadService
 	) { }
 
 	// Method to find user by email
@@ -58,7 +55,6 @@ export class UserService {
 				User,
 				true,
 			);
-
 			if (file) {
 				const bucketName = 'user';
 				const existingUser = await userRepository.findOne(id);
@@ -77,6 +73,14 @@ export class UserService {
 				data.profilePictureUrl = filePath;
 			}
 
+			data = Object.assign(
+				new User(),
+				Object.fromEntries(
+					Object.entries(data).map(([key, value]) =>
+						value === 'null' ? [key, null] : [key, value]
+					)
+				)
+			);
 			await userRepository.update(id, data);
 			const updatedUser = await userRepository.findOne(id);
 			await this.unitOfWork.completeTransaction();

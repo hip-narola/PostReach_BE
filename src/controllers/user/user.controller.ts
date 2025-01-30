@@ -35,7 +35,7 @@ export class UserController {
             return await this.userService.updateUser(id, userData, file);
         } catch (error) {
             throw new HttpException(
-                'Failed to update user',
+                error,
                 HttpStatus.INTERNAL_SERVER_ERROR,
             );
         }

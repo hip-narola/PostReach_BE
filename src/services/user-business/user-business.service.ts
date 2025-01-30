@@ -34,7 +34,7 @@ export class UserBusinessService {
             .where('user_business.user_id = :userId', { userId: userId })
             .getOne();
         if (!userBusiness) {
-            throw new Error('No business data found for the given user ID.');
+            return 'No business data found for the given user ID.';
         }
         return userBusiness;
     }
@@ -43,15 +43,24 @@ export class UserBusinessService {
         data: UserBusinessDto,
         file?: Express.Multer.File,
     ): Promise<UserBusiness | any> {
-        const userBusinessData = plainToInstance(UserBusiness, data);
 
+        let userBusinessData = plainToInstance(UserBusiness, data);
+
+        // Remove "null" string values and ensure the result matches the UserBusiness type
+        userBusinessData = Object.assign(
+            new UserBusiness(),
+            Object.fromEntries(
+                Object.entries(userBusinessData).map(([key, value]) =>
+                    value === 'null' ? [key, null] : [key, value]
+                )
+            )
+        );
         // Check if a UserBusiness record with the provided user_id exists
         let userBusiness = await this.userBusinessRepo
             .createQueryBuilder('user_business')
             .where('user_business.user_id = :userId', { userId: data.user_id })
             .andWhere('user_business.deleted_at IS NULL') // Ensures soft-deleted records are excluded
             .getOne();
-
         if (file) {
             const bucketName = 'user';
 
