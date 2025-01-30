@@ -1,18 +1,15 @@
 import { Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bullmq';
+import { SchedulePostProcessor } from 'src/scheduler/schedule-post/schedule-post.processor';
 import { ApprovalQueueService } from 'src/services/approval-queue/approval-queue.service';
 import { UnitOfWorkModule } from '../unit-of-work.module';
-// import { SchedulePostProcessor } from 'src/scheduler/schedule-post/schedule-post.processor';
-// import { PostInsightProcessor } from 'src/scheduler/post-insight/post-insight-processor.processor';
-// import { PageInsightProcessor } from 'src/scheduler/page-insight/page-insight-processor';
-// import { SubscriptionProcessor } from 'src/scheduler/subscription/subscription-processor';
-// import { GeneratePostProcessor } from 'src/scheduler/generate-post/generate-processor';
+import { PageInsightProcessor } from 'src/scheduler/page-insight/page-insight-processor';
 import { SocialMediaInsightsService } from 'src/services/social-media-insights/social-media-insights.service';
 import { DashboardInsightsModule } from '../dashboard-insights/dashboard-insights.module';
 import { FacebookService } from 'src/services/facebook/facebook.service';
 import { SocialMediaAccountModule } from '../social-media-account/social-media-account.module';
 import { LinkedinService } from 'src/services/linkedin/linkedin.service';
-
+import { PostInsightProcessor } from 'src/scheduler/post-insight/post-insight-processor.processor';
 import { InstagramService } from 'src/services/instagram/instagram.service';
 import { TwitterService } from 'src/services/twitter/twitter.service';
 import { UserModule } from '../user/user.module';
@@ -25,6 +22,8 @@ import { AwsSecretsService } from 'src/services/aws-secrets/aws-secrets.service'
 import { AWS_SECRET } from 'src/shared/constants/aws-secret-name-constants';
 import { ConfigService } from '@nestjs/config';
 import { JobSchedulerService } from 'src/scheduler/job-scheduler-service';
+import { SubscriptionProcessor } from 'src/scheduler/subscription/subscription-processor';
+import { GeneratePostProcessor } from 'src/scheduler/generate-post/generate-processor';
 import { CacheModule } from '../cache/cache-module';
 import { PostRepository } from 'src/repositories/post-repository';
 import { Post } from 'src/entities/post.entity';
@@ -54,11 +53,11 @@ async function getRedisConfig() {
             },
         }),
         BullModule.registerQueue(
-            // { name: 'post-queue' },
-            // { name: 'post-insight' },
-            // { name: 'page-insight' },
-            // { name: 'generate-post' },
-            // { name: 'subscription-queue' },
+            { name: 'post-queue' },
+            { name: 'post-insight' },
+            { name: 'page-insight' },
+            { name: 'generate-post' },
+            { name: 'subscription-queue' },
             // { name: 'exchangeAccessTokenQueue' }
         ),
         UnitOfWorkModule,
@@ -71,12 +70,12 @@ async function getRedisConfig() {
     ],
     providers: [
 
-        // JobSchedulerService,
-        // SchedulePostProcessor,
-        // PostInsightProcessor,
-        // PageInsightProcessor,
-        // GeneratePostProcessor,
-        // SubscriptionProcessor,
+        JobSchedulerService,
+        SchedulePostProcessor,
+        PostInsightProcessor,
+        PageInsightProcessor,
+        GeneratePostProcessor,
+        SubscriptionProcessor,
         ApprovalQueueService,
         SocialMediaInsightsService,
         FacebookService,
@@ -90,7 +89,7 @@ async function getRedisConfig() {
     ],
     exports: [
         BullModule,
-        // JobSchedulerService,
+        JobSchedulerService,
         FacebookService,
         LinkedinService,
         TwitterService,
