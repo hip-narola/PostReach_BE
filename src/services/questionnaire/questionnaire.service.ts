@@ -1,22 +1,23 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { UserAnswer } from 'src/entities/user-answer.entity';
 import { QuestionnaireRepository } from 'src/repositories/questionnaire-repository';
 import { UnitOfWork } from 'src/unitofwork/unitofwork';
 import { UserAnswerRepository } from 'src/repositories/user-answer-repository';
-import { In, Not } from 'typeorm';
 import { Questionnaire } from 'src/entities/questionnaire.entity';
 import { Question } from 'src/entities/question.entity';
 import { UserBusinessRepository } from 'src/repositories/userBusinessRepository';
 import { UserBusiness } from 'src/entities/user-business.entity';
 import { UserQuestionRepository } from 'src/repositories/user-question-repository';
+import { UserBusinessService } from '../user-business/user-business.service';
+import { UserBusinessDto } from 'src/dtos/params/user-business.dto/user-business.dto';
 @Injectable()
 export class QuestionnaireService {
     constructor(
         private readonly questionnaireRepository: QuestionnaireRepository,
         private readonly UserAnswerRepository: UserAnswerRepository,
         private readonly unitOfWork: UnitOfWork,
-        private readonly userBusinessRepo: UserBusinessRepository,
         private readonly userQuestionRepository: UserQuestionRepository,
+        private readonly userBusinessService: UserBusinessService
     ) { }
 
     private formatAnswers(answers): { question_option_id: string[], answer_text: string | null } {
@@ -162,205 +163,147 @@ export class QuestionnaireService {
 
         return formattedQuestions;
     }
-
     async storeData(id: number, userId: number, answers: any[]): Promise<any> {
         console.log(answers, 'answers')
-        // Sample answers provided
-        // const answers = [
-        //     {
-        //         "questionId": 1,
-        //         "question_option_id": ["3", "4"], // multiple options for questionId 1
-        //     },
-        //     {
-        //         "questionId": 2,
-        //         "question_option_id": ["6"], // answer text for questionId 2
-        //     },
-        //     {
-        //         "questionId": 4,
-        //         "answer_text": 'www.example.com', // answer text for questionId 5
-        //     },
-        //     {
-        //         "questionId": 5,
-        //         "answer_text": 'true', // answer text for questionId 5
-        //     },
-        // ];
         console.time('storeData execution time');
 
         // Start transaction
         await this.unitOfWork.startTransaction();
 
         try {
-            // Get the repository for UserAnswer
+            // const userRepository = this.unitOfWork.getRepository(
+            //     UserRepository,
+            //     User,
+            //     false
+            // );
+
             const userAnswerRepository = this.unitOfWork.getRepository(
                 UserAnswerRepository,
                 UserAnswer,
                 true
             );
-
+            // const user = await userRepository.findOne(userId);
             const userAnswersToSave: UserAnswer[] = []; // Array to collect user answers for bulk save
-            const createUserBusiness = new UserBusiness();
-            // createUserBusiness.brand_name = '';
-            // createUserBusiness.website = '';
-            // createUserBusiness.use = '';
-            // createUserBusiness.location = '';
-            // createUserBusiness.overview = '';
-            console.time('Remove outdated execution time');
-
+            const createUserBusiness = new UserBusinessDto(); // Initialize once before the loop
             const questionMapping = {
                 'brand_name': 'brand_name', // Direct field mapping for brand name
                 'personal_website': 'website', // Direct field mapping for website
                 'target_audiance_location': 'location', // Direct field mapping for location
-                // 'overview': 'overview' // Direct field mapping for overview
             };
 
-            // Step 1: Remove outdated answers (those no longer in the request)
-            // for (const answer of answers) {
-            //     if (answer.question_option_id) {
-            //         // If the question has options, check if any options need to be removed
-            //         await userAnswerRepository.deleteByFields({
-            //             user_id: userId,
-            //             question_id: answer.questionId,
-            //             question_option_id: Not(In(answer.question_option_id.map(id => parseInt(id)))), // Remove options not present in the new request
-            //         });
-            //     } else if (answer.answer_text !== undefined) {
-            //         // For text answers, just remove the ones that don't match the current request
-            //         await userAnswerRepository.deleteByFields({
-            //             user_id: userId,
-            //             question_id: answer.questionId,
-            //             question_option_id: null, // No question option for text answers
-            //             answer_text: Not(answer.answer_text), // Remove different text answers
-            //         });
-            //     }
-            // }
+            // Separate answers into options and text-based answers
             const optionAnswers = [];
             const textAnswers = [];
-            console.time('storeData answer execution time');
 
+            console.time('storeData answer execution time');
             for (const answer of answers) {
                 if (answer.question_option_id && answer.question_option_id.length > 0) {
-                    // Collect option-based answers
-                    optionAnswers.push(answer);
+                    optionAnswers.push(answer); // Collect option-based answers
                 } else if (answer.answer_text !== undefined) {
-                    // Collect text-based answers
-                    textAnswers.push(answer);
+                    textAnswers.push(answer); // Collect text-based answers
                 }
             }
             console.timeEnd('storeData answer execution time');
-            console.log(optionAnswers, textAnswers, 'textAnswers')
+            console.log(optionAnswers, textAnswers, 'textAnswers');
+
             // Delete outdated option-based answers in a single batch
-            console.time('deleteOptionData')
             if (optionAnswers.length > 0) {
+                console.time('deleteOptionData');
                 await userAnswerRepository.deleteOptionData(optionAnswers, userId);
+                console.timeEnd('deleteOptionData');
             }
-            console.timeEnd('deleteOptionData')
-            console.time('deleteTextData')
 
             // Delete outdated text-based answers in a single batch
             if (textAnswers.length > 0) {
+                console.time('deleteTextData');
                 await userAnswerRepository.deleteTextData(textAnswers, userId);
+                console.timeEnd('deleteTextData');
             }
-            console.timeEnd('deleteTextData')
-            console.timeEnd('Remove outdated execution time');
 
-            console.time('Handle new or updated answers (both options and text-based) execution end time & storeData execution');
-
-            // Step 2: Handle new or updated answers (both options and text-based)
+            // Process each answer and map them to createUserBusiness or userAnswersToSave
+            console.time('Handle new or updated answers execution time');
             for (const answer of answers) {
-
-                const userAnswerRepository = this.unitOfWork.getRepository(
-                    UserAnswerRepository,
-                    UserAnswer,
-                    true
-                );
-                const q = await this.userQuestionRepository.findOne(answer.questionId)
-                //create business
+                const q = await this.userQuestionRepository.findOne(answer.questionId);
                 const questionName = q.question_name;
-                console.log(questionName, 'questionName')
+
+                // If the question is in the mapping, update createUserBusiness
                 if (questionMapping.hasOwnProperty(questionName)) {
-                    // Map the answer to the corresponding field in the UserBusiness object
                     const fieldName = questionMapping[questionName];
-                    console.log(fieldName, 'fieldName');
                     if (answer.answer_text !== undefined) {
-                        // Save the answer to the mapped field
-                        createUserBusiness[fieldName] = answer.answer_text;
+                        createUserBusiness[fieldName] = answer.answer_text; // Update field in createUserBusiness
                     }
                 }
-
+                console.log(createUserBusiness);
+                // Handle option-based answers
                 if (answer.question_option_id) {
-                    // If the question has options, process each option
                     for (const optionId of answer.question_option_id) {
-                        // let userAnswer = await userAnswerRepository.findOneByFields({
-                        //     where: {
-                        //         user_id: userId,
-                        //         question_id: answer.questionId,
-                        //         question_option_id: parseInt(optionId), // Match by question_option_id
-                        //     },
-                        // });
-                        let userAnswer = await userAnswerRepository.userAnswerOne(userId, answer.questionId, parseInt(optionId)
-                        );
-
-
+                        let userAnswer = await userAnswerRepository.userAnswerOne(userId, answer.questionId, parseInt(optionId));
                         if (!userAnswer) {
-                            // If the record does not exist, create a new one
                             userAnswer = new UserAnswer();
                             userAnswer.user_id = userId;
                             userAnswer.question_id = answer.questionId;
                             userAnswer.question_option_id = parseInt(optionId);
                             userAnswer.answer_text = null; // No text answer for this case
                         }
-
-                        // Push the answer to be saved later
                         userAnswersToSave.push(userAnswer); // Collect for bulk save
                     }
                 } else if (answer.answer_text !== undefined) {
-                    // If it's a text-based answer (no options), handle accordingly
                     let userAnswer = await userAnswerRepository.findOneByFields({
                         where: {
                             user_id: userId,
                             question_id: answer.questionId,
-                            question_option_id: null, // For text answers, no option ID
+                            question_option_id: null,
                         },
                     });
 
                     if (!userAnswer) {
-                        // If the record does not exist, create a new one
                         userAnswer = new UserAnswer();
                         userAnswer.user_id = userId;
                         userAnswer.question_id = answer.questionId;
-                        userAnswer.question_option_id = null; // No question option
+                        userAnswer.question_option_id = null;
                         userAnswer.answer_text = answer.answer_text;
                     } else {
-                        // If the record exists, update the answer text
                         userAnswer.answer_text = answer.answer_text;
                     }
 
-                    // Push the text answer to be saved later
                     userAnswersToSave.push(userAnswer); // Collect for bulk save
                 }
             }
-            console.timeEnd('Handle new or updated answers (both options and text-based) execution end time & storeData execution');
+            console.timeEnd('Handle new or updated answers execution time');
 
-            // Step 3: Save all collected user answers at once
+            // Save all collected user answers in bulk
             if (userAnswersToSave.length > 0) {
                 console.time('storeData save execution time');
-
-                await userAnswerRepository.save(userAnswersToSave); // Bulk save
+                await userAnswerRepository.save(userAnswersToSave);
                 console.timeEnd('storeData save execution time');
-
             }
-            console.timeEnd('storeData execution time');
 
-            const userBusiness = await this.userBusinessRepo.findUserBusiness(userId);
-
-            if (!userBusiness) {
-                await this.userBusinessRepo.create(createUserBusiness);
-            } else {
-                await this.userBusinessRepo.update(userBusiness.id, createUserBusiness);
+            // Save or update UserBusiness
+            const userBusinessRepo = this.unitOfWork.getRepository(
+                UserBusinessRepository,
+                UserBusiness,
+                true
+            );
+            if(createUserBusiness){
+                createUserBusiness.user_id = userId;
+                console.log(createUserBusiness, 'createUserBusinessdd')
+                await this.userBusinessService.createUserBusiness(createUserBusiness)
             }
+          
+            // console.log(createUserBusiness, 'createUserBusiness')
+            // if (!userBusiness) {
+            //     createUserBusiness.user_id = userId;
+            //     // Create UserBusiness if it doesn't exist
+            //     // await this.userBusinessRepo.create(createUserBusiness);
+            // } else {
+            //     // Update UserBusiness if it exists
+            //     await this.userBusinessRepo.update(userBusiness.id, createUserBusiness);
+            // }
 
             // Commit the transaction
             await this.unitOfWork.completeTransaction();
 
+            console.timeEnd('storeData execution time');
             return { message: 'User answers have been saved, updated, or removed successfully!' };
         } catch (error) {
             // Rollback in case of error

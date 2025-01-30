@@ -39,7 +39,6 @@ export class UserBusinessDto {
 	@IsString()
 	location: string;
 
-
 	@ApiProperty({
 		description: 'website',
 		type: String,
