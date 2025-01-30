@@ -37,7 +37,7 @@ export class NotificationService {
             notification.content = content;
             notification.is_read = false;
             notification.created_at = new Date();
-            notification.modified_at = null;
+            notification.modified_at = new Date();
 
             await notificationRepo.create(notification);
 
