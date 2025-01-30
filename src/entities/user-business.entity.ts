@@ -25,7 +25,7 @@ import {
 	@Column({ nullable: true })
 	image_url: string;
 
-	@Column({ type: 'varchar' })
+	@Column({ type: 'varchar', nullable: true })
 	brand_name: string;
 
 	@Column({ type: 'text', nullable: true })
