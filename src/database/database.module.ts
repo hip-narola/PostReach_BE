@@ -67,6 +67,12 @@ import { AwsSecretsServiceModule } from 'src/modules/aws-secrets-service/aws-sec
           migrations: ['./dist/database/migrations/*.js'],
           synchronize: false,
           logging: true,
+          pool: {
+            max: 50, // Example: Adjust as needed
+            min: 10, // Example: Adjust as needed
+            acquire: 30000, // Example: Time in milliseconds to acquire a connection
+            idle: 10000 // Example: Time in milliseconds a connection can be idle before being closed
+          },
         };
       },
     }),
