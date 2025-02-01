@@ -134,23 +134,28 @@ export class ApprovalQueueService {
                 PostTask,
                 true,
             );
+
+            console.log("updateStatusAfterPostExecution id: ", id)
             const record = await approvalQueueRepository.findOne(id);
             record.status = status;
 
+            console.log("updateStatusAfterPostExecution update staus id record: ", id, record);
+
             await approvalQueueRepository.update(id, record);
 
-            console.log("post-queue save notification");
+            console.log("updateStatusAfterPostExecution post-queue save notification");
             // Add notification
             const notificationType = status == POST_TASK_STATUS.FAIL ? POST_TASK_STATUS.FAIL : POST_TASK_STATUS.EXECUTE_SUCCESS;
             const notificationContent = status == POST_TASK_STATUS.FAIL ? NotificationMessage[NotificationType.POST_FAILED] : NotificationMessage[NotificationType.POST_PUBLISHED];
 
-            console.log("post-queue save notification : notificationType ", notificationType, notificationContent);
+            console.log("updateStatusAfterPostExecution post-queue save notification : user id notificationType content", record.user.id, notificationType, notificationContent);
             await this.notificationService.saveData(record.user.id, notificationType, notificationContent);
 
             // await this.emailService.sendEmail(record.user.email, 'Post Posted', 'post_success');
 
             await this.unitOfWork.completeTransaction();
         } catch (error) {
+            console.log("updateStatusAfterPostExecution error:: ", error);
             await this.unitOfWork.rollbackTransaction();
             throw error;
         }

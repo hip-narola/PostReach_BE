@@ -38,7 +38,7 @@ export class NotificationService {
             notification.is_read = false;
             notification.created_at = new Date();
             notification.modified_at = new Date();
-
+            console.log("saveData notification : notification ", notification);
             await notificationRepo.create(notification);
 
             // await this.unitOfWork.completeTransaction();
