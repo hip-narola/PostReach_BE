@@ -63,7 +63,7 @@ export class SchedulePostProcessor extends WorkerHost {
 		catch (error) {
 			console.log("post-queue error: ", error, job.attemptsMade);
 			if (job.attemptsMade >= 4) {
-				await this.approvalQueueService.updateStatusAfterPostExecution(Id, POST_TASK_STATUS.FAIL);
+				await this.approvalQueueService.updateStatusAfterPostExecution(Id, POST_TASK_STATUS.FAIL, userId);
 				const user = await this.userService.findOne(userId);
 
 				await this.emailService.sendEmail(user.email, EMAIL_SEND.POST_FAILED, EMAIL_SEND_FILE[EMAIL_SEND.POST_FAILED]);
