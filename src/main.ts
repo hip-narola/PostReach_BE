@@ -16,10 +16,16 @@ async function bootstrap() {
   const logger = app.get(Logger);
   const configService = app.get(ConfigService);
 
+  // Trust first proxy (important for rate limiting)
+  app.use((req, res, next) => {
+    req.app.set('trust proxy', 1);
+    next();
+  });
+
   // Helmet for securing HTTP headers
   app.use(helmet());
 
-  //Configure sessions with more secure options
+  // Configure sessions with more secure options
   app.use(
     session({
       secret: configService.get('SESSION_SECRET') || '0716f5f0-4c0d-41d5-9564-a93f38b5a931',
