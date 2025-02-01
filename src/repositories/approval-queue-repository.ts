@@ -40,7 +40,7 @@ export class ApprovalQueueRepository extends GenericRepository<PostTask> {
                 .leftJoin('pt.user', 'ur')
                 .where('pt.status = :status', { status: POST_TASK_STATUS.PENDING })
                 .andWhere('pt.user_id = :userid', { userid: paginatedParams.userId })
-                .andWhere('pt.scheduled_at > :now', { now: new Date() })
+                // .andWhere('pt.scheduled_at > :now', { now: new Date() })
                 .addSelect('pt.scheduled_at::text AS scheduled_at')
                 .getRawMany();
             const data = postTasks.map(queryResult => ({
