@@ -90,9 +90,9 @@ export class JobSchedulerService {
 
         const delay = publishAt.diff(now);
         if (delay <= 0) {
-            // throw new BadRequestException(
-            //     'Schedule time must be in the future.',
-            // );
+            throw new BadRequestException(
+                'Schedule time must be in the future.',
+            );
         }
 
         await this.postQueue.add(
