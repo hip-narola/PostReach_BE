@@ -149,7 +149,7 @@ export class AuthController {
 			else if (error.name == 'UserNotConfirmedException') {
 				return res.status(HttpStatus.BAD_REQUEST).json({
 					StatusCode: HttpStatus.BAD_REQUEST,
-					Message: 'User account is not confirmed.',
+					Message: 'Provided email is not registered.',
 					IsSuccess: false,
 					Data: null,
 				});
