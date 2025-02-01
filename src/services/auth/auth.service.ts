@@ -92,56 +92,63 @@ export class AuthService {
   }
 
   // AWS Cognito Sign-In
-  async signIn(
-    email: string,
-    password: string,
-    rememberMe: boolean,
-  ): Promise<any> {
-
+  async signIn(email: string, password: string, rememberMe: boolean): Promise<any> {
     const authenticationDetails = new AuthenticationDetails({
       Username: email.toLowerCase(),
       Password: password,
     });
-
+  
     const cognitoUser = new CognitoUser({
       Username: email.toLowerCase(),
       Pool: this.userPool,
     });
-    const userDetails = await this.userService.findUserByEmail(
-      email.toLowerCase(),
-    );
-
-    if (userDetails == null) {
-      const error = new Error('Provided email is not registered.');
-      error.name = 'UserNotConfirmedException';
+  
+    const userDetails = await this.userService.findUserByEmail(email.toLowerCase());
+    if (!userDetails) {
+      const error = new Error('User not found.');
+      error.name = 'UserNotFoundException';
       throw error;
     }
+  /*
+    const authenticateUserAsync = promisify(cognitoUser.authenticateUser.bind(cognitoUser));
+  
+    try {
+      const result = await authenticateUserAsync(authenticationDetails);
+      const expiresIn = rememberMe ? 60 * 60 * 24 * 7 : 60 * 60; // 7 days for "Remember Me", 1 hour otherwise
+      
+      return {
+        idToken: result.getIdToken().getJwtToken(),
+        accessToken: result.getAccessToken().getJwtToken(),
+        refreshToken: result.getRefreshToken().getToken(),
+        expiresIn,
+        rememberMe,
+        userId: userDetails.id,
+        userName: userDetails.name,
+      };
+    } catch (err) {
+      throw err;
+    }*/
 
-    promisify(
-      cognitoUser.authenticateUser.bind(cognitoUser),
-    );
-    
-    return new Promise((resolve, reject) => {
-      cognitoUser.authenticateUser(authenticationDetails, {
-        onSuccess: (result) => {
-          const expiresIn = rememberMe ? 60 * 60 * 24 * 7 : 60 * 60; // 7 days for "Remember Me", 1 hour otherwise
-          resolve({
-            idToken: result.getIdToken().getJwtToken(),
-            accessToken: result.getAccessToken().getJwtToken(),
-            refreshToken: result.getRefreshToken().getToken(),
-            expiresIn, // Send expiration time along with the tokens
-            rememberMe,
-            userId: userDetails.id,
-            userName: userDetails.name,
-          });
-        },
-        onFailure: (err) => {
-          reject(err);
-        },
+      return new Promise((resolve, reject) => {
+        cognitoUser.authenticateUser(authenticationDetails, {
+          onSuccess: (result) => {
+            const expiresIn = rememberMe ? 60 * 60 * 24 * 7 : 60 * 60; // 7 days for "Remember Me", 1 hour otherwise
+            resolve({
+              idToken: result.getIdToken().getJwtToken(),
+              accessToken: result.getAccessToken().getJwtToken(),
+              refreshToken: result.getRefreshToken().getToken(),
+              expiresIn, // Send expiration time along with the tokens
+              rememberMe,
+              userId: userDetails.id,
+              userName: userDetails.name,
+            });
+          },
+          onFailure: (err) => {
+            reject(err);
+          },
+        });
       });
-    });
   }
-
   // AWS Cognito Confirm Sign-Up
   async confirmSignUp(
     email: string,

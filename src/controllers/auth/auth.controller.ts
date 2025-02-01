@@ -146,7 +146,7 @@ export class AuthController {
 					Data: null,
 				});
 			}
-			else if (error.name == 'UserNotConfirmedException') {
+			else if (error.name == 'UserNotFoundException') {
 				return res.status(HttpStatus.BAD_REQUEST).json({
 					StatusCode: HttpStatus.BAD_REQUEST,
 					Message: 'Provided email is not registered.',

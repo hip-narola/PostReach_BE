@@ -26,10 +26,4 @@ export class UserRepository extends GenericRepository<User> {
       where: { socialMediaId: socialMediaId },
     });
   }
-
-  async findByEmail(email: string): Promise<User | null> {
-    return await this.repository.findOne({
-      where: { email: email },
-    });
-  }
 }
