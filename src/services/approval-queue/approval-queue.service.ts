@@ -126,7 +126,7 @@ export class ApprovalQueueService {
     }
 
     // update the status for post execution success or failure.
-    async updateStatusAfterPostExecution(id: number, status: string) {
+    async updateStatusAfterPostExecution(id: number, status: string, userId: number) {
         try {
             await this.unitOfWork.startTransaction();
             const approvalQueueRepository = this.unitOfWork.getRepository(
@@ -148,8 +148,8 @@ export class ApprovalQueueService {
             const notificationType = status == POST_TASK_STATUS.FAIL ? POST_TASK_STATUS.FAIL : POST_TASK_STATUS.EXECUTE_SUCCESS;
             const notificationContent = status == POST_TASK_STATUS.FAIL ? NotificationMessage[NotificationType.POST_FAILED] : NotificationMessage[NotificationType.POST_PUBLISHED];
 
-            console.log("updateStatusAfterPostExecution post-queue save notification : user id notificationType content", record.user.id, notificationType, notificationContent);
-            await this.notificationService.saveData(record.user.id, notificationType, notificationContent);
+            console.log("updateStatusAfterPostExecution post-queue save notification : user id notificationType content", userId, notificationType, notificationContent);
+            await this.notificationService.saveData(userId, notificationType, notificationContent);
 
             // await this.emailService.sendEmail(record.user.email, 'Post Posted', 'post_success');
 

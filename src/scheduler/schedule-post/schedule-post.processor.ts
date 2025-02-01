@@ -37,12 +37,12 @@ export class SchedulePostProcessor extends WorkerHost {
 					console.log("post-queue postToFacebook ", PostId, pageId, accessToken, message, hashtags, imageUrl);
 					await this.facebookService.postToFacebook(PostId, pageId, accessToken, message, hashtags, imageUrl);
 					console.log("post-queue updateStatusAfterPostExecution ", Id, POST_TASK_STATUS.EXECUTE_SUCCESS);
-					await this.approvalQueueService.updateStatusAfterPostExecution(Id, POST_TASK_STATUS.EXECUTE_SUCCESS);
+					await this.approvalQueueService.updateStatusAfterPostExecution(Id, POST_TASK_STATUS.EXECUTE_SUCCESS, userId);
 					break;
 
 				case `${SocialMediaPlatformNames[SocialMediaPlatform['LINKEDIN']]}`:
 					await this.linkedinService.postToLinkedIn(PostId, pageId, accessToken, SocialMediauserId, message, imageUrl, hashtags);
-					await this.approvalQueueService.updateStatusAfterPostExecution(Id, POST_TASK_STATUS.EXECUTE_SUCCESS);
+					await this.approvalQueueService.updateStatusAfterPostExecution(Id, POST_TASK_STATUS.EXECUTE_SUCCESS, userId);
 					break;
 
 				case `${SocialMediaPlatformNames[SocialMediaPlatform['INSTAGRAM']]}`:
@@ -50,13 +50,13 @@ export class SchedulePostProcessor extends WorkerHost {
 					await this.instagramService.postToInstagram(PostId, instagramId, accessToken, imageUrl, message, hashtags);
 					console.log("post-queue updateStatusAfterPostExecution ", Id, POST_TASK_STATUS.EXECUTE_SUCCESS);
 					await this.approvalQueueService.updateStatusAfterPostExecution(
-						Id, POST_TASK_STATUS.EXECUTE_SUCCESS);
+						Id, POST_TASK_STATUS.EXECUTE_SUCCESS, userId);
 						
 					break;
 
 				case `${SocialMediaPlatformNames[SocialMediaPlatform['TWITTER']]}`:
 					await this.twitterService.postToTwitter(PostId, pageId, accessToken, SocialMediauserId, message, imageUrl, hashtags);
-					await this.approvalQueueService.updateStatusAfterPostExecution(Id, POST_TASK_STATUS.EXECUTE_SUCCESS);
+					await this.approvalQueueService.updateStatusAfterPostExecution(Id, POST_TASK_STATUS.EXECUTE_SUCCESS, userId);
 					break;
 			}
 		}
