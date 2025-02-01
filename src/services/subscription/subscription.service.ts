@@ -73,18 +73,21 @@ export class SubscriptionService {
 				// const userCreditDetails = await userCreditRepository.findTrialCreditByUserId(userSubscription.user.id, userSubscriptionDetails.subscription.id);
 				// if (userCreditDetails) {
 
-				// TODO: Generate Post
-				await this.createPostForSubscription(
-					userSubscriptionDetails.user.id,
-					userCredit.social_media_id,
-					userCredit.social_media_id,
-					userSubscriptionDetails.id
-				);
-				// Minus credit amount based on each social media post creation
-				userCredit.last_trigger_date = new Date();
-				userCredit.current_credit_amount = userCredit.current_credit_amount - 1;
-				await userCreditRepository.update(userCredit.id, userCredit);
-				// }
+				for (let i = 0; i < userCredit.current_credit_amount; i++) {
+
+					// TODO: Generate Post
+					await this.createPostForSubscription(
+						userSubscriptionDetails.user.id,
+						userCredit.social_media_id,
+						userCredit.social_media_id,
+						userSubscriptionDetails.id
+					);
+					// Minus credit amount based on each social media post creation
+					userCredit.last_trigger_date = new Date();
+					userCredit.current_credit_amount = userCredit.current_credit_amount - 1;
+					await userCreditRepository.update(userCredit.id, userCredit);
+					// }
+				}
 			}
 			// await this.unitOfWork.completeTransaction();
 		}
@@ -117,17 +120,20 @@ export class SubscriptionService {
 						const platform = platforms.find(p => p.id === credit.social_media_id);
 
 						if (platform && credit.current_credit_amount > 0) {
-							await this.createPostForSubscription(
-								subscriptionDetail.user.id,
-								credit.social_media_id,
-								platform.id,
-								subscriptionDetail.id
-							);
+							for (let i = 0; i < credit.current_credit_amount; i++) {
 
-							// Deduct credit for the post
-							credit.last_trigger_date = new Date();
-							credit.current_credit_amount -= 1;
-							await userCreditRepository.update(credit.id, credit);
+								await this.createPostForSubscription(
+									subscriptionDetail.user.id,
+									credit.social_media_id,
+									platform.id,
+									subscriptionDetail.id
+								);
+
+								// Deduct credit for the post
+								credit.last_trigger_date = new Date();
+								credit.current_credit_amount -= 1;
+								await userCreditRepository.update(credit.id, credit);
+							}
 						}
 					}
 					// }
@@ -194,6 +200,7 @@ export class SubscriptionService {
 					nextPostGenerationDate.setDate(subscriptionDetail.start_Date.getDate() + 14);
 					//to-do
 					// if ((new Date() == new Date(subscriptionDetail.start_Date))) {
+					for (let i = 0; i < userCreditDetails.current_credit_amount; i++) {
 
 						// TODO: Generate Post
 						await this.createPostForSubscription(
@@ -207,7 +214,8 @@ export class SubscriptionService {
 						userCreditDetails.last_trigger_date = new Date();
 						userCreditDetails.current_credit_amount = userCreditDetails.current_credit_amount - 1;
 						await userCreditRepository.update(userCreditDetails.id, userCreditDetails);
-					// }
+						// }
+					}
 				}
 				// }
 			}
@@ -469,9 +477,9 @@ export class SubscriptionService {
 		userCredit.user = user;
 		userCredit.subscription = subscription;
 		userCredit.current_credit_amount =
-        userSubscription.cycle === 1
-            ? subscription.creditAmount * 2
-            : subscription.creditAmount;
+			userSubscription.cycle === 1
+				? subscription.creditAmount * 2
+				: subscription.creditAmount;
 		// Add 3 days to start_Date
 		// userCredit.start_Date = new Date(
 		// 	new Date(userSubscription.start_Date).setDate(
@@ -492,7 +500,7 @@ export class SubscriptionService {
 
 		// Add 1 month and 3 days to today's date for end_Date
 		// userCredit.end_Date = new Date();
-		userCredit.end_Date  = new Date(userSubscription.start_Date);
+		userCredit.end_Date = new Date(userSubscription.start_Date);
 		userCredit.end_Date.setMonth(userCredit.end_Date.getMonth() + 1);
 		userCredit.end_Date.setDate(userCredit.end_Date.getDate() + 3);
 		userCredit.cancel_Date = null;
@@ -663,7 +671,7 @@ export class SubscriptionService {
 				invoice,
 				stripeSubscription
 			);
-			
+
 			await userSubscriptionRepository.create(userSubscriptionCreate);
 
 
