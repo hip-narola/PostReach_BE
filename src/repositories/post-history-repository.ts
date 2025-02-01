@@ -16,8 +16,7 @@ export class PostHistoryRepository extends GenericRepository<PostTask> {
 
     async getPostHistoryList(paginatedParams: PaginationParamDto): Promise<PaginatedResponseDto> {
         try {
-
-            const postTasks = await this.repository.createQueryBuilder('pt')
+            const query = this.repository.createQueryBuilder('pt')
                 .select([
                     'pt.id AS post_task_id',
                     'p.id AS post_id',
@@ -37,11 +36,16 @@ export class PostHistoryRepository extends GenericRepository<PostTask> {
                 .leftJoin('p.assets', 'a', 'a.type = :type', { type: ASSET_TYPE.IMAGE })
                 .leftJoin('pt.socialMediaAccount', 'sm')
                 .leftJoin('pt.user', 'ur')
-                .where('pt.status = :status', { status:POST_TASK_STATUS.EXECUTE_SUCCESS })
+                .where('pt.status = :status', { status: POST_TASK_STATUS.EXECUTE_SUCCESS })
                 .andWhere('pt.user_id = :userid', { userid: paginatedParams.userId })
-                .orderBy('pt.scheduled_at', 'DESC')
-                .getRawMany();
+                .orderBy('pt.scheduled_at', 'DESC');
 
+            const totalCount = await query.getCount();
+
+            const postTasks = await query
+                .skip((paginatedParams.pageNumber - 1) * paginatedParams.limit)
+                .take(paginatedParams.limit)
+                .getRawMany();
 
             const data = postTasks.map(queryResult => ({
                 id: queryResult.post_task_id,
@@ -60,7 +64,6 @@ export class PostHistoryRepository extends GenericRepository<PostTask> {
                 ]
             }));
 
-            const totalCount = postTasks.length;
             const offset = (paginatedParams.pageNumber - 1) * paginatedParams.limit;
             const paginatedTasks = data.slice(offset, offset + paginatedParams.limit);
             const totalPages = paginatedParams.limit > 0 ? Math.ceil(totalCount / paginatedParams.limit) : 0;
@@ -69,13 +72,12 @@ export class PostHistoryRepository extends GenericRepository<PostTask> {
         catch (error) {
             throw error;
         }
-
     }
+
     async getPostTaskWithUserDetails(postTaskId: number): Promise<PostTask> {
         return this.repository.findOne({
             where: { id: postTaskId },
             relations: ['user'],
         });
     }
-
 }

@@ -97,10 +97,12 @@ export class AuthService {
     password: string,
     rememberMe: boolean,
   ): Promise<any> {
+
     const authenticationDetails = new AuthenticationDetails({
       Username: email.toLowerCase(),
       Password: password,
     });
+
     const cognitoUser = new CognitoUser({
       Username: email.toLowerCase(),
       Pool: this.userPool,
@@ -108,14 +110,17 @@ export class AuthService {
     const userDetails = await this.userService.findUserByEmail(
       email.toLowerCase(),
     );
+
     if (userDetails == null) {
-      const error = new Error('User is not confirmed.');
+      const error = new Error('Provided email is not registered.');
       error.name = 'UserNotConfirmedException';
       throw error;
     }
+
     promisify(
       cognitoUser.authenticateUser.bind(cognitoUser),
     );
+    
     return new Promise((resolve, reject) => {
       cognitoUser.authenticateUser(authenticationDetails, {
         onSuccess: (result) => {

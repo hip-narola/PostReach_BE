@@ -22,12 +22,7 @@ export class UserService {
 
 	// Method to find user by email
 	async findUserByEmail(email: string): Promise<User | undefined> {
-		const userRepository = this.unitOfWork.getRepository(
-			UserRepository,
-			User,
-			false,
-		);
-		return userRepository.findByField('email', email);
+		return this.userRepository.findByField("email", email);
 	}
 
 	// Method to update user password
