@@ -112,9 +112,9 @@ export class SocialMediaInsightsService {
         return result;
     }
 
-    async getActiveSocialMediaAccountAsync(): Promise<SocialMediaAccount[]> {
+    async getActiveSocialMediaAccountAsync(platform: string | null = null): Promise<SocialMediaAccount[]> {
         const socialAccountRepository = this.unitOfWork.getRepository(SocialMediaAccountRepository, SocialMediaAccount, false);
-        return socialAccountRepository.getActiveSocialMediaAccountAsync();
+        return socialAccountRepository.getActiveSocialMediaAccountAsync(platform);
     }
 
     async userAccountInsight(socia_media_account_id: number): Promise<SocialMediaInsight> {

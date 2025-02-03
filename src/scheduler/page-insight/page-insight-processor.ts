@@ -5,13 +5,11 @@ import { SocialMediaInsightParamDTO } from 'src/dtos/params/social-media-insight
 import { DashboardInsightsService } from '../../services/dashboard-insights/dashboard-insights.service';
 import { SocialMediaPlatform, SocialMediaPlatformNames } from 'src/shared/constants/social-media.constants';
 import { TwitterService } from 'src/services/twitter/twitter.service';
-import { SocialMediaAccountService } from 'src/services/social-media-account/social-media-account.service';
 
 @Processor('page-insight')
 export class PageInsightProcessor extends WorkerHost {
     constructor(private readonly socialMediaService: SocialMediaInsightsService, private readonly dashboardInsightsService: DashboardInsightsService,
-        private readonly twitterService: TwitterService,
-        private readonly socialMediaAccountService: SocialMediaAccountService
+        private readonly twitterService: TwitterService
     ) {
         super();
     }
@@ -48,7 +46,7 @@ export class PageInsightProcessor extends WorkerHost {
 
         // refresh Twitter token
         try {
-            const twitterAccounts = await this.socialMediaAccountService.userTwitterAccounts();
+            const twitterAccounts = await this.socialMediaService.getActiveSocialMediaAccountAsync(SocialMediaPlatformNames[SocialMediaPlatform['TWITTER']]);
             twitterAccounts.forEach(twitterAccount => {
                 this.twitterService.refreshToken(twitterAccount);
             });

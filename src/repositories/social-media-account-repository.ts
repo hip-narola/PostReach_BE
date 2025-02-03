@@ -95,8 +95,8 @@ export class SocialMediaAccountRepository extends GenericRepository<SocialMediaA
         });
     }
 
-    async getActiveSocialMediaAccountAsync(): Promise<SocialMediaAccount[]> {
-        return this.repository.createQueryBuilder('account')
+    async getActiveSocialMediaAccountAsync(platform: string | null = null): Promise<SocialMediaAccount[]> {
+        const queryBuilder = this.repository.createQueryBuilder('account')
             .andWhere('account.isDisconnect = :isDisconnect', { isDisconnect: false }) // Filter active accounts
             .andWhere(
                 `EXISTS (
@@ -116,7 +116,7 @@ export class SocialMediaAccountRepository extends GenericRepository<SocialMediaA
                 'account.expires_in',
                 'account.scope',
                 'account.platform',
-                'account.user_id', 
+                'account.user_id',
                 'account.connected_at',
                 'account.page_id',
                 'account.instagram_Profile',
@@ -131,15 +131,15 @@ export class SocialMediaAccountRepository extends GenericRepository<SocialMediaA
                 'account.updated_at'
             ])
             .distinctOn(['account.user_id'])
-            .getMany();
+
+        if (platform != null) {
+            queryBuilder.andWhere('account.platform = :platform', { platform: platform });
+        }
+
+        return await queryBuilder.getMany();
     }
     
-
     async findPlatformsOfUser(userId: number): Promise<SocialMediaAccount[] | null> {
         return this.repository.find({ where: { user_id: userId } });
-    }
-
-    async findByPlatformAndConnected(platform: string): Promise<SocialMediaAccount[] | null> {
-        return this.repository.find({ where: { platform, isDisconnect: false } });
     }
 }

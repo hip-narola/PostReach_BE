@@ -196,23 +196,5 @@ export class SocialMediaAccountService {
         } catch (error) {
             throw error;
         }
-    }
-
-    async userTwitterAccounts(): Promise<SocialMediaAccount[]> {
-        const socialMediaAccountRepository = this.unitOfWork.getRepository(
-            SocialMediaAccountRepository,
-            SocialMediaAccount,
-            false
-        );
-        return await socialMediaAccountRepository.findByPlatformAndConnected(SocialMediaPlatformNames[SocialMediaPlatform['TWITTER']]);
-    }
-
-    async getPostsWithActiveSubscription(): Promise<SocialMediaAccount[]> {
-        const socialMediaAccountRepository = this.unitOfWork.getRepository(
-            SocialMediaAccountRepository,
-            SocialMediaAccount,
-            false
-        );
-        return await socialMediaAccountRepository.findByPlatformAndConnected(SocialMediaPlatformNames[SocialMediaPlatform['TWITTER']]);
-    }
+    }    
 }
