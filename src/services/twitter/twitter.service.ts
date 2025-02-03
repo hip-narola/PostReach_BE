@@ -499,6 +499,7 @@ export class TwitterService {
 			// Complete the transaction after the update
 			await this.unitOfWork.completeTransaction();
 		} catch (error) {
+			console.log("Twitter refresh token ERROR : ", error);
 			const errorDetails = error.response?.data || error.message;
 			// Rollback the transaction in case of an error
 			if (this.unitOfWork['queryRunner']) {  // Access queryRunner privately for rollback
