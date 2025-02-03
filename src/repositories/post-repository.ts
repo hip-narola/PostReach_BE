@@ -77,16 +77,16 @@ export class PostRepository extends GenericRepository<Post> {
     async getPostsWithActiveSubscription() {
         const posts = await this.repository
             .createQueryBuilder('post')
-            .leftJoinAndSelect('post.postTask', 'postTask')
-            .leftJoinAndSelect(
-                'postTask.socialMediaAccount',
-                'socialMediaAccount',
-            )
-            .leftJoinAndSelect('socialMediaAccount.user', 'user')
-            .leftJoinAndSelect(
-                'user.userSubscriptions',
-                'userSubscription',
-                'userSubscription.status IN (:...statuses)', // Filter user subscriptions by status
+            .innerJoin('post.postTask', 'postTask')
+            .innerJoin('postTask.socialMediaAccount', 'socialMediaAccount')
+            .innerJoin('socialMediaAccount.user', 'user')
+            .andWhere('postTask.status = :status', { status: POST_TASK_STATUS.EXECUTE_SUCCESS })
+            .andWhere(
+                `EXISTS (
+                    SELECT 1 FROM user_subscription us
+                    WHERE us.userId = user.id
+                    AND us.status IN (:...statuses)
+                )`,
                 {
                     statuses: [
                         UserSubscriptionStatusType.TRIAL,
@@ -94,7 +94,6 @@ export class PostRepository extends GenericRepository<Post> {
                     ],
                 }
             )
-            .andWhere('postTask.status = :status', { status: POST_TASK_STATUS.EXECUTE_SUCCESS })
             .select([
                 'post.id',
                 'post.external_platform_id',
@@ -107,4 +106,5 @@ export class PostRepository extends GenericRepository<Post> {
             .getMany();
         return posts;
     }
+    
 }

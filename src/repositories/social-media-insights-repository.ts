@@ -181,14 +181,13 @@ export class SocialMediaInsightsRepository extends GenericRepository<SocialMedia
 
         return result;
     }
+    
     async userAccountInsight(socia_media_account_id: number): Promise<SocialMediaInsight> {
-        const currentDate = new Date();
-        const formattedDate = currentDate.toISOString().split('T')[0]; // Format as 'YYYY-MM-DD'
+        const currentDate = new Date().toISOString().split('T')[0]; // Format as 'YYYY-MM-DD'
 
         return this.repository.createQueryBuilder('insight')
-            .where('DATE(insight.created_at) = :createdAt', { createdAt: formattedDate })
+            .where('DATE(insight.created_at) = :createdAt', { createdAt: currentDate })
             .andWhere('insight.socia_media_account_id = :socia_media_account_id', { socia_media_account_id })
             .getOne();
     }
-
 }

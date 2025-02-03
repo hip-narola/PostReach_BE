@@ -34,7 +34,7 @@ export class DashboardInsightsService {
     
 
     // facebook insights
-    async getFacebookInsights(socialTokenDataDTO: SocialTokenDataDTO): Promise<SocialMediaInsightParamDTO> {
+    async getFacebookInsights(socialTokenDataDTO: SocialMediaAccount): Promise<SocialMediaInsightParamDTO> {
         try {
 
             // Fetch insights for  account
@@ -172,7 +172,7 @@ export class DashboardInsightsService {
         }
     }
 
-    async gelinkedInInsights(socialMediaAccount: SocialTokenDataDTO): Promise<SocialMediaInsightParamDTO> {
+    async gelinkedInInsights(socialMediaAccount: SocialMediaAccount): Promise<SocialMediaInsightParamDTO> {
         try {
 
             const data = plainToInstance(SocialMediaAccount, socialMediaAccount);
@@ -383,7 +383,7 @@ export class DashboardInsightsService {
         }
     }
 
-    async getTwitterInsights(account: SocialTokenDataDTO): Promise<SocialMediaInsightParamDTO> {
+    async getTwitterInsights(account: SocialMediaAccount): Promise<SocialMediaInsightParamDTO> {
 
         // Fetch insights for account
         const data = plainToInstance(SocialMediaAccount, account);

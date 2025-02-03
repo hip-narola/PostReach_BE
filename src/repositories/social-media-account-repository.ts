@@ -95,19 +95,45 @@ export class SocialMediaAccountRepository extends GenericRepository<SocialMediaA
         });
     }
 
-    async findUniqueUserIds(): Promise<SocialMediaAccount[]> {
+    async getActiveSocialMediaAccountAsync(): Promise<SocialMediaAccount[]> {
         return this.repository.createQueryBuilder('account')
-            .innerJoin(
-                'user_subscription',
-                'userSubscriptions',
-                'userSubscriptions.user_id = account.user_id'
-            ) // Join user subscriptions
-            .andWhere('userSubscriptions.status IN (:...statuses)', {
-                statuses: [UserSubscriptionStatusType.ACTIVE, UserSubscriptionStatusType.TRIAL]
-            }) // Check multiple statuses
-            .andWhere('account.isDisconnect = :isDisconnect', { isDisconnect: false }) // Check disconnection
+            .andWhere('account.isDisconnect = :isDisconnect', { isDisconnect: false }) // Filter active accounts
+            .andWhere(
+                `EXISTS (
+                    SELECT 1 FROM user_subscription us
+                    WHERE us.user_id = account.user_id
+                    AND us.status IN (:...statuses)
+                )`,
+                { statuses: [UserSubscriptionStatusType.ACTIVE, UserSubscriptionStatusType.TRIAL] }
+            )
+            .select([
+                'account.id',
+                'account.token_type',
+                'account.encrypted_access_token',
+                'account.refresh_token',
+                'account.facebook_Profile_access_token',
+                'account.encryption_key_id',
+                'account.expires_in',
+                'account.scope',
+                'account.platform',
+                'account.user_id', 
+                'account.connected_at',
+                'account.page_id',
+                'account.instagram_Profile',
+                'account.facebook_Profile',
+                'account.name',
+                'account.user_name',
+                'account.user_profile',
+                'account.file_name',
+                'account.social_media_user_id',
+                'account.isDisconnect',
+                'account.created_at',
+                'account.updated_at'
+            ])
+            .distinctOn(['account.user_id'])
             .getMany();
     }
+    
 
     async findPlatformsOfUser(userId: number): Promise<SocialMediaAccount[] | null> {
         return this.repository.find({ where: { user_id: userId } });
