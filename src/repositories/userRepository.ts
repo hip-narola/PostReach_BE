@@ -128,6 +128,7 @@ export class UserRepository extends GenericRepository<User> {
 			.leftJoinAndSelect('question.options', 'options')
 			.leftJoinAndSelect('userAnswer.question_option', 'questionOption')
 			.leftJoinAndSelect('question.questionnaire', 'questionnaire')
+			.leftJoinAndSelect('question.referenceQuestion', 'referenceQuestion') // Fetching referenced question
 			.where('user.id = :userId', { userId })
 			.andWhere('socialMediaAccount.id = :socialMediaId', { socialMediaId })
 			.andWhere('questionnaire.name = :name', { name: QUESTIONNAIRE.ONBOARDING })
@@ -148,7 +149,11 @@ export class UserRepository extends GenericRepository<User> {
 				'question.question',
 				'question.question_type',
 				'question.question_name',
-				'userAnswer.question_option',
+				'question.control_label',
+				'question.reference_id',
+				'referenceQuestion.id', // Reference question details
+				'referenceQuestion.question',
+				'referenceQuestion.question_name',
 				'questionOption.id',
 				'questionOption.name',
 				'questionOption.question_id',
@@ -163,7 +168,36 @@ export class UserRepository extends GenericRepository<User> {
 		if (!user) {
 			throw new Error('User not found');
 		}
-		// Mapping response to ensure no saving happens
+
+		// Group answers by question ID
+		const answersByQuestion: Record<number, { id: number; answerText: string[]; question: any }> = {};
+
+		user.userAnswers.forEach((answer: any) => {
+			const questionId = answer.question.id;
+			const answerText = answer.answer_text || (answer.question_option ? answer.question_option.name : '');
+
+			if (!answersByQuestion[questionId]) {
+				answersByQuestion[questionId] = {
+					id: answer.id,
+					answerText: [],
+					question: {
+						id: answer.question.id,
+						question: answer.question.question ? answer.question?.reference_id?.question?.question : answer.question.control_label,
+						questionType: answer.question.question_type,
+						questionName: answer.question.question_name ? answer.question.question_name :
+							answer.question.referenceQuestion.question_name, // Use reference question text if available
+						// questionName: answer.question.question_name,
+					},
+				};
+			}
+			if (answer.question.question != null) {
+				answersByQuestion[questionId].answerText.push(answerText);
+			}
+			else {
+				answersByQuestion[questionId].answerText.push(answer?.question.control_label);
+			}
+		});
+
 		return {
 			userName: user.name,
 			socialMedia: {
@@ -184,20 +218,11 @@ export class UserRepository extends GenericRepository<User> {
 					use: user.userBusiness.use,
 				}
 				: null,
-			userAnswers: user.userAnswers.map((answer: any) => {
-				// const answerText = answer.answer_text || (answer.question_option ? answer.question_option.map((opt: any) => opt.name).join(', ') : '');
-				const answerText = answer.answer_text || null;
-				return {
-					id: answer.id,
-					answerText,
-					question: {
-						id: answer.question.id,
-						question: answer.question.question,
-						questionType: answer.question.question_type,
-						questionName: answer.question.question_name,
-					},
-				};
-			}),
+			userAnswers: Object.values(answersByQuestion).map((answer) => ({
+				id: answer.id,
+				answerText: answer.answerText.join(', '),
+				question: answer.question,
+			})),
 		};
 	}
 }

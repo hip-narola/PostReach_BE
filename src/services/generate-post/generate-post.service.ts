@@ -1,7 +1,6 @@
 import { HttpService } from '@nestjs/axios';
 import { Injectable } from '@nestjs/common';
 import { plainToInstance } from 'class-transformer';
-import { lastValueFrom } from 'rxjs';
 import { GeneratePostPipelineRequestDTO, Mode, SocialPostNumberDTO, UserInfoDTO, UserInfoType } from 'src/dtos/params/generate-post-param.dto';
 import { generatePostResponseDTO } from 'src/dtos/response/generate-post-response.dto';
 import { PostTaskRepository } from 'src/repositories/post-task-repository';
@@ -15,7 +14,6 @@ import { Asset } from 'src/entities/asset.entity';
 import { ASSET_TYPE } from 'src/shared/constants/asset-type-constants';
 import { UserRepository } from 'src/repositories/userRepository';
 import { SocialMediaAccountRepository } from 'src/repositories/social-media-account-repository';
-import { UserCreditDTO } from 'src/dtos/params/user-credit-param.dto';
 import { AwsSecretsService } from '../aws-secrets/aws-secrets.service';
 import { AWS_SECRET } from 'src/shared/constants/aws-secret-name-constants';
 import { COUNTRY } from 'src/shared/constants/country-constants';
@@ -29,6 +27,7 @@ import { POST_RESPONSE } from 'src/shared/constants/post-response-constants';
 import { PostRetry } from 'src/entities/post-retry.entity';
 import { generateId, IdType } from 'src/shared/utils/generate-id.util';
 import { PostRetryRepository } from 'src/repositories/post-retry-repository';
+import { POST_RETRY_COUNT } from 'src/shared/constants/post-retry-count-constants';
 
 @Injectable()
 export class GeneratePostService {
@@ -74,41 +73,13 @@ export class GeneratePostService {
             console.log(details, 'details')
             // After getting records of social media, on-boarding, bussiness preference.
             //  Generate object for GeneratePostPipelineRequestDTO
-            console.log(details?.userAnswers, 'details?.userAnswers');
             // Bind data from these info
-            // const userInfo: UserInfoDTO[] = details?.userAnswers?.map((answer: any) => ({
-            //     name: answer.question?.questionName || '',
-            //     value: answer.answerText || '',
-            //     type: UserInfoType.TEXT,
-            //     is_url: false,
-            // })) || [];
-            const userInfo: UserInfoDTO[] = Object.values(
-                details?.userAnswers?.reduce((acc, answer) => {
-                  const { id, questionName } = answer.question;
-              
-                  // Check if the questionName is personal_website
-                  const isUrl = questionName === 'personal_website' && answer.answerText;
-              
-                  if (!acc[id]) {
-                    acc[id] = {
-                      name: questionName || '',
-                      value: answer.answerText,
-                      type: UserInfoType.TEXT,
-                      is_url: isUrl, // Set is_url to true if it's personal_website
-                    };
-                  } else {
-                    // If the answer already exists, append the answer to the existing value (comma-separated)
-                    acc[id].value += acc[id].value ? `, ${answer.answerText}` : answer.answerText;
-                    
-                    // If the question is personal_website, update is_url
-                    if (isUrl) {
-                      acc[id].is_url = true;
-                    }
-                  }
-              
-                  return acc;
-                }, {})
-            ) || [];
+            const userInfo: UserInfoDTO[] = details?.userAnswers?.map((answer: any) => ({
+                name: answer.question?.questionName || '',
+                value: answer.answerText || '',
+                type: UserInfoType.TEXT,
+                isUrl: answer.question?.questionName == 'personal_website',
+            })) || [];
 
             console.log(userInfo, 'userInfo');
 
@@ -208,9 +179,7 @@ export class GeneratePostService {
             catch (error) {
                 console.log(error, 'error')
             }
-            console.log(response, 'response')
             if (response != undefined) {
-
                 const responseData = plainToInstance(generatePostResponseDTO, response.data);
                 console.log(responseData, 'responseData')
 
@@ -232,11 +201,6 @@ export class GeneratePostService {
                 }
             }
 
-            // await this.savePostDetails(userCredit.userId, userCredit.socialMediaId, platformId, userCredit.subscriptionId, responseData, userCredit)
-
-            // Manage status success & fail
-            // There will be no return type
-
         } catch (error) {
             console.log(error, 'error');
             throw error;
@@ -255,7 +219,6 @@ export class GeneratePostService {
         // get all required data based this dto
         // you will get user id, social media id  
         // Loop for posts
-        // await this.unitOfWork.startTransaction();
         try {
             // const existingUser = await this.userRepository.findOne(userCredit.user);
             // const socialMediaAccountDetails = await this.socialMediaAccountRepository.findOne(socialMediaAccountId);
@@ -331,79 +294,82 @@ export class GeneratePostService {
                 console.log('after credit', userCreditEntity.current_credit_amount)
                 await this.userCreditRepository.update(userCreditEntity.id, userCreditEntity);
             }
-
-            // await this.unitOfWork.completeTransaction();
         }
         catch (error) {
-            console.log(error, 'error')
-            // await this.unitOfWork.rollbackTransaction();
+            console.log(error, 'error789')
             throw error;
         }
     }
 
     private async savePostRetry(userId: number, userCreditId: string, pipelineId: string, status: string) {
         console.log(userId, userCreditId, pipelineId, status, 'savePostRetry');
+
         const postRetry = new PostRetry();
         postRetry.id = generateId(IdType.POST_RETRY);
         postRetry.pipeline_id = pipelineId;
         postRetry.user_id = userId;
         postRetry.credit_id = userCreditId;
-        postRetry.modified_date = null
+        postRetry.modified_date = null;
         postRetry.created_at = new Date();
         postRetry.retry_count = 5;
         postRetry.status = status;
+
         await this.postRetryRepository.create(postRetry);
+
+        this.scheduleRetry(postRetry); // Call retry scheduling function
     }
 
-    //will call in scheduler
-    private async reGeneratePost() {
-        const posts = await this.postRetryRepository.getAllPostRetryPosts();
-        console.log(posts, 'posts')
-        const secretData = await this.secretService.getSecret(AWS_SECRET.AWSSECRETNAME);
+    private async scheduleRetry(post: PostRetry) {
+        if (post.retry_count <= 0) {
+            console.log(`Retries exhausted for post ID ${post.id}`);
+            return; // Stop retrying when retry count reaches 0
+        }
 
-        for (const post of posts) { // Replace forEach with for...of
+        console.log(`Scheduling retry for post ID ${post.id} in ${POST_RETRY_COUNT[post.retry_count]} ms`);
+        setTimeout(async () => {
+            await this.reGeneratePost(post); // Ensuring full function execution
+        }, POST_RETRY_COUNT[post.retry_count]);
+        // setTimeout(() => {
+        //     this.reGeneratePost(post);
+        // }, POST_RETRY_COUNT[post.retry_count]);
+    }
+
+    private async reGeneratePost(post: PostRetry) {
+        try {
+            console.log(`Retrying post ID: ${post.id}`);
+
+            const secretData = await this.secretService.getSecret(AWS_SECRET.AWSSECRETNAME);
             const apiUrl = secretData.GETAPIURL;
             const token = secretData.TOKEN;
-            console.log(apiUrl, token, '5222');
-            // const userCredit = await this.userCreditRepository.findOne(post.credit_id);
-            const userCredit = await this.userCreditRepository.findOneCredit(
-                post.credit_id
-            );
-            console.log(userCredit, 'userCredit4')
-            let newResponse;
-            try {
-                // Perform the asynchronous request here
-                newResponse = await axios.request({
-                    url: apiUrl,
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        Authorization: `Bearer ${token}`,
-                    },
-                    data: {
-                        result_id: post.pipeline_id,
-                    },
-                });
 
-                newResponse = plainToInstance(generatePostResponseDTO, newResponse.data);
+            const userCredit = await this.userCreditRepository.findOneCredit(post.credit_id);
+            console.log(userCredit, 'userCredit');
 
-                console.log('get response', newResponse)
-                if (newResponse.data.status === POST_RESPONSE.SUCCESS) {
-                    // Assuming userCredit and response.data are correct
-                    await this.savePostDetails(userCredit, newResponse.data);
-                    post.status = POST_RESPONSE.COMPLETED
-                    await this.postRetryRepository.update(post.id, post);
-                    // post.retry_count = 0;
-                    post.status = POST_RESPONSE.COMPLETED;
-                }
-                else if (newResponse.data.status === POST_RESPONSE.PROCESSING || newResponse.data.status === POST_RESPONSE.FAILED) {
-                    post.retry_count = post.retry_count - 1;
-                }
-                this.postRetryRepository.update(post.id, post);
-                console.log('get updated post', post);
-            } catch (error) {
-                console.log(error, 'get post Api error');
+            const response = await axios.request({
+                url: apiUrl,
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`,
+                },
+                data: { result_id: post.pipeline_id },
+            });
+
+            const newResponse = plainToInstance(generatePostResponseDTO, response.data);
+            console.log('API Response:', newResponse);
+
+            if (newResponse.status === POST_RESPONSE.SUCCESS) {
+                await this.savePostDetails(userCredit, newResponse);
+                post.status = POST_RESPONSE.COMPLETED;
+                await this.postRetryRepository.update(post.id, post);
+                console.log(`Post ID ${post.id} marked as COMPLETED`);
+            } else if (newResponse.status === POST_RESPONSE.PROCESSING || newResponse.status === POST_RESPONSE.FAILED) {
+                post.retry_count -= 1; // Decrement retry count
+                await this.postRetryRepository.update(post.id, post);
+                await this.scheduleRetry(post); // Retry again if count is not zero
             }
+        } catch (error) {
+            console.log('Error in reGeneratePost:', error);
         }
     }
 }

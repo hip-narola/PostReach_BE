@@ -80,4 +80,12 @@ export class Question {
 
 	@OneToMany(() => UserAnswer, (userAnswer) => userAnswer.question)
 	answer: UserAnswer[];
+
+	@ManyToOne(() => Question, (question) => question.referencedQuestions, { nullable: true })
+	@JoinColumn({ name: 'reference_id' })
+	referenceQuestion: Question;
+
+	@OneToMany(() => Question, (question) => question.referenceQuestion)
+	referencedQuestions: Question[];
+
 }
