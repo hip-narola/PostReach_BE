@@ -18,11 +18,12 @@ import { FacebookGroupStrategyProvider } from 'src/shared/common/configurations/
 import { AwsSecretsService } from 'src/services/aws-secrets/aws-secrets.service';
 import { FacebookPageStrategyProvider } from 'src/shared/common/configurations/social/facebook-page.strategy.provider';
 import { InstagramBusinessStrategyProvider } from 'src/shared/common/configurations/social/instagram-business.strategy.provider';
+import { GeneratePostModule } from '../generate-post/generate-post.module';
+import { PaymentModule } from '../payment/payment.module';
 import { CacheModule } from '../cache/cache-module';
-
 @Module({
     imports: [
-        ConfigModule, PassportModule, TwitterModule, LinkPageModule, SocialMediaAccountModule, UnitOfWorkModule, NotificationModule, CacheModule],
+        ConfigModule, PassportModule, TwitterModule, LinkPageModule, SocialMediaAccountModule, UnitOfWorkModule, NotificationModule, GeneratePostModule, PaymentModule, CacheModule],
     providers: [AwsSecretsService, TwitterService, FacebookGroupStrategyProvider, FacebookPageStrategyProvider, InstagramService, FacebookService, LinkedinService, InstagramBusinessStrategyProvider, SocialMediaAccountService, ImageUploadService, SubscriptionService, EmailService],
     controllers: [LinkPageController],
 })

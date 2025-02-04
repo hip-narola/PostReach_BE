@@ -34,4 +34,5 @@ export enum IdType {
   MARKETING_CONSENT = 'marketingConsent',
   FORBIDDEN_CONTENT = 'forbiddenContent',
   SHARE_DOCUMENT_LIST = 'share_document_list',
+  POST_RETRY = 'post_retry',
 }

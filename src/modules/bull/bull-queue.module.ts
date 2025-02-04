@@ -28,6 +28,8 @@ import { CacheModule } from '../cache/cache-module';
 import { PostRepository } from 'src/repositories/post-repository';
 import { Post } from 'src/entities/post.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { GeneratePostModule } from '../generate-post/generate-post.module';
+import { PaymentModule } from '../payment/payment.module';
 
 async function getRedisConfig() {
     const configService = new ConfigService();
@@ -66,7 +68,9 @@ async function getRedisConfig() {
         UserModule,
         NotificationModule,
         AwsSecretsServiceModule,
-        CacheModule
+        CacheModule,
+        GeneratePostModule,
+        PaymentModule
     ],
     providers: [
 

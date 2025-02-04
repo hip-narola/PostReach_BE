@@ -19,7 +19,7 @@ export class UserSubscription {
     @Column({ nullable: true })
     stripe_subscription_id?: string;
 
-    @Column( {nullable: true, default: () => 'NULL'} )
+    @Column()
     status: string;
 
     @CreateDateColumn({ type: 'timestamp', nullable: true })

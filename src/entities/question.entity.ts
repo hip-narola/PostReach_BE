@@ -25,6 +25,9 @@ export class Question {
 	@Column({ type: 'varchar', nullable: true })
 	question_type: string;
 
+	@Column({ type: 'varchar', nullable: true })
+	question_name: string;
+
 	@Column({ type: 'bigint', nullable: true })
 	questionnaire_id: number;
 
@@ -77,7 +80,4 @@ export class Question {
 
 	@OneToMany(() => UserAnswer, (userAnswer) => userAnswer.question)
 	answer: UserAnswer[];
-	
-	@Column({ type: 'varchar', nullable: true })
-	question_name: string;
 }

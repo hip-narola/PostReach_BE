@@ -6,7 +6,7 @@ import {
 	CreateDateColumn,
 	UpdateDateColumn,
 	OneToMany,
-    DeleteDateColumn,
+	DeleteDateColumn,
 } from 'typeorm';
 import { Question } from './question.entity';
 
@@ -17,13 +17,13 @@ export class Questionnaire {
 
 	@Column({ type: 'varchar', nullable: false })
 	name: string;
-    
+
 	@Column({ type: 'varchar', nullable: true })
 	image_name: string;
-	
-    @Column({ nullable: true })
-    duration: number;
-	
+
+	@Column({ nullable: true })
+	duration: number;
+
 	@Column({ type: 'boolean', default: true })
 	is_active: boolean;
 
@@ -35,7 +35,7 @@ export class Questionnaire {
 
 	@DeleteDateColumn({ type: 'timestamp', nullable: true })
 	deleted_at: Date;
-	
+
 	@OneToMany(() => Question, (question) => question.questionnaire)
 	questions: Question[];
 }

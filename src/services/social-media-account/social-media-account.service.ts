@@ -196,5 +196,5 @@ export class SocialMediaAccountService {
         } catch (error) {
             throw error;
         }
-    }    
+    }
 }

@@ -1,7 +1,8 @@
-import { Entity, Column, ManyToOne, JoinColumn, CreateDateColumn, PrimaryColumn } from 'typeorm';
+import { Entity, Column, ManyToOne, JoinColumn, CreateDateColumn, PrimaryColumn, OneToMany } from 'typeorm';
 import { User } from './user.entity';
 import { Subscription } from './subscriptions.entity';
 import { SocialMediaAccount } from './social-media-account.entity';
+import { PostRetry } from './post-retry.entity';
 
 @Entity('user_credit')
 export class UserCredit {
@@ -39,6 +40,10 @@ export class UserCredit {
     @CreateDateColumn({ type: 'timestamp', nullable: true, default: () => 'NULL' })
     last_trigger_date: Date;
 
-    @Column( {nullable: true, default: () => 'NULL'} )
+    @Column()
     status: string;
+
+    @OneToMany(() => PostRetry, (postRetry) => postRetry.userCredit)
+    @JoinColumn({ name: 'credit_id' })
+    PostRetry: PostRetry;
 }

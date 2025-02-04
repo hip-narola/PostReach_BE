@@ -53,5 +53,6 @@ export class PostTask {
 
     @OneToMany(() => PostJobLog, PostJobLog => PostJobLog.postTask)
     PostJobLog: PostJobLog[];
+	postTask: { id: number; };
 
 }

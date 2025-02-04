@@ -16,14 +16,14 @@ export class GlobalExceptionFilter implements ExceptionFilter {
         let message = 'Internal server error';
 
         if (exception instanceof HttpException) {
-            // Extract status and response message from HttpException
-            status = exception.getStatus();
-            const exceptionResponse = exception.getResponse();
-            if (typeof exceptionResponse === 'string') {
-                message = exceptionResponse;
-            } else if (typeof exceptionResponse === 'object' && exceptionResponse !== null) {
-                message = (exceptionResponse as any).message || message;
-            }
+            // // Extract status and response message from HttpException
+            // status = exception.getStatus();
+            // const exceptionResponse = exception.getResponse();
+            // if (typeof exceptionResponse === 'string') {
+            //     message = exceptionResponse;
+            // } else if (typeof exceptionResponse === 'object' && exceptionResponse !== null) {
+            //     message = (exceptionResponse as any).message || message;
+            // }
         } else if (exception instanceof Error) {
             // Handle specific custom error names
             switch (exception.name) {

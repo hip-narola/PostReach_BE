@@ -24,5 +24,4 @@ export class PostHistoryController {
             message: 'Post(s) deleted successfully.',
         };
     }
-
 }

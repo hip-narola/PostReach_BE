@@ -40,11 +40,13 @@ import { SocialMediaInsightsService } from './services/social-media-insights/soc
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { NotificationModule } from './modules/notification/notification.module';
 import { PaymentModule } from './modules/payment/payment.module';
-import { SubscriptionService } from './services/subscription/subscription.service';
 import { ConfigModule } from '@nestjs/config';
 import { RedisModule } from './modules/redis/redis-module';
 import { CacheModule } from './modules/cache/cache-module';
 import { UserBusinessModule } from './modules/user/user-business.module';
+import { GeneratePostModule } from './modules/generate-post/generate-post.module';
+import { GeneratePostService } from './services/generate-post/generate-post.service';
+import { SubscriptionService } from './services/subscription/subscription.service';
 
 @Module({
   imports: [
@@ -83,7 +85,8 @@ import { UserBusinessModule } from './modules/user/user-business.module';
     PaymentModule,
     RedisModule,
     CacheModule,
-    UserBusinessModule
+    UserBusinessModule,
+    GeneratePostModule,
   ],
   controllers: [AppController, LinkPageController],
   providers: [
@@ -118,7 +121,8 @@ import { UserBusinessModule } from './modules/user/user-business.module';
     CalenderService,
     DashboardInsightsService,
     SocialMediaInsightsService,
-    SubscriptionService
+    SubscriptionService,
+    GeneratePostService
   ],
   exports: [AwsSecretsService],
 })

@@ -10,17 +10,18 @@ import { UserBusinessController } from 'src/controllers/user-business/user-busin
 import { UserBusinessService } from 'src/services/user-business/user-business.service';
 import { ImageUploadModule } from 'src/src/modules/image-upload/image-upload.module';
 import { QuestionnaireModule } from '../questionnaire/questionnaire.module'; // Import QuestionnaireModule
+import { UserRepository } from 'src/repositories/userRepository';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([User, UserBusiness]),
-    UserBusinessModule,
-    UnitOfWorkModule,
-    ImageUploadModule,
-    QuestionnaireModule
-  ],
-  controllers: [UserController, UserBusinessController],
-  providers: [UserService, UserBusinessService],
-  exports: [UserService],
+	imports: [
+		TypeOrmModule.forFeature([User, UserBusiness]),
+		UserBusinessModule,
+		UnitOfWorkModule,
+		ImageUploadModule,
+		QuestionnaireModule
+	],
+	controllers: [UserController, UserBusinessController],
+	providers: [UserService, UserBusinessService, UserRepository],
+	exports: [UserService, UserRepository],
 })
-export class UserModule {}
+export class UserModule { }

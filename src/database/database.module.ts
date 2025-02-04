@@ -23,6 +23,7 @@ import { UserCredit } from '../entities/user_credit.entity';
 import { UserSubscription } from '../entities/user_subscription.entity';
 import { Notification } from '../entities/notification.entity';
 import { AwsSecretsServiceModule } from 'src/modules/aws-secrets-service/aws-secrets-service.module';
+import { PostRetry } from 'src/entities/post-retry.entity';
 
 @Module({
   imports: [
@@ -63,6 +64,7 @@ import { AwsSecretsServiceModule } from 'src/modules/aws-secrets-service/aws-sec
             UserCredit,
             UserSubscription,
             Notification,
+            PostRetry
           ],
           migrations: ['./dist/database/migrations/*.js'],
           synchronize: false,

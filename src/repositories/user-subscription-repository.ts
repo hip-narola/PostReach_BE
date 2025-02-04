@@ -6,58 +6,63 @@ import { SUBSCRIPTION_PLANS } from 'src/shared/constants/subscription-plan-name-
 import { UserSubscriptionStatusType } from 'src/shared/constants/user-subscription-status-constants';
 import { In } from 'typeorm';
 import Stripe from 'stripe';
+import { UserCreditStatusTypeNames } from 'src/shared/constants/user-credit-status-constants';
+import { InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()
 export class UserSubscriptionRepository extends GenericRepository<UserSubscription> {
 	private stripe: Stripe;
-	constructor(repository: Repository<UserSubscription>) {
+	constructor(
+		@InjectRepository(UserSubscription)
+		repository: Repository<UserSubscription>) {
+
 		super(repository);
 	}
-	
+
 	async findAllWithRelations(): Promise<UserSubscription[]> {
 		return await this.repository.find({
 			relations: ['user', 'subscription'],
 		});
 	}
-	
+
 	async findByUserId(userId: number): Promise<UserSubscription> {
 		return await this.repository.findOne({
 			where: { user: { id: userId } },
 			relations: ['user', 'subscription'],
 		});
 	}
-	
+
 	async findTrialSubscriptionsByUserId(userId: number): Promise<UserSubscription> {
 		// const currentDate = new Date();
 		// const currentDateOnly = currentDate.toISOString().split('T')[0];
 		return this.repository
-		.createQueryBuilder('user_subscription')
-		.innerJoinAndSelect('user_subscription.subscription', 'subscription')
-		.innerJoinAndSelect('user_subscription.user', 'user')
-		// .andWhere("DATE(user_subscription.start_Date) <= :currentDate", { currentDate: currentDateOnly })
-		// .andWhere("DATE(user_subscription.end_Date) >= :currentDate", { currentDate: currentDateOnly })
-		// .andWhere('subscription.planName = :planName', { planName: SUBSCRIPTION_PLANS.TRIAL })
-		.andWhere('user_subscription.status = :status', { status: UserSubscriptionStatusType.TRIAL })
-		.andWhere('user_subscription.user_id = :user_id', { user_id: userId })
-		.getOne();
+			.createQueryBuilder('user_subscription')
+			.innerJoinAndSelect('user_subscription.subscription', 'subscription')
+			.innerJoinAndSelect('user_subscription.user', 'user')
+			// .andWhere("DATE(user_subscription.start_Date) <= :currentDate", { currentDate: currentDateOnly })
+			// .andWhere("DATE(user_subscription.end_Date) >= :currentDate", { currentDate: currentDateOnly })
+			// .andWhere('subscription.planName = :planName', { planName: SUBSCRIPTION_PLANS.TRIAL })
+			.andWhere('user_subscription.status = :status', { status: UserSubscriptionStatusType.TRIAL })
+			.andWhere('user_subscription.user_id = :user_id', { user_id: userId })
+			.getOne();
 	}
-	
+
 	async findAllActiveSubscriptions(): Promise<UserSubscription[]> {
 		const currentDate = new Date();
 		const currentDateOnly = currentDate.toISOString().split('T')[0];
 		return this.repository
-		.createQueryBuilder('user_subscription')
-		.innerJoinAndSelect('user_subscription.subscription', 'subscription')
-		.innerJoinAndSelect('user_subscription.user', 'user')
-		.andWhere('user_subscription.status = :status', { status: UserSubscriptionStatusType.ACTIVE })
-		.andWhere("DATE(user_subscription.start_Date) <= :currentDate", { currentDate: currentDateOnly })
-		.andWhere("DATE(user_subscription.end_Date) >= :currentDate", { currentDate: currentDateOnly })
-		.andWhere('subscription.planName != :trialPlan', { trialPlan: SUBSCRIPTION_PLANS.TRIAL })
-		.getMany();
+			.createQueryBuilder('user_subscription')
+			.innerJoinAndSelect('user_subscription.subscription', 'subscription')
+			.innerJoinAndSelect('user_subscription.user', 'user')
+			.andWhere('user_subscription.status = :status', { status: UserSubscriptionStatusType.ACTIVE })
+			.andWhere("DATE(user_subscription.start_Date) <= :currentDate", { currentDate: currentDateOnly })
+			.andWhere("DATE(user_subscription.end_Date) >= :currentDate", { currentDate: currentDateOnly })
+			.andWhere('subscription.planName != :trialPlan', { trialPlan: SUBSCRIPTION_PLANS.TRIAL })
+			.getMany();
 	}
-	
+
 	async findUserSubscription(userId: number): Promise<UserSubscription> {
-		
+
 		const subscription = this.repository.findOne({
 			where: {
 				user: { id: userId },
@@ -65,7 +70,7 @@ export class UserSubscriptionRepository extends GenericRepository<UserSubscripti
 		});
 		return subscription || null;
 	}
-	
+
 	async findUserActiveSubscription(userId: number, stripeSubscriptionId: string): Promise<UserSubscription> {
 		return this.repository.findOne({
 			where: {
@@ -81,7 +86,7 @@ export class UserSubscriptionRepository extends GenericRepository<UserSubscripti
 			// status: UserSubscriptionStatusType.ACTIVE || UserSubscriptionStatusType.TRIAL,
 		});
 	}
-	
+
 	async findUserCurrentActiveSubscription(userId: number, subscriptionCancelledId: string): Promise<UserSubscription> {
 		return this.repository.findOne({
 			where: {
@@ -91,7 +96,7 @@ export class UserSubscriptionRepository extends GenericRepository<UserSubscripti
 			}
 		});
 	}
-	
+
 	// Get all subscription that expire before 3 days
 	async getAllExpiringSubscription(): Promise<UserSubscription[]> {
 		return this.repository.find({
@@ -105,7 +110,7 @@ export class UserSubscriptionRepository extends GenericRepository<UserSubscripti
 			}
 		});
 	}
-	
+
 	async findMaxCycle(userId: number): Promise<number | null> {
 		const result = await this.repository.findOne({
 			relations: ['user'],
@@ -117,10 +122,9 @@ export class UserSubscriptionRepository extends GenericRepository<UserSubscripti
 			},
 			select: ['id', 'cycle'], // Include 'id' in the select clause for ordering
 		});
-		
+
 		return result ? result.cycle : null; // Return the cycle number or null if not found
 	}
-	
 	
 	async findUserActiveSubscriptionWithoutSubscriptionId(userId) : Promise<UserSubscription> {
 		
@@ -139,8 +143,23 @@ export class UserSubscriptionRepository extends GenericRepository<UserSubscripti
 		});
 		return subscription || null;
 	}
-	
-	
+
+	async getAllUserToGeneratePost(): Promise<UserSubscription[]> {
+		const currentDate = new Date();
+		const currentDateOnly = currentDate.toISOString().split('T')[0];
+
+		return this.repository
+			.createQueryBuilder('user_subscription')
+			.innerJoinAndSelect('user_subscription.subscription', 'subscription')
+			.innerJoinAndSelect('user_subscription.user', 'user')
+			.innerJoinAndSelect('user_subscription.user.userCredits', 'userCredit')
+			.andWhere('user_subscription.status = :status', { status: UserSubscriptionStatusType.ACTIVE })
+			.andWhere('user_subscription.user.userCredits.status = :status', { status: UserCreditStatusTypeNames.ACTIVE })
+			.andWhere('user_subscription.cycle >= :cycle', { cycle: 1 })
+			.andWhere("DATE(user_subscription.start_Date) + INTERVAL '14 days' = :currentDateOnly", { currentDateOnly: currentDateOnly })
+			.getMany();
+	}
+
 	// Get all subscription that expire before 3 days
 	async getAllUserFirstCycleSubscription(): Promise<UserSubscription[]> {
 		return this.repository.find({
@@ -154,6 +173,5 @@ export class UserSubscriptionRepository extends GenericRepository<UserSubscripti
 			}
 		});
 	}
-	
 }
 

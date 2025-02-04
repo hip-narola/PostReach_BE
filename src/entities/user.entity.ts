@@ -9,10 +9,11 @@ import {
 	JoinColumn,
 } from 'typeorm';
 import { SocialMediaAccount } from './social-media-account.entity';
-
 import { UserBusiness } from './user-business.entity';
 import { UserAnswer } from './user-answer.entity';
 import { UserSubscription } from './user_subscription.entity';
+import { UserCredit } from './user_credit.entity';
+import { PostRetry } from './post-retry.entity';
 @Entity()
 
 export class User {
@@ -64,4 +65,13 @@ export class User {
 	@OneToMany(() => UserSubscription, (userSubscription) => userSubscription.user)
 	@JoinColumn({ name: 'user_id' })
 	userSubscriptions: UserSubscription[];
+
+	@OneToMany(() => UserCredit, (userCredit) => userCredit.user)
+	@JoinColumn({ name: 'user_id' })
+	userCredits: UserCredit[];
+	
+	@OneToMany(() => PostRetry, (postRetry) => postRetry.user)
+	@JoinColumn({ name: 'user_id' })
+	PostRetry: PostRetry;
+
 }

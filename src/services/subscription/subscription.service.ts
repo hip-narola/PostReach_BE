@@ -24,11 +24,9 @@ import { SocialMediaAccountService } from '../social-media-account/social-media-
 import { AwsSecretsService } from '../aws-secrets/aws-secrets.service';
 import { AWS_SECRET } from 'src/shared/constants/aws-secret-name-constants';
 import { ConfigService } from '@nestjs/config';
-import { PostTaskRepository } from 'src/repositories/post-task-repository';
-import { PostRepository } from 'src/repositories/post-repository';
-import { Post } from 'src/entities/post.entity';
-import { PostTask } from 'src/entities/post-task.entity';
+import { GeneratePostService } from '../generate-post/generate-post.service';
 import { UserService } from '../user/user.service';
+
 // import { CreatePostDto } from 'src/dtos/params/post-dto';
 // import { CreatePostTaskDto } from 'src/dtos/params/post-task-dto';
 
@@ -45,7 +43,9 @@ export class SubscriptionService {
 		private readonly socialMediaAccountService: SocialMediaAccountService,
 		private readonly secretService: AwsSecretsService,
 		private configService: ConfigService,
-		private readonly userService: UserService
+		private readonly userService: UserService,
+		private generatePostService: GeneratePostService,
+		private userSubscriptionRepository: UserSubscriptionRepository,
 
 		// private readonly checkSubscriptionSchedulerService: CheckSubscriptionSchedulerService,
 	) {
@@ -56,7 +56,8 @@ export class SubscriptionService {
 		this.stripeSecretKey = secretData.STRIPE_SECRET_KEY;
 		this.stripeWebhookSecret = secretData.STRIPE_WEBHOOK_SECRET;
 		this.stripe = new Stripe(this.stripeSecretKey, {
-			apiVersion: '2025-01-27.acacia',
+			// apiVersion: '2025-01-27.acacia'
+			apiVersion: '2024-12-18.acacia'
 		});
 	}
 
@@ -73,21 +74,18 @@ export class SubscriptionService {
 				// const userCreditDetails = await userCreditRepository.findTrialCreditByUserId(userSubscription.user.id, userSubscriptionDetails.subscription.id);
 				// if (userCreditDetails) {
 
-				for (let i = 0; i < userCredit.current_credit_amount; i++) {
-
-					// TODO: Generate Post
-					await this.createPostForSubscription(
-						userSubscriptionDetails.user.id,
-						userCredit.social_media_id,
-						userCredit.social_media_id,
-						userSubscriptionDetails.id
-					);
-					// Minus credit amount based on each social media post creation
-					userCredit.last_trigger_date = new Date();
-					userCredit.current_credit_amount = userCredit.current_credit_amount - 1;
-					await userCreditRepository.update(userCredit.id, userCredit);
-					// }
-				}
+				// TODO: Generate Post
+				// await this.createPostForSubscription(
+				// 	userSubscriptionDetails.user.id,
+				// 	userCredit.social_media_id,
+				// 	userCredit.social_media_id,
+				// 	userSubscriptionDetails.id
+				// );
+				// Minus credit amount based on each social media post creation
+				userCredit.last_trigger_date = new Date();
+				userCredit.current_credit_amount = userCredit.current_credit_amount - 1;
+				await userCreditRepository.update(userCredit.id, userCredit);
+				// }
 			}
 			// await this.unitOfWork.completeTransaction();
 		}
@@ -102,43 +100,47 @@ export class SubscriptionService {
 			await this.unitOfWork.startTransaction();
 
 			// Get all active user subscriptions for the first cycle
-			const userSubscriptionRepository = this.unitOfWork.getRepository(UserSubscriptionRepository, UserSubscription, true);
-			const userSubscriptionDetails = await userSubscriptionRepository.getAllUserFirstCycleSubscription();
+			const userSubscriptionDetails = await this.userSubscriptionRepository.getAllUserToGeneratePost();
 
-			for (const subscriptionDetail of userSubscriptionDetails) {
-				// Get all active credits for the user
-				const userCreditRepository = this.unitOfWork.getRepository(UserCreditRepository, UserCredit, true);
-				const userCredits = await userCreditRepository.getAllUserCredits(subscriptionDetail.user.id);
-
-				if (userCredits && userCredits.length > 0) {
-					// Get all social media platforms of the user
-					const socialMediaAccountRepository = this.unitOfWork.getRepository(SocialMediaAccountRepository, SocialMediaAccount, true);
-					const platforms = await socialMediaAccountRepository.findPlatformsOfUser(subscriptionDetail.user.id);
-
-					for (const credit of userCredits) {
-						// Ensure the platform matches the credit's social media account
-						const platform = platforms.find(p => p.id === credit.social_media_id);
-
-						if (platform && credit.current_credit_amount > 0) {
-							for (let i = 0; i < credit.current_credit_amount; i++) {
-
-								await this.createPostForSubscription(
-									subscriptionDetail.user.id,
-									credit.social_media_id,
-									platform.id,
-									subscriptionDetail.id
-								);
-
-								// Deduct credit for the post
-								credit.last_trigger_date = new Date();
-								credit.current_credit_amount -= 1;
-								await userCreditRepository.update(credit.id, credit);
-							}
-						}
-					}
-					// }
+			if (userSubscriptionDetails && userSubscriptionDetails.length > 0) {
+				for (const userSubscription of userSubscriptionDetails) {
+					// Iterate over user credits and generate posts
+					userSubscription.user.userCredits.forEach(async (credit) => {
+						await this.generatePostService.generatePostByAIAPI(credit);
+					});
 				}
 			}
+			// for (const subscriptionDetail of userSubscriptionDetails) {
+			// 	// Get all active credits for the user
+			// 	const userCreditRepository = this.unitOfWork.getRepository(UserCreditRepository, UserCredit, true);
+			// 	const userCredits = await userCreditRepository.getAllUserCredits(subscriptionDetail.user.id);
+
+			// 	if (userCredits && userCredits.length > 0) {
+			// 		// Get all social media platforms of the user
+			// 		const socialMediaAccountRepository = this.unitOfWork.getRepository(SocialMediaAccountRepository, SocialMediaAccount, true);
+			// 		const platforms = await socialMediaAccountRepository.findPlatformsOfUser(subscriptionDetail.user.id);
+
+			// 		for (const credit of userCredits) {
+			// 			// Ensure the platform matches the credit's social media account
+			// 			const platform = platforms.find(p => p.id === credit.social_media_id);
+
+			// 			if (platform && credit.current_credit_amount > 0) {
+			// 				// await this.createPostForSubscription(
+			// 				// 	subscriptionDetail.user.id,
+			// 				// 	credit.social_media_id,
+			// 				// 	platform.id,
+			// 				// 	subscriptionDetail.id
+			// 				// );
+
+			// 				// Deduct credit for the post
+			// 				credit.last_trigger_date = new Date();
+			// 				credit.current_credit_amount -= 1;
+			// 				await userCreditRepository.update(credit.id, credit);
+			// 			}
+			// 		}
+			// 		// }
+			// 	}
+			// }
 
 			await this.unitOfWork.completeTransaction();
 		} catch (error) {
@@ -147,40 +149,7 @@ export class SubscriptionService {
 		}
 	}
 
-	private async createPostForSubscription(
-		userId: number,
-		socialMediaAccountId: number,
-		platformId: number,
-		subscriptionId: string
-	): Promise<void> {
-		const postTaskRepository = this.unitOfWork.getRepository(PostTaskRepository, PostTask, true);
-		const postRepository = this.unitOfWork.getRepository(PostRepository, Post, true);
 
-		const tempDate = new Date();
-		tempDate.setDate(tempDate.getDate() + 3)
-		// Step 1: Create PostTask
-		const postTask = new PostTask();
-		postTask.user = { id: userId } as any;
-		postTask.socialMediaAccount = { id: socialMediaAccountId } as any;
-		postTask.task_type = 'Auto_Creation';
-		postTask.scheduled_at = tempDate;
-		postTask.status = 'Pending';
-		postTask.created_By = userId;
-		postTask.created_at = new Date();
-
-		const savedPostTask = await postTaskRepository.create(postTask);
-
-		// Step 2: Create Post
-		const post = new Post();
-		post.postTask = { id: savedPostTask.id } as any;
-		post.external_platform_id = platformId.toString();
-		post.content = `This is an auto-generated post for subscription ${subscriptionId}`;
-		post.hashtags = '#auto #generated #post';
-		post.created_By = userId;
-		post.created_at = new Date();
-
-		await postRepository.create(post);
-	}
 
 	async GenerateUserPostSubscriptionWise(user: User, subscription: Subscription, subscriptionDetail: UserSubscription, userPlatformId: number): Promise<void> {
 		try {
@@ -200,21 +169,21 @@ export class SubscriptionService {
 					nextPostGenerationDate.setDate(subscriptionDetail.start_Date.getDate() + 14);
 					//to-do
 					// if ((new Date() == new Date(subscriptionDetail.start_Date))) {
-					for (let i = 0; i < userCreditDetails.current_credit_amount; i++) {
 
-						// TODO: Generate Post
-						await this.createPostForSubscription(
-							subscriptionDetail.user.id,
-							userCreditDetails.social_media_id,
-							userPlatformId,
-							subscriptionDetail.id
-						);
+					if ((new Date() == new Date(subscriptionDetail.start_Date))) {
+
+						// // TODO: Generate Post
+						// await this.createPostForSubscription(
+						// 	subscriptionDetail.user.id,
+						// 	userCreditDetails.social_media_id,
+						// 	userPlatformId,
+						// 	subscriptionDetail.id
+						// );
 
 						// TODO: Minus credit amount based on each social media post creation
 						userCreditDetails.last_trigger_date = new Date();
 						userCreditDetails.current_credit_amount = userCreditDetails.current_credit_amount - 1;
 						await userCreditRepository.update(userCreditDetails.id, userCreditDetails);
-						// }
 					}
 				}
 				// }
@@ -438,13 +407,22 @@ export class SubscriptionService {
 
 			// Save all UserCredit instances at once
 			await userCreditRepository.save(userCredits);
+			if (userSubscription.cycle == 1) {
+				await Promise.all(
+					userCredits.map(async (userCredit) => {
+						this.generatePostService.generatePostByAIAPI(userCredit);
+					})
+				);
+			}
+
+
 			await this.notificationService.saveData(userSubscription.user.id, NotificationType.SOCIAL_CREDIT_ADDED, `${NotificationMessage[NotificationType.SOCIAL_CREDIT_ADDED]} ${formattedPlatforms}`);
 			//Generate posts
-			await Promise.all(
-				userPlatforms.map((userPlatform) =>
-					this.GenerateUserPostSubscriptionWise(user, subscription, userSubscription, userPlatform.id)
-				)
-			);
+			// await Promise.all(
+			// 	userPlatforms.map((userPlatform) =>
+			// 		this.GenerateUserPostSubscriptionWise(user, subscription, userSubscription, userPlatform.id)
+			// 	)
+			// );
 
 		} else {
 
@@ -455,14 +433,18 @@ export class SubscriptionService {
 				userSubscription,
 				socialMediaAccountId
 			);
-			this.GenerateUserPostSubscriptionWise(user, subscription, userSubscription, socialMediaAccountId);
-
-			// Save the single UserCredit instance
+			// this.GenerateUserPostSubscriptionWise(user, subscription, userSubscription, socialMediaAccountId);
 			await userCreditRepository.create(userCredit);
+			if (userSubscription.cycle == 1) {
+				{
+					await this.generatePostService.generatePostByAIAPI(userCredit);
+				}
+
+				// Save the single UserCredit instance
+			}
 		}
-
 	}
-
+	
 	/**
 	* Helper function to create a UserCredit instance.
 	*/
@@ -477,9 +459,9 @@ export class SubscriptionService {
 		userCredit.user = user;
 		userCredit.subscription = subscription;
 		userCredit.current_credit_amount =
-			userSubscription.cycle === 1
-				? subscription.creditAmount * 2
-				: subscription.creditAmount;
+        userSubscription.cycle === 1
+            ? subscription.creditAmount * 2
+            : subscription.creditAmount;
 		// Add 3 days to start_Date
 		// userCredit.start_Date = new Date(
 		// 	new Date(userSubscription.start_Date).setDate(
@@ -500,7 +482,7 @@ export class SubscriptionService {
 
 		// Add 1 month and 3 days to today's date for end_Date
 		// userCredit.end_Date = new Date();
-		userCredit.end_Date = new Date(userSubscription.start_Date);
+		userCredit.end_Date  = new Date(userSubscription.start_Date);
 		userCredit.end_Date.setMonth(userCredit.end_Date.getMonth() + 1);
 		userCredit.end_Date.setDate(userCredit.end_Date.getDate() + 3);
 		userCredit.cancel_Date = null;
@@ -671,7 +653,7 @@ export class SubscriptionService {
 				invoice,
 				stripeSubscription
 			);
-
+			
 			await userSubscriptionRepository.create(userSubscriptionCreate);
 
 
@@ -941,7 +923,8 @@ export class SubscriptionService {
 					);
 					userCredit = await this.createUserTrialCredit(userSubscription.user, subscription, userSubscription, userSocialAcc.id);
 					await userCreditRepository.create(userCredit);
-					await this.GeneratePostOnTrialPeriod(userSubscription, userCredit);
+					this.generatePostService.generatePostByAIAPI(userCredit);
+					// await this.GeneratePostOnTrialPeriod(userSubscription, userCredit);
 
 				}
 				else {
