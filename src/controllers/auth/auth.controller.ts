@@ -281,7 +281,7 @@ export class AuthController {
 			httpOnly: true,
 			secure: true,
 			sameSite: 'none',
-			maxAge: 60 * 1000,
+			maxAge: 24 * 60 * 60 * 1000,
 			domain: this.configService.get('COOKIE_DOMAIN')
 		});
 	}
