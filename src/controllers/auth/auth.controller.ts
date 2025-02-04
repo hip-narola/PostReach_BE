@@ -13,6 +13,7 @@ import { ConfigService } from '@nestjs/config';
 import { FacebookSignupAuthGuard } from 'src/shared/common/guards/facebook-signup/facebook-signup.guard';
 import { LogoutParamDto } from 'src/dtos/params/logout-param.dto';
 import { GoogleSignupGuard } from 'src/shared/common/guards/google-signup/google-signup.guard';
+import { RefreshTokenParamDto } from 'src/dtos/params/refresh-token-param.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -85,7 +86,12 @@ export class AuthController {
 			const redirectUrl = `${appUrl}/auth/signin?isSuccess=${encodeURIComponent(isSuccess)}`;
 			return res.redirect(redirectUrl);
 		}
-
+		if (!req.user) {
+			const isSuccess = false;
+			const redirectUrl = `${appUrl}/auth/signin?isSuccess=${encodeURIComponent(isSuccess)}`;
+			res.redirect(redirectUrl);
+			return;
+		}
 		const redirectUrl = `${appUrl}/auth/signin?` +
 			`firstName=${encodeURIComponent(req.user.firstName)}&` +
 			`lastName=${encodeURIComponent(req.user.lastName)}&` +
@@ -253,10 +259,18 @@ export class AuthController {
 				Data: null,
 			});
 		} catch (error) {
+
+			res.clearCookie('accessToken', {
+				httpOnly: true,
+				secure: true,
+				sameSite: 'none',
+				domain: this.configService.get('COOKIE_DOMAIN')
+			});
+
 			return res.json({
-				StatusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-				Message: "Internal server error. Please try again later.",
-				IsSuccess: false,
+				StatusCode: 200,
+				Message: 'You have been logged out.',
+				IsSuccess: true,
 				Data: null,
 			});
 		}
@@ -267,8 +281,22 @@ export class AuthController {
 			httpOnly: true,
 			secure: true,
 			sameSite: 'none',
-			maxAge: 24 * 60 * 60 * 1000, // 1 day in milliseconds
+			maxAge: 60 * 1000,
 			domain: this.configService.get('COOKIE_DOMAIN')
 		});
 	}
+
+	@Post('refresh-token')
+	@ApiBody({ type: RefreshTokenParamDto })
+	async refreshToken(@Body('refreshToken') refreshToken: string, @Res() res: Response) {
+		const details = await this.authService.refreshToken(refreshToken);
+		this.setCookie(res, details.accessToken);
+		return res.json({
+			StatusCode: 200,
+			Message: 'Access token refreshed successfully !',
+			IsSuccess: true,
+			Data: details,
+		});
+	}
+
 }

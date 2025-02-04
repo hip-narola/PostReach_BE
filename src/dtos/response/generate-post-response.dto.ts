@@ -80,7 +80,7 @@ export class generatePostResponseDTO {
 
     @IsOptional()
     @IsString()
-    pipeline_id: string;
+    result_id: string;
 
     @IsOptional()
     @IsString()

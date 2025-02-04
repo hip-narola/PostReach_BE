@@ -1,4 +1,4 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, CreateDateColumn } from 'typeorm';
+import { Entity, Column, ManyToOne, JoinColumn, CreateDateColumn, PrimaryColumn } from 'typeorm';
 import { User } from './user.entity';
 import { UserCredit } from './user_credit.entity';
 
@@ -6,7 +6,7 @@ import { UserCredit } from './user_credit.entity';
 @Entity('post-retry')
 export class PostRetry {
 
-    @PrimaryGeneratedColumn()
+    @PrimaryColumn()
     id: string;
 
     @Column()

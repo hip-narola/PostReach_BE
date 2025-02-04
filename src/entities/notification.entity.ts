@@ -5,7 +5,7 @@ import { User } from './user.entity';
 export class Notification {
     @PrimaryGeneratedColumn()
     id: number;
-    
+
     @Column()
     user_id: number; // Foreign key
 
@@ -25,6 +25,6 @@ export class Notification {
     @CreateDateColumn({ type: 'timestamp' })
     created_at: Date;
 
-    @UpdateDateColumn({ type: 'timestamp' })
+    @UpdateDateColumn({ type: 'timestamp', nullable: true, default: null })
     modified_at: Date;
 }

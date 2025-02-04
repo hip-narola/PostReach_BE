@@ -132,5 +132,12 @@ export class UserCreditRepository extends GenericRepository<UserCredit> {
         });
     }
 
+    async findOneCredit(postId: string): Promise<UserCredit | null> {
+        return await this.repository.findOne({
+            where: { id: postId },
+            relations: ['social_media', 'user', 'subscription', 'PostRetry'],
+            
+        });
+    }
 }
 

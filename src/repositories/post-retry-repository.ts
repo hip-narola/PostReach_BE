@@ -22,8 +22,8 @@ export class PostRetryRepository extends GenericRepository<PostRetry> {
                 'post_retry.retry_count',
                 'post_retry.retry_count',
             ])
-            .where('post_retry.user_id > :retry_count', { retry_count: 0 })
-            .andWhere('post_retry.status :status', { status: POST_RESPONSE.PROCESSING })
+            .where('post_retry.retry_count > :retry_count', { retry_count: 0 })
+            .andWhere('post_retry.status IN (:...statuses)', { statuses: [POST_RESPONSE.PROCESSING, POST_RESPONSE.FAILED] })            
             .getMany();
     }
 }

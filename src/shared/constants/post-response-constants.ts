@@ -1,5 +1,6 @@
 export const POST_RESPONSE = {
     PROCESSING: 'processing',
     COMPLETED: 'completed',
-    SUCCESS: 'success'
+    SUCCESS: 'success',
+    FAILED: 'failed',
 };

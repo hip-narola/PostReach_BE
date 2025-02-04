@@ -67,6 +67,7 @@ export class PostRepository extends GenericRepository<Post> {
             relations: ['postTask'],
         });
     }
+    
     async updateRejectedPost(postId: number): Promise<Post | null> {
         return await this.repository.findOne({
             where: { id: postId },

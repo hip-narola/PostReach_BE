@@ -113,6 +113,7 @@ export class UserRepository extends GenericRepository<User> {
 	// 	};
 	// }
 
+
 	async findUserAnswersWithQuestionsAndSocialMedia(
 		userId: number,
 		socialMediaId: number
@@ -142,22 +143,27 @@ export class UserRepository extends GenericRepository<User> {
 				'userBusiness.use',
 				'userAnswer.id',
 				'userAnswer.answer_text',
+				'userAnswer.question_option_id',
 				'question.id',
 				'question.question',
 				'question.question_type',
 				'question.question_name',
 				'userAnswer.question_option',
+				'questionOption.id',
+				'questionOption.name',
+				'questionOption.question_id',
+				'questionOption.sub_question_id',
 				'userSubscription.id',
 				'userSubscription.start_Date',
 				'userSubscription.end_Date',
 				'userSubscription.cycle',
 			])
 			.getOne();
-	
+
 		if (!user) {
 			throw new Error('User not found');
 		}
-	
+		// Mapping response to ensure no saving happens
 		return {
 			userName: user.name,
 			socialMedia: {
@@ -179,7 +185,8 @@ export class UserRepository extends GenericRepository<User> {
 				}
 				: null,
 			userAnswers: user.userAnswers.map((answer: any) => {
-				const answerText = answer.answer_text || (answer.question_option ? answer.question_option.map((opt: any) => opt.option).join(', ') : '');
+				// const answerText = answer.answer_text || (answer.question_option ? answer.question_option.map((opt: any) => opt.name).join(', ') : '');
+				const answerText = answer.answer_text || null;
 				return {
 					id: answer.id,
 					answerText,
@@ -193,7 +200,4 @@ export class UserRepository extends GenericRepository<User> {
 			}),
 		};
 	}
-	
-
-
 }

@@ -70,10 +70,10 @@ import { PostRetry } from 'src/entities/post-retry.entity';
           synchronize: false,
           logging: true,
           pool: {
-            max: 50, // Example: Adjust as needed
-            min: 10, // Example: Adjust as needed
-            acquire: 30000, // Example: Time in milliseconds to acquire a connection
-            idle: 10000 // Example: Time in milliseconds a connection can be idle before being closed
+            max: 50,
+            min: 10,
+            acquire: 30000,
+            idle: 10000
           },
         };
       },

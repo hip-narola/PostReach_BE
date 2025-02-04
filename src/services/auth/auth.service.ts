@@ -8,10 +8,12 @@ import {
   ConfirmForgotPasswordCommand,
   ConfirmSignUpCommand,
   ForgotPasswordCommand,
+  InitiateAuthCommand,
   ResendConfirmationCodeCommand,
   SignUpCommand,
+  AuthFlowType
 } from '@aws-sdk/client-cognito-identity-provider';
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import {
   AuthenticationDetails,
@@ -254,6 +256,31 @@ export class AuthService {
       throw new Error(`Global sign-out failed: ${error.response?.data?.message || error.message}`);
     }
   }
+
+
+  async refreshToken(refreshToken: string) {
+    const params = {
+      AuthFlow: AuthFlowType.REFRESH_TOKEN_AUTH,
+      ClientId: this.appClientId,
+      AuthParameters: {
+        REFRESH_TOKEN: refreshToken,
+      },
+    };
+
+    try {
+      const command = new InitiateAuthCommand(params);
+      const response = await this.cognitoClient.send(command);
+
+      return {
+        accessToken: response.AuthenticationResult?.AccessToken,
+        idToken: response.AuthenticationResult?.IdToken,
+        expiresIn: response.AuthenticationResult?.ExpiresIn,
+      };
+    } catch (error) {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
+  }
+
 
 
 }

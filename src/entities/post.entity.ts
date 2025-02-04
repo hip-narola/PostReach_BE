@@ -40,10 +40,10 @@ export class Post {
     @Column({ nullable: true })
     modified_By: number;
 
-    @CreateDateColumn({ type: 'timestamp',nullable: true })
+    @CreateDateColumn({ type: 'timestamp', nullable: true })
     modified_date: Date;
 
     @OneToMany(() => Asset, Asset => Asset.post)
     assets: Asset[];
-    
+
 }
