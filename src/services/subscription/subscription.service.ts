@@ -105,9 +105,7 @@ export class SubscriptionService {
 			if (userSubscriptionDetails && userSubscriptionDetails.length > 0) {
 				for (const userSubscription of userSubscriptionDetails) {
 					// Iterate over user credits and generate posts
-					userSubscription.user.userCredits.forEach(async (credit) => {
-						await this.generatePostService.generatePostByAIAPI(credit);
-					});
+					await this.generatePostService.generatePostByAIAPI(userSubscription.user.userCredits);
 				}
 			}
 			// for (const subscriptionDetail of userSubscriptionDetails) {
@@ -408,11 +406,7 @@ export class SubscriptionService {
 			// Save all UserCredit instances at once
 			await userCreditRepository.save(userCredits);
 			if (userSubscription.cycle == 1) {
-				await Promise.all(
-					userCredits.map(async (userCredit) => {
-						this.generatePostService.generatePostByAIAPI(userCredit);
-					})
-				);
+				await this.generatePostService.generatePostByAIAPI(userCredits);
 			}
 
 
@@ -437,7 +431,7 @@ export class SubscriptionService {
 			await userCreditRepository.create(userCredit);
 			if (userSubscription.cycle == 1) {
 				{
-					await this.generatePostService.generatePostByAIAPI(userCredit);
+					await this.generatePostService.generatePostByAIAPI([userCredit]);
 				}
 
 				// Save the single UserCredit instance
@@ -913,7 +907,7 @@ export class SubscriptionService {
 				const subscription = await subscriptionRepository.findOne(userSubscription.subscription.id)
 
 				await this.unitOfWork.startTransaction();
-				let userCredit;
+				let userCredit: UserCredit;
 				//Create user credit
 				if (userSubscription.cycle == 0) {
 					const userCreditRepository = this.unitOfWork.getRepository(
@@ -923,12 +917,12 @@ export class SubscriptionService {
 					);
 					userCredit = await this.createUserTrialCredit(userSubscription.user, subscription, userSubscription, userSocialAcc.id);
 					await userCreditRepository.create(userCredit);
-					this.generatePostService.generatePostByAIAPI(userCredit);
+					this.generatePostService.generatePostByAIAPI([userCredit]);
 					// await this.GeneratePostOnTrialPeriod(userSubscription, userCredit);
 
 				}
 				else {
-					userCredit = await this.createUserCredit(userSubscription.user, subscription, userSubscription, userSocialAcc.id);
+					await this.createUserCredit(userSubscription.user, subscription, userSubscription, userSocialAcc.id);
 				}
 				//Generate posts
 				await this.notificationService.saveData(userSubscription.user.id, NotificationType.SOCIAL_CREDIT_ADDED, `${NotificationMessage[NotificationType.SOCIAL_CREDIT_ADDED]} ${userSocialAcc.platform}`);

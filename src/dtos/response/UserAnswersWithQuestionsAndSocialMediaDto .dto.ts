@@ -1,9 +1,9 @@
 export interface UserAnswersWithQuestionsAndSocialMediaDTO {
     userName: string | null;
-    socialMedia: {
+    socialMedia: Array<{
       platform: string | null;
-      isDisconnect: boolean ;
-    } | null;
+      id: number ;
+    }> | null;
     userSubscription: {
       id: string | null;
       cycle: number | null ;

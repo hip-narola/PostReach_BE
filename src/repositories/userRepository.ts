@@ -115,8 +115,9 @@ export class UserRepository extends GenericRepository<User> {
 
 
 	async findUserAnswersWithQuestionsAndSocialMedia(
-		userId: number,
-		socialMediaId: number
+		userId: number
+		//,
+		// socialMediaId: number
 	): Promise<UserAnswersWithQuestionsAndSocialMediaDTO> {
 		const user = await this.repository
 			.createQueryBuilder('user')
@@ -130,7 +131,7 @@ export class UserRepository extends GenericRepository<User> {
 			.leftJoinAndSelect('question.questionnaire', 'questionnaire')
 			.leftJoinAndSelect('question.referenceQuestion', 'referenceQuestion') // Fetching referenced question
 			.where('user.id = :userId', { userId })
-			.andWhere('socialMediaAccount.id = :socialMediaId', { socialMediaId })
+			// .andWhere('socialMediaAccount.id = :socialMediaId', { socialMediaId })
 			.andWhere('questionnaire.name = :name', { name: QUESTIONNAIRE.ONBOARDING })
 			.andWhere('socialMediaAccount.isDisconnect = :isDisconnect', { isDisconnect: false })
 			.andWhere('userSubscription.status IN (:...statuses)', { statuses: [UserSubscriptionStatusType.ACTIVE, UserSubscriptionStatusType.TRIAL] })
@@ -138,6 +139,7 @@ export class UserRepository extends GenericRepository<User> {
 				'user.id',
 				'user.name',
 				'socialMediaAccount.platform',
+				'socialMediaAccount.id',
 				'userBusiness.id',
 				'userBusiness.brand_name',
 				'userBusiness.website',
@@ -200,10 +202,10 @@ export class UserRepository extends GenericRepository<User> {
 
 		return {
 			userName: user.name,
-			socialMedia: {
-				platform: user.socialMediaAccounts[0]?.platform || null,
-				isDisconnect: user.socialMediaAccounts[0]?.isDisconnect || false,
-			},
+			socialMedia: user.socialMediaAccounts.map((element) => ({
+				id: element.id,
+				platform: element.platform
+			})),
 			userSubscription: {
 				id: user.userSubscriptions[0].id,
 				cycle: user.userSubscriptions[0].cycle,

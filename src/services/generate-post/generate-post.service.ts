@@ -2,7 +2,7 @@ import { HttpService } from '@nestjs/axios';
 import { Injectable } from '@nestjs/common';
 import { plainToInstance } from 'class-transformer';
 import { GeneratePostPipelineRequestDTO, Mode, SocialPostNumberDTO, UserInfoDTO, UserInfoType } from 'src/dtos/params/generate-post-param.dto';
-import { generatePostResponseDTO, PostDTO } from 'src/dtos/response/generate-post-response.dto';
+import { generatePostResponseDTO } from 'src/dtos/response/generate-post-response.dto';
 import { PostTaskRepository } from 'src/repositories/post-task-repository';
 import { PostRepository } from 'src/repositories/post-repository';
 import { Post } from 'src/entities/post.entity';
@@ -47,7 +47,7 @@ export class GeneratePostService {
     ) { }
 
     // TODO: Call generatePostByAIAPI function where ever createPostForSubscription is called
-    async generatePostByAIAPI(userCredit: UserCredit): Promise<void> {
+    async generatePostByAIAPI(userCredit: UserCredit[]): Promise<void> {
         try {
             console.log(userCredit, 'userCredit')
             // TODO :
@@ -63,12 +63,9 @@ export class GeneratePostService {
                 get connected social media account detail by social media account id
             */
             // const userRepository = this.unitOfWork.getRepository(UserRepository, User, false);
-            console.log(userCredit.social_media_id, 'userCredit.socialMediaId');
-            userCredit.social_media = await this.socialMediaAccountRepository.findOne(userCredit.social_media_id);
+           
 
-            console.log(userCredit.social_media.platform, 'platform')
-
-            const details = await this.userRepository.findUserAnswersWithQuestionsAndSocialMedia(userCredit.user.id, userCredit.social_media_id);
+            const details = await this.userRepository.findUserAnswersWithQuestionsAndSocialMedia(userCredit[0].user.id/*, userCredit.social_media_id*/);
 
             console.log(details, 'details')
             // After getting records of social media, on-boarding, bussiness preference.
@@ -95,61 +92,77 @@ export class GeneratePostService {
             subscriptionValidDate.setDate(subscriptionValidDate.getDate() + 14);
             console.log(today, subscriptionStart, subscriptionValidDate, 'today, subscriptionStart, subscriptionValidDate');
 
-            if (details.userSubscription.cycle == 0) {
-                console.log('cycle0')
-                if (userCredit.current_credit_amount >= daysDifference) {
-                    console.log('PostRequestCount = daysDifference', daysDifference);
-                    PostRequestCount = daysDifference;
-                }
-            }
-            else if (details.userSubscription.cycle == 1) {
-                console.log('cycle==1')
+            let socialPostNumber: SocialPostNumberDTO;
+            userCredit.forEach(async (element) => {
+                PostRequestCount = 0;
 
-                if (today >= subscriptionValidDate && userCredit.current_credit_amount > daysDifference) {
-                    console.log('today >= subscriptionValidDate && userCredit.currentCreditAmount > daysDifference', daysDifference)
-                    PostRequestCount = daysDifference;
-                } else {
-                    if (userCredit.last_trigger_date != null) {
-                        console.log('userCredit.lastTriggerDate != null', userCredit.current_credit_amount)
-                        PostRequestCount = userCredit.current_credit_amount;
+                if (details.userSubscription.cycle == 0) {
+                    console.log('cycle0')
+                    if (element.current_credit_amount >= daysDifference) {
+                        console.log('PostRequestCount = daysDifference', daysDifference);
+                        PostRequestCount = daysDifference;
+                    }
+                }
+                else if (details.userSubscription.cycle == 1) {
+                    console.log('cycle==1')
+    
+                    if (today >= subscriptionValidDate && element.current_credit_amount > daysDifference) {
+                        console.log('today >= subscriptionValidDate && userCredit.currentCreditAmount > daysDifference', daysDifference)
+                        PostRequestCount = daysDifference;
+                    } else {
+                        if (element.last_trigger_date != null) {
+                            console.log('userCredit.lastTriggerDate != null', element.current_credit_amount)
+                            PostRequestCount = element.current_credit_amount;
+                        }
+                        else {
+                            console.log('cycle==1 if else else', element.current_credit_amount / 2)
+                            PostRequestCount = element.current_credit_amount / 2;
+                        }
+                    }
+                }
+                else if (details.userSubscription.cycle >= 2) {
+                    console.log('cycle>=2')
+    
+                    if (today >= subscriptionValidDate && element.current_credit_amount > daysDifference) {
+                        console.log('today >= subscriptionValidDate && userCredit.current_credit_amount > daysDifference', daysDifference)
+                        PostRequestCount = daysDifference;
                     }
                     else {
-                        console.log('cycle==1 if else else', userCredit.current_credit_amount / 2)
-                        PostRequestCount = userCredit.current_credit_amount / 2;
+                        console.log('cycle>=2 else', element.current_credit_amount)
+                        PostRequestCount = element.current_credit_amount;
                     }
                 }
-            }
-            else if (details.userSubscription.cycle >= 2) {
-                console.log('cycle>=2')
-
-                if (today >= subscriptionValidDate && userCredit.current_credit_amount > daysDifference) {
-                    console.log('today >= subscriptionValidDate && userCredit.current_credit_amount > daysDifference', daysDifference)
-                    PostRequestCount = daysDifference;
-                }
                 else {
-                    console.log('cycle>=2 else', userCredit.current_credit_amount)
-                    PostRequestCount = userCredit.current_credit_amount;
+                    console.log('else', element.current_credit_amount)
+                    PostRequestCount = element.current_credit_amount;
                 }
-            }
-            else {
-                console.log('else', userCredit.current_credit_amount)
-                PostRequestCount = userCredit.current_credit_amount;
-            }
-            console.log(PostRequestCount, 'PostRequestCount')
-            const socialPostNumber: SocialPostNumberDTO = {
-                facebook_posts_number: userCredit.social_media.platform == SocialMediaPlatformNames[SocialMediaPlatform.FACEBOOK] ? PostRequestCount : 0,
-                linkedin_posts_number: userCredit.social_media.platform == SocialMediaPlatformNames[SocialMediaPlatform.LINKEDIN] ? PostRequestCount : 0,
-                twitter_posts_number: userCredit.social_media.platform == SocialMediaPlatformNames[SocialMediaPlatform.TWITTER] ? PostRequestCount : 0,
-                instagram_posts_number: userCredit.social_media.platform == SocialMediaPlatformNames[SocialMediaPlatform.INSTAGRAM] ? PostRequestCount : 0,
-            };
+
+                console.log(PostRequestCount, 'PostRequestCount')
+    
+                console.log(element.social_media_id, 'userCredit.socialMediaId');
+                element.social_media = await this.socialMediaAccountRepository.findOne(element.social_media_id);
+    
+                console.log(element.social_media.platform, 'platform');
+
+                if(element.social_media.platform == SocialMediaPlatformNames[SocialMediaPlatform.FACEBOOK])
+                    socialPostNumber.facebook_posts_number = PostRequestCount;
+                else if(element.social_media.platform == SocialMediaPlatformNames[SocialMediaPlatform.LINKEDIN])
+                    socialPostNumber.linkedin_posts_number = PostRequestCount;
+                else if(element.social_media.platform == SocialMediaPlatformNames[SocialMediaPlatform.TWITTER])
+                    socialPostNumber.twitter_posts_number = PostRequestCount;
+                else if(element.social_media.platform == SocialMediaPlatformNames[SocialMediaPlatform.INSTAGRAM])
+                    socialPostNumber.instagram_posts_number = PostRequestCount;
+
+            });
+            
             console.log(socialPostNumber, 'socialPostNumber')
 
             const generatePostRequest: GeneratePostPipelineRequestDTO = {
                 mode: Mode.AUTOPILOT,
                 social_post_number: socialPostNumber,
                 user_info: userInfo,
-                schedule_start_date: userCredit?.start_Date ? userCredit.start_Date.toISOString().split('T')[0] : '',
-                schedule_end_date: userCredit?.end_Date ? userCredit.end_Date.toISOString().split('T')[0] : '',
+                schedule_start_date: userCredit[0]?.start_Date ? userCredit[0].start_Date.toISOString().split('T')[0] : '',
+                schedule_end_date: userCredit[0]?.end_Date ? userCredit[0].end_Date.toISOString().split('T')[0] : '',
                 country: COUNTRY.SINGAPORE,
                 language: LANGUAGE.ENGLISH,
                 is_dummy: IS_DUMMY_STATUS.TRUE,
@@ -193,7 +206,7 @@ export class GeneratePostService {
                 }
                 else if ((responseData.status == POST_RESPONSE.PROCESSING && responseData.posts.length == 0) || responseData.status == POST_RESPONSE.FAILED) {
                     console.log(' PROCESSINGhere1')
-                    await this.savePostRetry(userCredit.user.id, userCredit.id, responseData.result_id, responseData.status)
+                    await this.savePostRetry(userCredit[0].user.id, /*userCredit.id,*/ responseData.result_id, responseData.status)
                 }
                 else {
                     console.log('else1');
@@ -211,7 +224,7 @@ export class GeneratePostService {
         // socialMediaAccountDetails: SocialMediaAccount,
         // platformId: number,
         // subscriptionId: string,
-        userCredit: UserCredit,
+        userCredit: UserCredit[],
         generatePostData: generatePostResponseDTO,
     ): Promise<void> {
         // TODO: 2 Request parameter dto of responseData and dto of new function which is created at 1st 
@@ -222,7 +235,7 @@ export class GeneratePostService {
             // const existingUser = await this.userRepository.findOne(userCredit.user);
             // const socialMediaAccountDetails = await this.socialMediaAccountRepository.findOne(socialMediaAccountId);
             console.log(userCredit, 'userCredit');
-            const user = userCredit.user;
+            const user = userCredit[0].user;
             if (generatePostData.posts && generatePostData.posts.length > 0) {
                 for (const post of generatePostData.posts) {
 
@@ -244,7 +257,7 @@ export class GeneratePostService {
                     // TODO: 
                     // assign social media id -> get id from both dtos (do not add loop get id by filter)
                     // Check if update date is inserting as null or not. Should insert as null
-                    postTask.socialMediaAccount = userCredit.social_media;
+                    postTask.socialMediaAccount = userCredit.find(x => x.social_media.platform == post.platform).social_media;
                     await this.postTaskRepository.save([postTask]);
                     console.log(postTask, 'postTask')
 
@@ -285,14 +298,27 @@ export class GeneratePostService {
                         console.log(createAsset, 'createAsset')
                     }
                     // Create asset || End
-
                 }
-                const userCreditEntity = await this.userCreditRepository.findOne(userCredit.id);
-                console.log('before credit', userCreditEntity.current_credit_amount)
 
-                userCreditEntity.current_credit_amount = userCreditEntity.current_credit_amount - generatePostData.posts.length;
-                console.log('after credit', userCreditEntity.current_credit_amount)
-                await this.userCreditRepository.update(userCreditEntity.id, userCreditEntity);
+                userCredit.forEach(async (element) => {
+
+                    const userCreditEntity = await this.userCreditRepository.getUserCreditWithSocialMedia(user.id, element.social_media_id);
+                    console.log('before credit', userCreditEntity.current_credit_amount)
+    
+                    let count = 0;
+                    if (element.social_media.platform == SocialMediaPlatformNames[SocialMediaPlatform.FACEBOOK])
+                        count = generatePostData.posts.filter(x => x.platform == SocialMediaPlatformNames[SocialMediaPlatform.FACEBOOK]).length;
+                    else if (element.social_media.platform == SocialMediaPlatformNames[SocialMediaPlatform.INSTAGRAM])
+                        count = generatePostData.posts.filter(x => x.platform == SocialMediaPlatformNames[SocialMediaPlatform.INSTAGRAM]).length;
+                    else if (element.social_media.platform == SocialMediaPlatformNames[SocialMediaPlatform.LINKEDIN])
+                        count = generatePostData.posts.filter(x => x.platform == SocialMediaPlatformNames[SocialMediaPlatform.LINKEDIN]).length;
+                    else if (element.social_media.platform == SocialMediaPlatformNames[SocialMediaPlatform.TWITTER])
+                        count = generatePostData.posts.filter(x => x.platform == SocialMediaPlatformNames[SocialMediaPlatform.TWITTER]).length;
+
+                    userCreditEntity.current_credit_amount = userCreditEntity.current_credit_amount - count;
+                    console.log('after credit', userCreditEntity.current_credit_amount)
+                    await this.userCreditRepository.update(userCreditEntity.id, userCreditEntity);
+                });
             }
         }
         catch (error) {
@@ -301,14 +327,14 @@ export class GeneratePostService {
         }
     }
 
-    private async savePostRetry(userId: number, userCreditId: string, pipelineId: string, status: string) {
-        console.log(userId, userCreditId, pipelineId, status, 'savePostRetry');
+    private async savePostRetry(userId: number, /*userCreditId: string,*/ pipelineId: string, status: string) {
+        console.log(userId, /*userCreditId, */ pipelineId, status, 'savePostRetry');
 
         const postRetry = new PostRetry();
         postRetry.id = generateId(IdType.POST_RETRY);
         postRetry.pipeline_id = pipelineId;
         postRetry.user_id = userId;
-        postRetry.credit_id = userCreditId;
+        postRetry.credit_id = 'user_credit-20250204121438-281d1317';
         postRetry.modified_date = null;
         postRetry.created_at = new Date();
         postRetry.retry_count = 5;
@@ -342,9 +368,6 @@ export class GeneratePostService {
             const apiUrl = secretData.GETAPIURL;
             const token = secretData.TOKEN;
 
-            const userCredit = await this.userCreditRepository.findOneCredit(post.credit_id);
-            console.log(userCredit, 'userCredit');
-
             const response = await axios.request({
                 url: apiUrl,
                 method: 'GET',
@@ -360,48 +383,9 @@ export class GeneratePostService {
 
             if (newResponse.status === POST_RESPONSE.SUCCESS) {
 
-
-                if (post.retry_count == 1) {
-                    console.log("dummy_response set for retry count 1");
-                    const responseData = newResponse;
-
-                    if (responseData.status != POST_RESPONSE.COMPLETED) {
-                        responseData.result_id = 'pipeline-25a07b0a-cbf3-43e7-b0b6-bf088a5b5f4f';
-                        responseData.status = 'completed';
-                        responseData.completed_at = '2025-01-22T06:13:27.096547';
-
-                        const postDto = plainToInstance(PostDTO, {
-                            "id": "post-39e392be-d9f3-4c46-87df-f382221dc833",
-                            "platform": userCredit.social_media.platform,
-                            "language": "English",
-                            "text": "The Art of Coffee Roasting: A Journey Through Downtown Seattle's Coffee Culture. As a coffee enthusiast, have you ever wondered what goes into creating the perfect cup of coffee? From bean selection to roasting, the process is an art form. In downtown Seattle, local coffee shops like Victrola Coffee are dedicated to serving high-quality, expertly roasted coffee. With a focus on sustainability and community, Victrola Coffee is a must-visit destination for coffee lovers. Learn more about their story and commitment to quality at https://www.victrolacoffee.com/pages/our-story. As we explore the art of coffee roasting, we'll delve into the world of coffee brewing and roasting, highlighting the techniques and traditions that make Seattle's coffee scene so unique. From pour-overs to lattes, we'll examine the role of coffee in bringing people together and fostering a sense of community. Whether you're a remote worker, a local resident, or just visiting downtown Seattle, we invite you to join us on this journey through the city's vibrant coffee culture. With a focus on quality, sustainability, and community, we'll discover what makes Seattle's coffee shops so special and how they contribute to the city's thriving food and beverage scene. So grab a cup of your favorite coffee and let's dive into the world of coffee roasting and brewing, as we explore the sights, sounds, and flavors of downtown Seattle's coffee culture. As Morning Brew, we're committed to promoting local coffee shops and increasing customer engagement, and we're excited to share this journey with you. Join the conversation and let us know what you love about coffee and Seattle's coffee culture. Use the hashtags to share your thoughts and photos, and let's work together to build a stronger, more vibrant coffee community. Published on 2025-01-22.",
-                            "hashtags": [
-                                "#CoffeeLove",
-                                "#SeattleCoffee"
-                            ],
-                            "image_url": "social_media_images/facebook_post_images/e62e69d1-f1ad-46b5-95a2-bbf05f1ac8f4.png",
-                            "image_prompt": "A warm and inviting photograph of a skilled barista expertly roasting coffee beans in a cozy coffee shop, with a photorealistic style, set against the backdrop of a bustling downtown Seattle street, illuminated by the soft, golden light of morning, with a color palette featuring rich browns, creamy whites, and deep blues, evoking a sense of comfort and community, and a composition that places the barista in the center of the frame, surrounded by bags of freshly roasted coffee beans, with a few customers blurred in the background, engaged in conversation, and the Victrola Coffee logo subtly integrated into the scene, conveying a sense of warmth, professionalism, and a passion for coffee, that captures the essence of Seattle's vibrant coffee culture and the art of coffee roasting.",
-                            "context": "{'title': \"The Art of Coffee Roasting: A Journey Through Downtown Seattle's Coffee Culture\", 'content': \"As a coffee enthusiast, have you ever wondered what goes into creating the perfect cup of coffee? From bean selection to roasting, the process is an art form. In downtown Seattle, local coffee shops like Victrola Coffee are dedicated to serving high-quality, expertly roasted coffee. With a focus on sustainability and community, Victrola Coffee is a must-visit destination for coffee lovers. Learn more about their story and commitment to quality at https://www.victrolacoffee.com/pages/our-story. As we explore the art of coffee roasting, we'll delve into the world of coffee brewing and roasting, highlighting the techniques and traditions that make Seattle's coffee scene so unique. From pour-overs to lattes, we'll examine the role of coffee in bringing people together and fostering a sense of community. Whether you're a remote worker, a local resident, or just visiting downtown Seattle, we invite you to join us on this journey through the city's vibrant coffee culture. With a focus on quality, sustainability, and community, we'll discover what makes Seattle's coffee shops so special and how they contribute to the city's thriving food and beverage scene. So grab a cup of your favorite coffee and let's dive into the world of coffee roasting and brewing, as we explore the sights, sounds, and flavors of downtown Seattle's coffee culture. As Morning Brew, we're committed to promoting local coffee shops and increasing customer engagement, and we're excited to share this journey with you. Join the conversation and let us know what you love about coffee and Seattle's coffee culture. Use the hashtags #CoffeeLove #SeattleCoffee #MorningBrew to share your thoughts and photos, and let's work together to build a stronger, more vibrant coffee community. Published on 2025-01-22.\", 'source_url': 'https://www.victrolacoffee.com/pages/our-story', 'published_date': '2025-01-22'}",
-                            "user_story": "business_name: Morning Brew\nlocation: downtown Seattle\nindustry: Food & Beverage\ngoal: Promote local coffee shop and increase customer engagement\ntarget_audience: Coffee enthusiasts, remote workers, and local residents\ntone: Warm and professional\nusage: Social media marketing\nurl: https://www.victrolacoffee.com/pages/our-story\nkeywords: ['Coffee', 'Brewing', 'Roasting']",
-                            "post_time": "2025-02-07T16:29:03.960088",
-                            "social_task_version": 1,
-                            "image_prompt_generation_task_version": 1,
-                            "post_word_count": 1000,
-                            "image_prompt_word_count": 1000,
-                            "hashtag_number": 2,
-                            "created_at": "2025-02-04T06:13:04.204471",
-                            "updated_at": "2025-02-04T06:13:04.204474",
-                            "metadata": null
-                        });
-
-                        for (let i = 0; i < userCredit.current_credit_amount; i++) {
-                            responseData.posts.push(postDto);
-                        }
-                        console.log("dummy_response : ", responseData);
-                        return;
-                    }
-                }
-
+                const userCredit = await this.userCreditRepository.getAllUserCredits(post.user_id);
+                console.log(userCredit, 'userCredit');
+                
                 await this.savePostDetails(userCredit, newResponse);
                 post.status = POST_RESPONSE.COMPLETED;
                 await this.postRetryRepository.update(post.id, post);
