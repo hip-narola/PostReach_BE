@@ -85,14 +85,20 @@ export class GeneratePostService {
             console.log(Math.abs(new Date(details.userSubscription.end_Date).getTime()), 'Math.abs(new Date(details.userSubscription.end_Date).getTime()', new Date().getTime());
             console.log(daysDifference, 'daysDifference');
 
-            let PostRequestCount;
+            let PostRequestCount: number;
             const today = new Date();
             const subscriptionStart = new Date(details.userSubscription.start_Date);
             const subscriptionValidDate = new Date(subscriptionStart);
             subscriptionValidDate.setDate(subscriptionValidDate.getDate() + 14);
             console.log(today, subscriptionStart, subscriptionValidDate, 'today, subscriptionStart, subscriptionValidDate');
 
-            let socialPostNumber: SocialPostNumberDTO;
+            const socialPostNumber: SocialPostNumberDTO = {
+                facebook_posts_number: 0,
+                instagram_posts_number: 0,
+                linkedin_posts_number: 0,
+                twitter_posts_number: 0
+            }
+            console.log("socialPostNumber : ", socialPostNumber);
             userCredit.forEach(async (element) => {
                 PostRequestCount = 0;
 
@@ -142,7 +148,10 @@ export class GeneratePostService {
                 console.log(element.social_media_id, 'userCredit.socialMediaId');
                 element.social_media = await this.socialMediaAccountRepository.findOne(element.social_media_id);
     
+                console.log("element::: ", element);
                 console.log(element.social_media.platform, 'platform');
+                console.log(SocialMediaPlatformNames[SocialMediaPlatform.FACEBOOK], 'SocialMediaPlatformNames[SocialMediaPlatform.FACEBOOK]');
+
 
                 if(element.social_media.platform == SocialMediaPlatformNames[SocialMediaPlatform.FACEBOOK])
                     socialPostNumber.facebook_posts_number = PostRequestCount;
@@ -152,6 +161,9 @@ export class GeneratePostService {
                     socialPostNumber.twitter_posts_number = PostRequestCount;
                 else if(element.social_media.platform == SocialMediaPlatformNames[SocialMediaPlatform.INSTAGRAM])
                     socialPostNumber.instagram_posts_number = PostRequestCount;
+
+                console.log("socialPostNumber::: ", socialPostNumber);
+
 
             });
             
