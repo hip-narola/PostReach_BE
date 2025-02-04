@@ -2,7 +2,7 @@ import { HttpService } from '@nestjs/axios';
 import { Injectable } from '@nestjs/common';
 import { plainToInstance } from 'class-transformer';
 import { GeneratePostPipelineRequestDTO, Mode, SocialPostNumberDTO, UserInfoDTO, UserInfoType } from 'src/dtos/params/generate-post-param.dto';
-import { generatePostResponseDTO } from 'src/dtos/response/generate-post-response.dto';
+import { generatePostResponseDTO, PostDTO } from 'src/dtos/response/generate-post-response.dto';
 import { PostTaskRepository } from 'src/repositories/post-task-repository';
 import { PostRepository } from 'src/repositories/post-repository';
 import { Post } from 'src/entities/post.entity';
@@ -181,13 +181,12 @@ export class GeneratePostService {
             }
             if (response != undefined) {
                 const responseData = plainToInstance(generatePostResponseDTO, response.data);
-                console.log(responseData, 'responseData')
+                console.log(responseData, 'responseData');
 
                 // // TODO : Bind responseData in to one object and pass it to savePostDetails function
                 // // call savePostDetails function
-                const platformId = SocialMediaPlatform[userCredit.social_media.platform?.toUpperCase() as keyof typeof SocialMediaPlatform];
-                console.log(platformId, 'platformId');
-                if (responseData.status == POST_RESPONSE.SUCCESS) {
+
+                if (responseData.status == POST_RESPONSE.COMPLETED) {
                     console.log('SUCCESS here1')
                     await this.savePostDetails(userCredit, responseData)
 
@@ -272,18 +271,19 @@ export class GeneratePostService {
                     // Create post || End
 
                     // Create asset || Started
-                    const createAsset = new Asset();
-                    createAsset.url = post.image_url;
-                    createAsset.type = ASSET_TYPE.IMAGE;
-                    createAsset.created_By = user.id;
-                    createAsset.created_at = new Date(post.created_at);
-                    createAsset.modified_date = null;
-                    // TODO:
-                    // Check if update date is inserting as null or not. Should insert as null
-                    createAsset.post = createPost;
-                    await this.assetRepository.save([createAsset]);
-                    console.log(createAsset, 'createAsset')
-
+                    if (post.image_url != "") {
+                        const createAsset = new Asset();
+                        createAsset.url = post.image_url;
+                        createAsset.type = ASSET_TYPE.IMAGE;
+                        createAsset.created_By = user.id;
+                        createAsset.created_at = new Date(post.created_at);
+                        createAsset.modified_date = null;
+                        // TODO:
+                        // Check if update date is inserting as null or not. Should insert as null
+                        createAsset.post = createPost;
+                        await this.assetRepository.save([createAsset]);
+                        console.log(createAsset, 'createAsset')
+                    }
                     // Create asset || End
 
                 }
@@ -325,7 +325,7 @@ export class GeneratePostService {
             return; // Stop retrying when retry count reaches 0
         }
 
-        console.log(`Scheduling retry for post ID ${post.id} in ${POST_RETRY_COUNT[post.retry_count]} ms`);
+        console.log(`Scheduling retry for post ID ${post.id} in ${POST_RETRY_COUNT[post.retry_count]} ms DATE: ${new Date()}`);
         setTimeout(async () => {
             await this.reGeneratePost(post); // Ensuring full function execution
         }, POST_RETRY_COUNT[post.retry_count]);
@@ -359,13 +359,61 @@ export class GeneratePostService {
             console.log('API Response:', newResponse);
 
             if (newResponse.status === POST_RESPONSE.SUCCESS) {
+
+
+                if (post.retry_count == 1) {
+                    console.log("dummy_response set for retry count 1");
+                    const responseData = newResponse;
+
+                    if (responseData.status != POST_RESPONSE.COMPLETED) {
+                        responseData.result_id = 'pipeline-25a07b0a-cbf3-43e7-b0b6-bf088a5b5f4f';
+                        responseData.status = 'completed';
+                        responseData.completed_at = '2025-01-22T06:13:27.096547';
+
+                        const postDto = plainToInstance(PostDTO, {
+                            "id": "post-39e392be-d9f3-4c46-87df-f382221dc833",
+                            "platform": userCredit.social_media.platform,
+                            "language": "English",
+                            "text": "The Art of Coffee Roasting: A Journey Through Downtown Seattle's Coffee Culture. As a coffee enthusiast, have you ever wondered what goes into creating the perfect cup of coffee? From bean selection to roasting, the process is an art form. In downtown Seattle, local coffee shops like Victrola Coffee are dedicated to serving high-quality, expertly roasted coffee. With a focus on sustainability and community, Victrola Coffee is a must-visit destination for coffee lovers. Learn more about their story and commitment to quality at https://www.victrolacoffee.com/pages/our-story. As we explore the art of coffee roasting, we'll delve into the world of coffee brewing and roasting, highlighting the techniques and traditions that make Seattle's coffee scene so unique. From pour-overs to lattes, we'll examine the role of coffee in bringing people together and fostering a sense of community. Whether you're a remote worker, a local resident, or just visiting downtown Seattle, we invite you to join us on this journey through the city's vibrant coffee culture. With a focus on quality, sustainability, and community, we'll discover what makes Seattle's coffee shops so special and how they contribute to the city's thriving food and beverage scene. So grab a cup of your favorite coffee and let's dive into the world of coffee roasting and brewing, as we explore the sights, sounds, and flavors of downtown Seattle's coffee culture. As Morning Brew, we're committed to promoting local coffee shops and increasing customer engagement, and we're excited to share this journey with you. Join the conversation and let us know what you love about coffee and Seattle's coffee culture. Use the hashtags to share your thoughts and photos, and let's work together to build a stronger, more vibrant coffee community. Published on 2025-01-22.",
+                            "hashtags": [
+                                "#CoffeeLove",
+                                "#SeattleCoffee"
+                            ],
+                            "image_url": "social_media_images/facebook_post_images/e62e69d1-f1ad-46b5-95a2-bbf05f1ac8f4.png",
+                            "image_prompt": "A warm and inviting photograph of a skilled barista expertly roasting coffee beans in a cozy coffee shop, with a photorealistic style, set against the backdrop of a bustling downtown Seattle street, illuminated by the soft, golden light of morning, with a color palette featuring rich browns, creamy whites, and deep blues, evoking a sense of comfort and community, and a composition that places the barista in the center of the frame, surrounded by bags of freshly roasted coffee beans, with a few customers blurred in the background, engaged in conversation, and the Victrola Coffee logo subtly integrated into the scene, conveying a sense of warmth, professionalism, and a passion for coffee, that captures the essence of Seattle's vibrant coffee culture and the art of coffee roasting.",
+                            "context": "{'title': \"The Art of Coffee Roasting: A Journey Through Downtown Seattle's Coffee Culture\", 'content': \"As a coffee enthusiast, have you ever wondered what goes into creating the perfect cup of coffee? From bean selection to roasting, the process is an art form. In downtown Seattle, local coffee shops like Victrola Coffee are dedicated to serving high-quality, expertly roasted coffee. With a focus on sustainability and community, Victrola Coffee is a must-visit destination for coffee lovers. Learn more about their story and commitment to quality at https://www.victrolacoffee.com/pages/our-story. As we explore the art of coffee roasting, we'll delve into the world of coffee brewing and roasting, highlighting the techniques and traditions that make Seattle's coffee scene so unique. From pour-overs to lattes, we'll examine the role of coffee in bringing people together and fostering a sense of community. Whether you're a remote worker, a local resident, or just visiting downtown Seattle, we invite you to join us on this journey through the city's vibrant coffee culture. With a focus on quality, sustainability, and community, we'll discover what makes Seattle's coffee shops so special and how they contribute to the city's thriving food and beverage scene. So grab a cup of your favorite coffee and let's dive into the world of coffee roasting and brewing, as we explore the sights, sounds, and flavors of downtown Seattle's coffee culture. As Morning Brew, we're committed to promoting local coffee shops and increasing customer engagement, and we're excited to share this journey with you. Join the conversation and let us know what you love about coffee and Seattle's coffee culture. Use the hashtags #CoffeeLove #SeattleCoffee #MorningBrew to share your thoughts and photos, and let's work together to build a stronger, more vibrant coffee community. Published on 2025-01-22.\", 'source_url': 'https://www.victrolacoffee.com/pages/our-story', 'published_date': '2025-01-22'}",
+                            "user_story": "business_name: Morning Brew\nlocation: downtown Seattle\nindustry: Food & Beverage\ngoal: Promote local coffee shop and increase customer engagement\ntarget_audience: Coffee enthusiasts, remote workers, and local residents\ntone: Warm and professional\nusage: Social media marketing\nurl: https://www.victrolacoffee.com/pages/our-story\nkeywords: ['Coffee', 'Brewing', 'Roasting']",
+                            "post_time": "2025-02-07T16:29:03.960088",
+                            "social_task_version": 1,
+                            "image_prompt_generation_task_version": 1,
+                            "post_word_count": 1000,
+                            "image_prompt_word_count": 1000,
+                            "hashtag_number": 2,
+                            "created_at": "2025-02-04T06:13:04.204471",
+                            "updated_at": "2025-02-04T06:13:04.204474",
+                            "metadata": null
+                        });
+
+                        for (let i = 0; i < userCredit.current_credit_amount; i++) {
+                            responseData.posts.push(postDto);
+                        }
+                        console.log("dummy_response : ", responseData);
+                        return;
+                    }
+                }
+
                 await this.savePostDetails(userCredit, newResponse);
                 post.status = POST_RESPONSE.COMPLETED;
                 await this.postRetryRepository.update(post.id, post);
+
+
                 console.log(`Post ID ${post.id} marked as COMPLETED`);
             } else if (newResponse.status === POST_RESPONSE.PROCESSING || newResponse.status === POST_RESPONSE.FAILED) {
+
                 post.retry_count -= 1; // Decrement retry count
                 await this.postRetryRepository.update(post.id, post);
+         
+                console.log(`Post ID ${post.id} count minus: ${post.retry_count}`);
                 await this.scheduleRetry(post); // Retry again if count is not zero
             }
         } catch (error) {
