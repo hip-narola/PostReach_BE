@@ -302,35 +302,35 @@ export class GeneratePostService {
                     console.log(createPost, 'after createPost')
                     for (let i = 0; i < userCredit.length; i++) {
                         const element = userCredit[i];
-                        console.log(element, 'element')
+                        console.log('element dsds', element)
 
                     }
                     // Create post || End
 
                     // Create asset || Started
-                    if (post.image_url != "") {
-                        const createAsset = new Asset();
-                        createAsset.url = post.image_url;
-                        createAsset.type = ASSET_TYPE.IMAGE;
-                        createAsset.created_By = user.id;
-                        createAsset.created_at = new Date(post.created_at);
-                        createAsset.modified_date = null;
-                        // TODO:
-                        // Check if update date is inserting as null or not. Should insert as null
-                        createAsset.post = createPost;
-                        await this.assetRepository.save([createAsset]);
-                        console.log(createAsset, 'createAsset')
-                    }
+                    // if (post.image_url != "") {
+                    //     const createAsset = new Asset();
+                    //     createAsset.url = post.image_url;
+                    //     createAsset.type = ASSET_TYPE.IMAGE;
+                    //     createAsset.created_By = user.id;
+                    //     createAsset.created_at = new Date(post.created_at);
+                    //     createAsset.modified_date = null;
+                    //     // TODO:
+                    //     // Check if update date is inserting as null or not. Should insert as null
+                    //     createAsset.post = createPost;
+                    //     await this.assetRepository.save([createAsset]);
+                    //     console.log(createAsset, 'createAsset')
+                    // }
                     // Create asset || End
                 }
+                console.log(userCredit.length, 'userCredit.length')
                 for (let i = 0; i < userCredit.length; i++) {
 
-                    // console.log(userCredit.length, 'userCredit.length')
-                    // const element = userCredit[i];
+                    const element = userCredit[i];
+                    console.log(`element: ${i}`, element)
 
                     // element.social_media = await this.socialMediaAccountRepository.findOne(element.social_media_id);
 
-                    // console.log(element, 'element')
                     // console.log(element.social_media_id, 'element.social_media_id in loop')
 
                     // console.log(element, 'element in for loop')
@@ -433,7 +433,12 @@ export class GeneratePostService {
                 const userCredit = await this.userCreditRepository.getAllUserCredits(post.user_id);
                 console.log(userCredit, 'reGeneratePost userCredit');
 
-                await this.savePostDetails(userCredit, newResponse);
+                try{
+                    await this.savePostDetails(userCredit, newResponse);
+                }
+                catch(error){
+                    console.log(error, 'errorin save')
+                }
                 post.status = POST_RESPONSE.COMPLETED;
                 console.log('updated post1')
 
