@@ -125,10 +125,10 @@ export class UserSubscriptionRepository extends GenericRepository<UserSubscripti
 
 		return result ? result.cycle : null; // Return the cycle number or null if not found
 	}
-	
-	async findUserActiveSubscriptionWithoutSubscriptionId(userId) : Promise<UserSubscription> {
-		
-		const subscription =  this.repository.findOne({
+
+	async findUserActiveSubscriptionWithoutSubscriptionId(userId): Promise<UserSubscription> {
+
+		const subscription = this.repository.findOne({
 			relations: ['subscription', 'user'],
 			where: {
 				user: { id: userId },
@@ -148,16 +148,31 @@ export class UserSubscriptionRepository extends GenericRepository<UserSubscripti
 		const currentDate = new Date();
 		const currentDateOnly = currentDate.toISOString().split('T')[0];
 
-		return this.repository
+		const data1 = this.repository
 			.createQueryBuilder('user_subscription')
-			.innerJoinAndSelect('user_subscription.subscription', 'subscription')
-			.innerJoinAndSelect('user_subscription.user', 'user')
-			.innerJoinAndSelect('user_subscription.user.userCredits', 'userCredit')
+			.leftJoinAndSelect('user_subscription.user', 'user')
+			.leftJoinAndSelect('user.userCredits', 'user_credit')
 			.andWhere('user_subscription.status = :status', { status: UserSubscriptionStatusType.ACTIVE })
-			.andWhere('user_subscription.user.userCredits.status = :status', { status: UserCreditStatusTypeNames.ACTIVE })
+			.andWhere('user_credit.status = :status', { status: UserCreditStatusTypeNames.ACTIVE })
 			.andWhere('user_subscription.cycle >= :cycle', { cycle: 1 })
 			.andWhere("DATE(user_subscription.start_Date) + INTERVAL '14 days' = :currentDateOnly", { currentDateOnly: currentDateOnly })
 			.getMany();
+			console.log("getAllUserToGeneratePost: ", data1, 'data1')
+
+		const data = this.repository
+			.createQueryBuilder('user_subscription')
+			.leftJoinAndSelect('user_subscription.user', 'user')
+			.leftJoinAndSelect('user.userCredits', 'userCredits')
+			.andWhere('user_subscription.status = :status', { status: UserSubscriptionStatusType.ACTIVE })
+			.andWhere('userCredits.status = :status', { status: UserCreditStatusTypeNames.ACTIVE })
+			.andWhere('user_subscription.cycle >= :cycle', { cycle: 1 })
+			.andWhere("DATE(user_subscription.start_Date) + INTERVAL '14 days' = :currentDateOnly", { currentDateOnly: currentDateOnly })
+			.getMany();
+		console.log("getAllUserToGeneratePost: ", data, 'data')
+
+
+
+		return data1;
 	}
 }
 

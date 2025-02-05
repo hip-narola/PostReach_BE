@@ -270,7 +270,7 @@ export class JobSchedulerService {
             {
                 repeat: {
                     // pattern: '0 0 * * *', // Cron pattern for daily at midnight
-                    pattern: '*/10 * * * *',
+                    pattern: '*/5 * * * *',
                     tz: 'UTC',
                 },
                 removeOnComplete: true,
