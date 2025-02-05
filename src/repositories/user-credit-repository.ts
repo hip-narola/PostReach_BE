@@ -129,6 +129,7 @@ export class UserCreditRepository extends GenericRepository<UserCredit> {
                 user: { id: userId },
                 status: UserCreditStatusType.ACTIVE,
             },
+            relations: ['social_media', 'user'],
         });
     }
 
