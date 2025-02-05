@@ -11,18 +11,18 @@ export class NotificationService {
     ) { }
 
     async getData(userId: number, isRead: boolean): Promise<Notification[]> {
-        try {
-            const notificationRepo = this.unitOfWork.getRepository(
-                NotificationRepository,
-                Notification,
-                false
-            );
-            return await notificationRepo.findIsRead(userId, isRead);
-
-        }
-        catch (error) {
-            throw new Error(`Failed to list notifications `);
-        }
+        // try {
+        //     const notificationRepo = this.unitOfWork.getRepository(
+        //         NotificationRepository,
+        //         Notification,
+        //         false
+        //     );
+        //     return await notificationRepo.findIsRead(userId, isRead);
+        return [];
+        // }
+        // catch (error) {
+        //     throw new Error(`Failed to list notifications `);
+        // }
     }
 
     async saveData(userId: number, type: string, content: string): Promise<void> {
