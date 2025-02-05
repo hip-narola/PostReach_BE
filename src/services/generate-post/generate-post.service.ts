@@ -331,17 +331,26 @@ export class GeneratePostService {
 
                     console.log('before credit', userCreditEntity.current_credit_amount)
 
-                    let count = 0;
-                    if (element.social_media.platform == SocialMediaPlatformNames[SocialMediaPlatform.FACEBOOK])
-                        count = generatePostData.posts.filter(x => x.platform == SocialMediaPlatformNames[SocialMediaPlatform.FACEBOOK]).length;
-                    else if (element.social_media.platform == SocialMediaPlatformNames[SocialMediaPlatform.INSTAGRAM])
-                        count = generatePostData.posts.filter(x => x.platform == SocialMediaPlatformNames[SocialMediaPlatform.INSTAGRAM]).length;
-                    else if (element.social_media.platform == SocialMediaPlatformNames[SocialMediaPlatform.LINKEDIN])
-                        count = generatePostData.posts.filter(x => x.platform == SocialMediaPlatformNames[SocialMediaPlatform.LINKEDIN]).length;
-                    else if (element.social_media.platform == SocialMediaPlatformNames[SocialMediaPlatform.TWITTER])
-                        count = generatePostData.posts.filter(x => x.platform == SocialMediaPlatformNames[SocialMediaPlatform.TWITTER]).length;
+                    // let count = 0;
+                    // if (element.social_media.platform == SocialMediaPlatformNames[SocialMediaPlatform.FACEBOOK]) {
+                    //     count = generatePostData.posts.filter(x => x.platform == SocialMediaPlatformNames[SocialMediaPlatform.FACEBOOK]).length;
+                    // }
 
-                    userCreditEntity.current_credit_amount = userCreditEntity.current_credit_amount - count;
+                    // else if (element.social_media.platform == SocialMediaPlatformNames[SocialMediaPlatform.INSTAGRAM]) {
+                    //     count = generatePostData.posts.filter(x => x.platform == SocialMediaPlatformNames[SocialMediaPlatform.INSTAGRAM]).length;
+                    // }
+
+                    // else if (element.social_media.platform == SocialMediaPlatformNames[SocialMediaPlatform.LINKEDIN]) {
+                    //     count = generatePostData.posts.filter(x => x.platform == SocialMediaPlatformNames[SocialMediaPlatform.LINKEDIN]).length;
+                    // }
+                    // else if (element.social_media.platform == SocialMediaPlatformNames[SocialMediaPlatform.TWITTER]) {
+                    //     count = generatePostData.posts.filter(x => x.platform == SocialMediaPlatformNames[SocialMediaPlatform.TWITTER]).length;
+                    // }
+                    // else{
+
+                    // }
+
+                    userCreditEntity.current_credit_amount = userCreditEntity.current_credit_amount - 0;
                     console.log('after credit', userCreditEntity.current_credit_amount)
                     await this.userCreditRepository.update(userCreditEntity.id, userCreditEntity);
                 }
