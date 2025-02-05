@@ -85,7 +85,7 @@ export class PostRepository extends GenericRepository<Post> {
             .andWhere(
                 `EXISTS (
                     SELECT 1 FROM user_subscription us
-                    WHERE us.user_id = user.id
+                    WHERE us.user_id = "user"."id"
                     AND us.status IN (:...statuses)
                 )`,
                 {

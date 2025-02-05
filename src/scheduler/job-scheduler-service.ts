@@ -269,10 +269,11 @@ export class JobSchedulerService {
             {}, // Empty payload for the job
             {
                 repeat: {
-                    pattern: '0 0 * * *', // Cron pattern for daily at midnight
+                    // pattern: '0 0 * * *', // Cron pattern for daily at midnight
+                    pattern: '*/10 * * * *',
                     tz: 'UTC',
                 },
-                removeOnComplete: false,
+                removeOnComplete: true,
                 removeOnFail: false,
             }
         );
@@ -294,7 +295,7 @@ export class JobSchedulerService {
             {
                 repeat: {
                     //   pattern: '0,30 * * * *', // Correct cron syntax for half-hourly schedule
-                    pattern: '0,30 * * * *',
+                    pattern: '*/30 * * * *',
                     tz: 'UTC', // Optional timezone
                 },
                 removeOnComplete: true,
@@ -322,6 +323,8 @@ export class JobSchedulerService {
                 repeat: {
                     pattern: '*/30 * * * *',
                 },
+                removeOnComplete: true,
+                removeOnFail: true,
                 jobId,
             }
         );
