@@ -303,6 +303,7 @@ export class GeneratePostService {
                         console.log("savePostDetails::: asset save finish createAsset:  ", createAsset)
                     }
                     // Create asset || End
+                    console.log("savePostDetails::: after image if");
                 }
                 console.log("savePostDetails::: userCredit.length : " ,userCredit.length);
                 for (let i = 0; i < userCredit.length; i++) {
