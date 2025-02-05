@@ -219,12 +219,12 @@ export class GeneratePostService {
                 // // TODO : Bind responseData in to one object and pass it to savePostDetails function
                 // // call savePostDetails function
 
-                if (responseData.status == POST_RESPONSE.COMPLETED) {
+                if (responseData.status == POST_RESPONSE.COMPLETED && responseData.posts.length > 0) {
                     // console.log('SUCCESS here1')
                     await this.savePostDetails(userCredit, responseData)
 
                 }
-                else if ((responseData.status == POST_RESPONSE.PROCESSING && responseData.posts.length == 0) || responseData.status == POST_RESPONSE.FAILED) {
+                else if ((responseData.status == POST_RESPONSE.PROCESSING || responseData.status == POST_RESPONSE.FAILED) || (responseData.status == POST_RESPONSE.COMPLETED && responseData.posts.length == 0)) {
                     // console.log(' PROCESSINGhere1')
                     await this.savePostRetry(userCredit[0].user.id, /*userCredit.id,*/ responseData.result_id, responseData.status)
                 }
