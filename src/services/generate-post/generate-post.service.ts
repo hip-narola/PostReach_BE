@@ -319,14 +319,14 @@ export class GeneratePostService {
                     }
                     // Create asset || End
                 }
-                console.log(userCredit, 'userCredit data')
                 for (let i = 0; i < userCredit.length; i++) {
-                    console.log(userCredit.length, 'userCredit.length')
-                    const element = userCredit[i];
 
-                    element.social_media = await this.socialMediaAccountRepository.findOne(element.social_media_id);
+                    // console.log(userCredit.length, 'userCredit.length')
+                    // const element = userCredit[i];
 
-                    console.log(element, 'element')
+                    // element.social_media = await this.socialMediaAccountRepository.findOne(element.social_media_id);
+
+                    // console.log(element, 'element')
                     // console.log(element.social_media_id, 'element.social_media_id in loop')
 
                     // console.log(element, 'element in for loop')
@@ -431,7 +431,10 @@ export class GeneratePostService {
 
                 await this.savePostDetails(userCredit, newResponse);
                 post.status = POST_RESPONSE.COMPLETED;
+                console.log('updated post1')
+
                 await this.postRetryRepository.update(post.id, post);
+                console.log('Post', post)
 
 
                 console.log(`Post ID ${post.id} marked as COMPLETED`);
