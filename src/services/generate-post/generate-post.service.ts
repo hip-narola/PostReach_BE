@@ -352,9 +352,9 @@ export class GeneratePostService {
 
                     // }
 
-                    userCreditEntity.current_credit_amount = userCreditEntity.current_credit_amount - 0;
-                    console.log('after credit', userCreditEntity.current_credit_amount)
-                    await this.userCreditRepository.update(userCreditEntity.id, userCreditEntity);
+                    // userCreditEntity.current_credit_amount = userCreditEntity.current_credit_amount - 0;
+                    // console.log('after credit', userCreditEntity.current_credit_amount)
+                    // await this.userCreditRepository.update(userCreditEntity.id, userCreditEntity);
                 }
             }
         }
