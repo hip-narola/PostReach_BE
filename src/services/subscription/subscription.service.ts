@@ -96,29 +96,20 @@ export class SubscriptionService {
 	}
 
 	async GeneratePostSubscriptionWiseOnFirstCycle(): Promise<void> {
-		console.log("GeneratePostSubscriptionWiseOnFirstCycle::: started" )
+		console.log("GeneratePostSubscriptionWiseOnFirstCycle::: started")
 		try {
 			// Get all active user subscriptions for the first cycle
-			const userSubscriptionDetails = await this.userCreditRepository.getAllUserToGeneratePost();
-			console.log("GeneratePostSubscriptionWiseOnFirstCycle::: userSubscriptionDetails: ", userSubscriptionDetails);
+			const userCreditDetails = await this.userCreditRepository.getAllUserToGeneratePost();
+			console.log("GeneratePostSubscriptionWiseOnFirstCycle::: userCreditDetails: ", userCreditDetails);
 
 
-			if (userSubscriptionDetails && userSubscriptionDetails.length > 0) {
-				for (const userSubscription of userSubscriptionDetails) {
-					console.log("GeneratePostSubscriptionWiseOnFirstCycle::: userSubscription: ",  userSubscription);
-
-					console.log("GeneratePostSubscriptionWiseOnFirstCycle::: user: ",  userSubscription.user);
-
-					console.log("GeneratePostSubscriptionWiseOnFirstCycle::: userCredits: ",  userSubscription.user.userCredits);
-
-					// Iterate over user credits and generate posts
-					await this.generatePostService.generatePostByAIAPI(userSubscription.user.userCredits);
-				}
+			if (userCreditDetails && userCreditDetails.length > 0) {
+				// Iterate over user credits and generate posts
+				await this.generatePostService.generatePostByAIAPI(userCreditDetails);
 			}
 
 		} catch (error) {
-
-			console.log("GeneratePostSubscriptionWiseOnFirstCycle::: error: ",  error);
+			console.log("GeneratePostSubscriptionWiseOnFirstCycle::: error: ", error);
 			throw error;
 		}
 	}
@@ -414,7 +405,7 @@ export class SubscriptionService {
 			}
 		}
 	}
-	
+
 	/**
 	* Helper function to create a UserCredit instance.
 	*/
@@ -429,9 +420,9 @@ export class SubscriptionService {
 		userCredit.user = user;
 		userCredit.subscription = subscription;
 		userCredit.current_credit_amount =
-        userSubscription.cycle === 1
-            ? subscription.creditAmount * 2
-            : subscription.creditAmount;
+			userSubscription.cycle === 1
+				? subscription.creditAmount * 2
+				: subscription.creditAmount;
 		// Add 3 days to start_Date
 		// userCredit.start_Date = new Date(
 		// 	new Date(userSubscription.start_Date).setDate(
@@ -452,7 +443,7 @@ export class SubscriptionService {
 
 		// Add 1 month and 3 days to today's date for end_Date
 		// userCredit.end_Date = new Date();
-		userCredit.end_Date  = new Date(userSubscription.start_Date);
+		userCredit.end_Date = new Date(userSubscription.start_Date);
 		userCredit.end_Date.setMonth(userCredit.end_Date.getMonth() + 1);
 		userCredit.end_Date.setDate(userCredit.end_Date.getDate() + 3);
 		userCredit.cancel_Date = null;
@@ -623,7 +614,7 @@ export class SubscriptionService {
 				invoice,
 				stripeSubscription
 			);
-			
+
 			await userSubscriptionRepository.create(userSubscriptionCreate);
 
 
