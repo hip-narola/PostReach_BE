@@ -159,19 +159,5 @@ export class UserSubscriptionRepository extends GenericRepository<UserSubscripti
 			.andWhere("DATE(user_subscription.start_Date) + INTERVAL '14 days' = :currentDateOnly", { currentDateOnly: currentDateOnly })
 			.getMany();
 	}
-
-	// Get all subscription that expire before 3 days
-	async getAllUserFirstCycleSubscription(): Promise<UserSubscription[]> {
-		return this.repository.find({
-			relations: ['user', 'subscription'],
-			where: {
-				// UserSubscriptionStatusType.CANCELLED,
-				status: In([UserSubscriptionStatusType.ACTIVE]),
-				start_Date: Raw(
-					(alias) => `DATE(${alias}) + INTERVAL '14 days' = CURRENT_DATE`
-				),
-			}
-		});
-	}
 }
 

@@ -254,6 +254,8 @@ export class JobSchedulerService {
     }
 
     private async scheduleDailyJob() {
+
+        console.log("generatePostQueue : strated")
         const existingJobs = await this.generatePostQueue.getRepeatableJobs();
         const jobName = 'call-subscription-scheduler-service';
 

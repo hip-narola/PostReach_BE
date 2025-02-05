@@ -96,53 +96,29 @@ export class SubscriptionService {
 	}
 
 	async GeneratePostSubscriptionWiseOnFirstCycle(): Promise<void> {
+		console.log("GeneratePostSubscriptionWiseOnFirstCycle::: started" )
 		try {
-			await this.unitOfWork.startTransaction();
-
 			// Get all active user subscriptions for the first cycle
 			const userSubscriptionDetails = await this.userSubscriptionRepository.getAllUserToGeneratePost();
+			console.log("GeneratePostSubscriptionWiseOnFirstCycle::: userSubscriptionDetails: ", userSubscriptionDetails);
+
 
 			if (userSubscriptionDetails && userSubscriptionDetails.length > 0) {
 				for (const userSubscription of userSubscriptionDetails) {
+					console.log("GeneratePostSubscriptionWiseOnFirstCycle::: userSubscription: ",  userSubscription);
+
+					console.log("GeneratePostSubscriptionWiseOnFirstCycle::: user: ",  userSubscription.user);
+
+					console.log("GeneratePostSubscriptionWiseOnFirstCycle::: userCredits: ",  userSubscription.user.userCredits);
+
 					// Iterate over user credits and generate posts
 					await this.generatePostService.generatePostByAIAPI(userSubscription.user.userCredits);
 				}
 			}
-			// for (const subscriptionDetail of userSubscriptionDetails) {
-			// 	// Get all active credits for the user
-			// 	const userCreditRepository = this.unitOfWork.getRepository(UserCreditRepository, UserCredit, true);
-			// 	const userCredits = await userCreditRepository.getAllUserCredits(subscriptionDetail.user.id);
 
-			// 	if (userCredits && userCredits.length > 0) {
-			// 		// Get all social media platforms of the user
-			// 		const socialMediaAccountRepository = this.unitOfWork.getRepository(SocialMediaAccountRepository, SocialMediaAccount, true);
-			// 		const platforms = await socialMediaAccountRepository.findPlatformsOfUser(subscriptionDetail.user.id);
-
-			// 		for (const credit of userCredits) {
-			// 			// Ensure the platform matches the credit's social media account
-			// 			const platform = platforms.find(p => p.id === credit.social_media_id);
-
-			// 			if (platform && credit.current_credit_amount > 0) {
-			// 				// await this.createPostForSubscription(
-			// 				// 	subscriptionDetail.user.id,
-			// 				// 	credit.social_media_id,
-			// 				// 	platform.id,
-			// 				// 	subscriptionDetail.id
-			// 				// );
-
-			// 				// Deduct credit for the post
-			// 				credit.last_trigger_date = new Date();
-			// 				credit.current_credit_amount -= 1;
-			// 				await userCreditRepository.update(credit.id, credit);
-			// 			}
-			// 		}
-			// 		// }
-			// 	}
-			// }
-
-			await this.unitOfWork.completeTransaction();
 		} catch (error) {
-			await this.unitOfWork.rollbackTransaction();
+
+			console.log("GeneratePostSubscriptionWiseOnFirstCycle::: error: ",  error);
 			throw error;
 		}
 	}
