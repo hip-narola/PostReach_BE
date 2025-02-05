@@ -323,6 +323,9 @@ export class GeneratePostService {
                 for (let i = 0; i < userCredit.length; i++) {
                     console.log(userCredit.length, 'userCredit.length')
                     const element = userCredit[i];
+
+                    element.social_media = await this.socialMediaAccountRepository.findOne(element.social_media_id);
+
                     console.log(element, 'element')
                     // console.log(element.social_media_id, 'element.social_media_id in loop')
 
