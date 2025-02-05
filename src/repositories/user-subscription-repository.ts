@@ -6,7 +6,7 @@ import { SUBSCRIPTION_PLANS } from 'src/shared/constants/subscription-plan-name-
 import { UserSubscriptionStatusType } from 'src/shared/constants/user-subscription-status-constants';
 import { In } from 'typeorm';
 import Stripe from 'stripe';
-import { UserCreditStatusTypeNames } from 'src/shared/constants/user-credit-status-constants';
+import { UserCreditStatusType } from 'src/shared/constants/user-credit-status-constants';
 import { InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()
@@ -153,23 +153,11 @@ export class UserSubscriptionRepository extends GenericRepository<UserSubscripti
 			.leftJoinAndSelect('user_subscription.user', 'user')
 			.leftJoinAndSelect('user.userCredits', 'user_credit')
 			.andWhere('user_subscription.status = :status', { status: UserSubscriptionStatusType.ACTIVE })
-			.andWhere('user_credit.status = :status', { status: UserCreditStatusTypeNames.ACTIVE })
+			.andWhere('user_credit.status = :status', { status: UserCreditStatusType.ACTIVE })
 			.andWhere('user_subscription.cycle >= :cycle', { cycle: 1 })
 			.andWhere("DATE(user_subscription.start_Date) + INTERVAL '14 days' = :currentDateOnly", { currentDateOnly: currentDateOnly })
 			.getMany();
 			console.log("getAllUserToGeneratePost: ", data1, 'data1')
-
-		const data = this.repository
-			.createQueryBuilder('user_subscription')
-			.leftJoinAndSelect('user_subscription.user', 'user')
-			.leftJoinAndSelect('user.userCredits', 'userCredits')
-			.andWhere('user_subscription.status = :status', { status: UserSubscriptionStatusType.ACTIVE })
-			.andWhere('userCredits.status = :status', { status: UserCreditStatusTypeNames.ACTIVE })
-			.andWhere('user_subscription.cycle >= :cycle', { cycle: 1 })
-			.andWhere("DATE(user_subscription.start_Date) + INTERVAL '14 days' = :currentDateOnly", { currentDateOnly: currentDateOnly })
-			.getMany();
-		console.log("getAllUserToGeneratePost: ", data, 'data')
-
 
 
 		return data1;

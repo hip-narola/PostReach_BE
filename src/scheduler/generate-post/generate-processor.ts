@@ -12,7 +12,7 @@ export class GeneratePostProcessor extends WorkerHost {
 
     async process(job: Job) {
         try {
-            console.log("generate-post::: job started: ",  job);
+            console.log("generate-post::: job started: ");
             await this.subscriptionService.GeneratePostSubscriptionWiseOnFirstCycle();
         } catch (error) {
             console.log("generate-post::: error: ",  error);
