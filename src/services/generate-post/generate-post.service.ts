@@ -349,6 +349,7 @@ export class GeneratePostService {
                     }
 
                     userCreditEntity.current_credit_amount = userCreditEntity.current_credit_amount - count;
+                    userCreditEntity.last_trigger_date = new Date();
                     console.log('savePostDetails::: after credit', userCreditEntity.current_credit_amount)
                     await this.userCreditRepository.update(userCreditEntity.id, userCreditEntity);
                 }

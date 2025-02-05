@@ -404,7 +404,6 @@ export class SubscriptionService {
 		userCredit.social_media_id = socialMediaAccountId;
 
 		userCredit.status = UserCreditStatusType.ACTIVE;
-		userCredit.last_trigger_date = new Date();
 		return userCredit;
 	}
 
