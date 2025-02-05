@@ -319,17 +319,19 @@ export class GeneratePostService {
                     }
                     // Create asset || End
                 }
-
+                console.log(userCredit, 'userCredit data')
                 for (let i = 0; i < userCredit.length; i++) {
+                    console.log(userCredit.length, 'userCredit.length')
                     const element = userCredit[i];
-                    console.log(element.social_media_id, 'element.social_media_id in loop')
+                    console.log(element, 'element')
+                    // console.log(element.social_media_id, 'element.social_media_id in loop')
 
-                    console.log(element, 'element in for loop')
-                    const userCreditEntity = await this.userCreditRepository.getUserCreditWithSocialMedia(user.id, element.social_media_id);
+                    // console.log(element, 'element in for loop')
+                    // const userCreditEntity = await this.userCreditRepository.getUserCreditWithSocialMedia(user.id, element.social_media_id);
 
-                    console.log(userCreditEntity, 'userCreditEntity in loop')
+                    // console.log(userCreditEntity, 'userCreditEntity in loop')
 
-                    console.log('before credit', userCreditEntity.current_credit_amount)
+                    // console.log('before credit', userCreditEntity.current_credit_amount)
 
                     // let count = 0;
                     // if (element.social_media.platform == SocialMediaPlatformNames[SocialMediaPlatform.FACEBOOK]) {
