@@ -99,11 +99,13 @@ export class GeneratePostService {
                 twitter_posts_number: 0
             }
             console.log("socialPostNumber : ", socialPostNumber);
-            userCredit.forEach(async (element) => {
+            for (let i = 0; i < userCredit.length; i++) {
+                console.log('for credit loop start')
+                const element = userCredit[i];
                 PostRequestCount = 0;
-                
-                element.social_media = await this.socialMediaAccountRepository.findOne(element.social_media_id);
 
+                element.social_media = await this.socialMediaAccountRepository.findOne(element.social_media_id);
+                console.log( 'await element.social_media');
                 if (details.userSubscription.cycle == 0) {
                     console.log('cycle0')
                     if (element.current_credit_amount >= daysDifference) {
@@ -165,8 +167,13 @@ export class GeneratePostService {
 
                 console.log("socialPostNumber::: ", socialPostNumber);
 
+                console.log('for credit loop end')
+            }
 
-            });
+            // userCredit.forEach(async (element) => {
+
+
+            // });
 
             console.log(socialPostNumber, 'socialPostNumber')
 
