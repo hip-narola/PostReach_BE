@@ -322,8 +322,13 @@ export class GeneratePostService {
 
                 for (let i = 0; i < userCredit.length; i++) {
                     const element = userCredit[i];
+                    console.log(element.social_media_id, 'element.social_media_id in loop')
+
                     console.log(element, 'element in for loop')
                     const userCreditEntity = await this.userCreditRepository.getUserCreditWithSocialMedia(user.id, element.social_media_id);
+
+                    console.log(userCreditEntity, 'userCreditEntity in loop')
+
                     console.log('before credit', userCreditEntity.current_credit_amount)
 
                     let count = 0;
