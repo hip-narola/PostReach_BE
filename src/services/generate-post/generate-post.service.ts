@@ -166,7 +166,7 @@ export class GeneratePostService {
                     socialPostNumber.instagram_posts_number = PostRequestCount;
 
                 // console.log("socialPostNumber::: ", socialPostNumber);
-// 
+                // 
                 // console.log('for credit loop end')
             }
 
@@ -238,82 +238,93 @@ export class GeneratePostService {
 
     private async savePostDetails(userCredit: UserCredit[], generatePostData: generatePostResponseDTO,
     ): Promise<void> {
-      
+
         // Loop for posts
         try {
-          
+
             console.log('savePostDetails::: userCredit', userCredit);
             const user = userCredit[0].user;
             if (generatePostData.posts && generatePostData.posts.length > 0) {
                 for (const post of generatePostData.posts) {
                     console.log("savePostDetails::: post ", post.id);
 
-                    // Create post task | Started
-                    const postTask = new PostTask();
-                    postTask.task_type = POST_TASK_TYPE.AUTO_CREATION;
-                    postTask.scheduled_at = new Date(post.post_time);
-                    postTask.status = POST_TASK_STATUS.PENDING;
-                    postTask.created_By = user.id;
-                    postTask.created_at = new Date(post.created_at);
-                    postTask.user = user;
-                    postTask.modified_date = null;
-                    postTask.socialMediaAccount = userCredit.find(x => x.social_media.platform == post.platform).social_media;
+                    console.log("savePostDetails:::  post.platform", post.platform);
 
-                    await this.postTaskRepository.save([postTask]);
 
-                    console.log("savePostDetails::: post task saved: ", postTask);
-                    console.log('savePostDetails::: postTask socialMediaAccount: ', postTask.socialMediaAccount);
+                    const sm = userCredit.find(x => x.social_media.platform == post.platform);
+                    console.log("savePostDetails:::  sm", sm);
 
-                    // Create post task | End
+                    if (sm) {
 
-                    // Create post || Started
-                    console.log("savePostDetails::: post saved started: ");
-                    const createPost = new Post();
-                    createPost.postTask = postTask;
-                    createPost.content = post.text;
-                    createPost.hashtags = post.hashtags.join(', ');
-                    createPost.created_By = user.id;
-                    createPost.created_at = new Date(post.created_at);
-                    createPost.no_of_likes = 0;
-                    createPost.no_of_comments = 0;
-                    createPost.no_of_views = 0;
-                    createPost.modified_date = null;
+                        // Create post task | Started
+                        const postTask = new PostTask();
+                        postTask.task_type = POST_TASK_TYPE.AUTO_CREATION;
+                        postTask.scheduled_at = new Date(post.post_time);
+                        postTask.status = POST_TASK_STATUS.PENDING;
+                        postTask.created_By = user.id;
+                        postTask.created_at = new Date(post.created_at);
+                        postTask.user = user;
+                        postTask.modified_date = null;
+                        postTask.socialMediaAccount = sm.social_media;
 
-                    console.log("savePostDetails::: post : ", createPost);
+                        await this.postTaskRepository.save([postTask]);
 
-                    await this.postRepository.save([createPost]);
-                    console.log("savePostDetails::: post save finish" , createPost);
-                
-                    // Create post || End
+                        console.log("savePostDetails::: post task saved: ", postTask);
+                        console.log('savePostDetails::: postTask socialMediaAccount: ', postTask.socialMediaAccount);
 
-                    // Create asset || Started
+                        // Create post task | End
 
-                    console.log("savePostDetails::: asset save started post.image_url : ",post.image_url);
-                    if (post.image_url != "") {
-                        const createAsset = new Asset();
-                        createAsset.url = post.image_url;
-                        createAsset.type = ASSET_TYPE.IMAGE;
-                        createAsset.created_By = user.id;
-                        createAsset.created_at = new Date(post.created_at);
-                        createAsset.modified_date = null;
-                        // TODO:
-                        // Check if update date is inserting as null or not. Should insert as null
-                        createAsset.post = createPost;
-                        await this.assetRepository.save([createAsset]);
-                        console.log("savePostDetails::: asset save finish createAsset:  ", createAsset)
+                        // Create post || Started
+                        console.log("savePostDetails::: post saved started: ");
+                        const createPost = new Post();
+                        createPost.postTask = postTask;
+                        createPost.content = post.text;
+                        createPost.hashtags = post.hashtags.join(', ');
+                        createPost.created_By = user.id;
+                        createPost.created_at = new Date(post.created_at);
+                        createPost.no_of_likes = 0;
+                        createPost.no_of_comments = 0;
+                        createPost.no_of_views = 0;
+                        createPost.modified_date = null;
+
+                        console.log("savePostDetails::: post : ", createPost);
+
+                        await this.postRepository.save([createPost]);
+                        console.log("savePostDetails::: post save finish", createPost);
+
+                        // Create post || End
+
+                        // Create asset || Started
+
+                        console.log("savePostDetails::: asset save started post.image_url : ", post.image_url);
+                        if (post.image_url != "") {
+                            const createAsset = new Asset();
+                            createAsset.url = post.image_url;
+                            createAsset.type = ASSET_TYPE.IMAGE;
+                            createAsset.created_By = user.id;
+                            createAsset.created_at = new Date(post.created_at);
+                            createAsset.modified_date = null;
+                            // TODO:
+                            // Check if update date is inserting as null or not. Should insert as null
+                            createAsset.post = createPost;
+                            await this.assetRepository.save([createAsset]);
+                            console.log("savePostDetails::: asset save finish createAsset:  ", createAsset)
+                        }
+                        // Create asset || End
+                        console.log("savePostDetails::: after image if");
                     }
-                    // Create asset || End
-                    console.log("savePostDetails::: after image if");
+
+                    console.log("savePostDetails::: sm end")
                 }
-                console.log("savePostDetails::: userCredit.length : " ,userCredit.length);
+                console.log("savePostDetails::: userCredit.length : ", userCredit.length);
                 for (let i = 0; i < userCredit.length; i++) {
 
                     const element = userCredit[i];
                     console.log(`savePostDetails::: element: ${i}`, element);
-                    console.log("savePostDetails::: element.social_media_id in loop " , element.social_media_id)
+                    console.log("savePostDetails::: element.social_media_id in loop ", element.social_media_id)
 
                     element.social_media = await this.socialMediaAccountRepository.findOne(element.social_media_id);
-                    console.log("savePostDetails::: element.social_media " , element.social_media)
+                    console.log("savePostDetails::: element.social_media ", element.social_media)
 
                     const userCreditEntity = await this.userCreditRepository.getUserCreditWithSocialMedia(user.id, element.social_media_id);
 
@@ -411,10 +422,10 @@ export class GeneratePostService {
                 const userCredit = await this.userCreditRepository.getAllUserCredits(post.user_id);
                 console.log('reGeneratePost userCredit : ', userCredit);
 
-                try{
+                try {
                     await this.savePostDetails(userCredit, newResponse);
                 }
-                catch(error){
+                catch (error) {
                     console.log(error, 'errorin save')
                 }
                 post.status = POST_RESPONSE.COMPLETED;
