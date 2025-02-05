@@ -12,7 +12,7 @@ export class UserCreditRepository extends GenericRepository<UserCredit> {
         super(repository);
     }
 
-    async findUserCreditDetailWithSocialAccount(userId: number, subscriptionId: string, socialMediaId: number): Promise<UserCredit | null> {
+    async findUserCreditDetailWithSocialAccount(userId: number, subscriptionId: string, socialMediaId: number): Promise<UserCredit> {
 
         // const currentDate = new Date();
         return this.repository
@@ -33,7 +33,7 @@ export class UserCreditRepository extends GenericRepository<UserCredit> {
             .getOne();
     }
 
-    async findUserCreditDetail(userId: number, subscriptionId: string): Promise<UserCredit | null> {
+    async findUserCreditDetail(userId: number, subscriptionId: string): Promise<UserCredit> {
 
         // const currentDate = new Date();
         return this.repository
@@ -51,7 +51,7 @@ export class UserCreditRepository extends GenericRepository<UserCredit> {
             .getOne();
     }
 
-    // async findTrialCreditByUserId(userId: number, subscriptionId: string): Promise<UserCredit | null> {
+    // async findTrialCreditByUserId(userId: number, subscriptionId: string): Promise<UserCredit> {
     //     const currentDate = new Date();
     //     return this.repository
     //     .createQueryBuilder('userCredit')
@@ -70,7 +70,7 @@ export class UserCreditRepository extends GenericRepository<UserCredit> {
     async findUserAndSubscription(
         userId: number,
         subscriptionId: string,
-    ): Promise<UserCredit | null> {
+    ): Promise<UserCredit> {
         return this.repository.findOne({
             where: {
                 user: { id: userId },
@@ -81,7 +81,7 @@ export class UserCreditRepository extends GenericRepository<UserCredit> {
     }
 
     //Get credit of user with social media 
-    async getUserCreditWithSocialMedia(userId: number, socialMediaAccountId: number): Promise<UserCredit | null> {
+    async getUserCreditWithSocialMedia(userId: number, socialMediaAccountId: number): Promise<UserCredit> {
         return this.repository.findOne({
             where: {
                 user: { id: userId },
@@ -92,7 +92,7 @@ export class UserCreditRepository extends GenericRepository<UserCredit> {
     }
 
     //Get all credit of user
-    async getUserCredits(userId: number): Promise<UserCredit | null> {
+    async getUserCredits(userId: number): Promise<UserCredit> {
         return this.repository.findOne({
             where: {
                 user: { id: userId },
@@ -123,7 +123,7 @@ export class UserCreditRepository extends GenericRepository<UserCredit> {
         );
     }
 
-    async getAllUserCredits(userId: number): Promise<UserCredit[] | null> {
+    async getAllUserCredits(userId: number): Promise<UserCredit[]> {
         return this.repository.find({
             where: {
                 user: { id: userId },
@@ -133,7 +133,7 @@ export class UserCreditRepository extends GenericRepository<UserCredit> {
         });
     }
 
-    async findOneCredit(postId: string): Promise<UserCredit | null> {
+    async findOneCredit(postId: string): Promise<UserCredit> {
         return await this.repository.findOne({
             where: { id: postId },
             relations: ['social_media', 'user', 'subscription', 'PostRetry'],

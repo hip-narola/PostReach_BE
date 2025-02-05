@@ -247,23 +247,14 @@ export class GeneratePostService {
         userCredit: UserCredit[],
         generatePostData: generatePostResponseDTO,
     ): Promise<void> {
-        // TODO: 2 Request parameter dto of responseData and dto of new function which is created at 1st 
-        // get all required data based this dto
-        // you will get user id, social media id  
+      
         // Loop for posts
         try {
-            // const existingUser = await this.userRepository.findOne(userCredit.user);
-            // const socialMediaAccountDetails = await this.socialMediaAccountRepository.findOne(socialMediaAccountId);
+          
             console.log(userCredit, 'savePostDetails userCredit');
             const user = userCredit[0].user;
             if (generatePostData.posts && generatePostData.posts.length > 0) {
                 for (const post of generatePostData.posts) {
-
-                    // const postTaskRepository = this.unitOfWork.getRepository(PostTaskRepository, PostTask, true);
-                    // const postRepository = this.unitOfWork.getRepository(PostRepository, Post, true);
-                    // const userRepository = this.unitOfWork.getRepository(UserRepository, User, false);
-                    // const socialMediaRepository = this.unitOfWork.getRepository(SocialMediaAccountRepository, SocialMediaAccount, false);
-                    // const assestRepository = this.unitOfWork.getRepository(AssetRepository, Asset, true);
 
                     // Create post task | Started
                     const postTask = new PostTask();
@@ -278,8 +269,8 @@ export class GeneratePostService {
                     // assign social media id -> get id from both dtos (do not add loop get id by filter)
                     // Check if update date is inserting as null or not. Should insert as null
                     postTask.socialMediaAccount = userCredit.find(x => x.social_media.platform == post.platform).social_media;
-                    await this.postTaskRepository.save([postTask]);
-                    console.log(postTask, 'postTask', postTask.socialMediaAccount)
+                    this.postTaskRepository.save1([postTask]);
+                    console.log("savePostDetails:::" , postTask, 'postTask', postTask.socialMediaAccount)
 
                     // Create post task | End
 
@@ -295,78 +286,71 @@ export class GeneratePostService {
                     createPost.no_of_comments = 0;
                     createPost.no_of_views = 0;
                     createPost.modified_date = null;
-                    console.log(createPost, 'before createPost')
+                    console.log("savePostDetails:::", createPost, 'before createPost')
                     // TODO:
                     // Check if update date is inserting as null or not. Should insert as null
-                    await this.postRepository.save([createPost]);
-                    console.log(createPost, 'after createPost')
-                    for (let i = 0; i < userCredit.length; i++) {
-                        const element = userCredit[i];
-                        console.log('element dsds', element)
-
-                    }
+                    this.postRepository.save1([createPost]);
+                    console.log("savePostDetails:::" , createPost, 'after createPost')
+                
                     // Create post || End
 
                     // Create asset || Started
-                    // if (post.image_url != "") {
-                    //     const createAsset = new Asset();
-                    //     createAsset.url = post.image_url;
-                    //     createAsset.type = ASSET_TYPE.IMAGE;
-                    //     createAsset.created_By = user.id;
-                    //     createAsset.created_at = new Date(post.created_at);
-                    //     createAsset.modified_date = null;
-                    //     // TODO:
-                    //     // Check if update date is inserting as null or not. Should insert as null
-                    //     createAsset.post = createPost;
-                    //     await this.assetRepository.save([createAsset]);
-                    //     console.log(createAsset, 'createAsset')
-                    // }
+                    if (post.image_url != "") {
+                        const createAsset = new Asset();
+                        createAsset.url = post.image_url;
+                        createAsset.type = ASSET_TYPE.IMAGE;
+                        createAsset.created_By = user.id;
+                        createAsset.created_at = new Date(post.created_at);
+                        createAsset.modified_date = null;
+                        // TODO:
+                        // Check if update date is inserting as null or not. Should insert as null
+                        createAsset.post = createPost;
+                        this.assetRepository.save1([createAsset]);
+                        console.log("savePostDetails:::", createAsset, 'createAsset')
+                    }
                     // Create asset || End
                 }
-                console.log(userCredit.length, 'userCredit.length')
+                console.log("savePostDetails:::" ,userCredit.length, 'userCredit.length')
                 for (let i = 0; i < userCredit.length; i++) {
 
                     const element = userCredit[i];
-                    console.log(`element: ${i}`, element)
+                    console.log(`savePostDetails::: element: ${i}`, element)
+                    element.social_media = await this.socialMediaAccountRepository.findOne(element.social_media_id);
 
-                    // element.social_media = await this.socialMediaAccountRepository.findOne(element.social_media_id);
 
-                    // console.log(element.social_media_id, 'element.social_media_id in loop')
+                    console.log("savePostDetails:::" ,element.social_media_id, 'element.social_media_id in loop')
 
-                    // console.log(element, 'element in for loop')
-                    // const userCreditEntity = await this.userCreditRepository.getUserCreditWithSocialMedia(user.id, element.social_media_id);
+                    console.log("savePostDetails:::" , element, 'element in for loop')
+                    const userCreditEntity = await this.userCreditRepository.getUserCreditWithSocialMedia(user.id, element.social_media_id);
 
-                    // console.log(userCreditEntity, 'userCreditEntity in loop')
+                    console.log("savePostDetails:::", userCreditEntity, 'userCreditEntity in loop')
 
-                    // console.log('before credit', userCreditEntity.current_credit_amount)
+                    console.log('savePostDetails::: before credit', userCreditEntity.current_credit_amount)
+                    console.log('savePostDetails::: element.social_media.platform', element.social_media.platform)
 
-                    // let count = 0;
-                    // if (element.social_media.platform == SocialMediaPlatformNames[SocialMediaPlatform.FACEBOOK]) {
-                    //     count = generatePostData.posts.filter(x => x.platform == SocialMediaPlatformNames[SocialMediaPlatform.FACEBOOK]).length;
-                    // }
+                    let count = 0;
+                    if (element.social_media.platform == SocialMediaPlatformNames[SocialMediaPlatform.FACEBOOK]) {
+                        count = generatePostData.posts.filter(x => x.platform == SocialMediaPlatformNames[SocialMediaPlatform.FACEBOOK]).length;
+                    }
+                    else if (element.social_media.platform == SocialMediaPlatformNames[SocialMediaPlatform.INSTAGRAM]) {
+                        count = generatePostData.posts.filter(x => x.platform == SocialMediaPlatformNames[SocialMediaPlatform.INSTAGRAM]).length;
+                    }
 
-                    // else if (element.social_media.platform == SocialMediaPlatformNames[SocialMediaPlatform.INSTAGRAM]) {
-                    //     count = generatePostData.posts.filter(x => x.platform == SocialMediaPlatformNames[SocialMediaPlatform.INSTAGRAM]).length;
-                    // }
+                    else if (element.social_media.platform == SocialMediaPlatformNames[SocialMediaPlatform.LINKEDIN]) {
+                        count = generatePostData.posts.filter(x => x.platform == SocialMediaPlatformNames[SocialMediaPlatform.LINKEDIN]).length;
+                    }
+                    else if (element.social_media.platform == SocialMediaPlatformNames[SocialMediaPlatform.TWITTER]) {
+                        count = generatePostData.posts.filter(x => x.platform == SocialMediaPlatformNames[SocialMediaPlatform.TWITTER]).length;
+                    }
 
-                    // else if (element.social_media.platform == SocialMediaPlatformNames[SocialMediaPlatform.LINKEDIN]) {
-                    //     count = generatePostData.posts.filter(x => x.platform == SocialMediaPlatformNames[SocialMediaPlatform.LINKEDIN]).length;
-                    // }
-                    // else if (element.social_media.platform == SocialMediaPlatformNames[SocialMediaPlatform.TWITTER]) {
-                    //     count = generatePostData.posts.filter(x => x.platform == SocialMediaPlatformNames[SocialMediaPlatform.TWITTER]).length;
-                    // }
-                    // else{
-
-                    // }
-
-                    // userCreditEntity.current_credit_amount = userCreditEntity.current_credit_amount - 0;
-                    // console.log('after credit', userCreditEntity.current_credit_amount)
-                    // await this.userCreditRepository.update(userCreditEntity.id, userCreditEntity);
+                    userCreditEntity.current_credit_amount = userCreditEntity.current_credit_amount - count;
+                    console.log('savePostDetails::: after credit', userCreditEntity.current_credit_amount)
+                    await this.userCreditRepository.update(userCreditEntity.id, userCreditEntity);
                 }
             }
         }
         catch (error) {
-            console.log(`error in savePostDetails: ${error}`)
+            console.log(`savePostDetails::: error in savePostDetails: ${error}`)
             throw error;
         }
     }
