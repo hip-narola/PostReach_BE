@@ -101,6 +101,8 @@ export class GeneratePostService {
             console.log("socialPostNumber : ", socialPostNumber);
             userCredit.forEach(async (element) => {
                 PostRequestCount = 0;
+                
+                element.social_media = await this.socialMediaAccountRepository.findOne(element.social_media_id);
 
                 if (details.userSubscription.cycle == 0) {
                     console.log('cycle0')
@@ -146,12 +148,11 @@ export class GeneratePostService {
                 console.log(PostRequestCount, 'PostRequestCount')
 
                 console.log(element.social_media_id, 'userCredit.socialMediaId');
-                element.social_media = await this.socialMediaAccountRepository.findOne(element.social_media_id);
+
 
                 console.log("element::: ", element);
                 console.log(element.social_media.platform, 'platform');
                 console.log(SocialMediaPlatformNames[SocialMediaPlatform.FACEBOOK], 'SocialMediaPlatformNames[SocialMediaPlatform.FACEBOOK]');
-
 
                 if (element.social_media.platform == SocialMediaPlatformNames[SocialMediaPlatform.FACEBOOK])
                     socialPostNumber.facebook_posts_number = PostRequestCount;
@@ -226,7 +227,7 @@ export class GeneratePostService {
             }
 
         } catch (error) {
-            console.log(error, 'error');
+            console.log(`error in generatePostByAIAPI: ${error}`);
             throw error;
         }
     }
@@ -335,27 +336,30 @@ export class GeneratePostService {
             }
         }
         catch (error) {
-            console.log(error, 'error789')
+            console.log(`error in savePostDetails: ${error}`)
             throw error;
         }
     }
 
     private async savePostRetry(userId: number, /*userCreditId: string,*/ pipelineId: string, status: string) {
         console.log(userId, /*userCreditId, */ pipelineId, status, 'savePostRetry');
+        try {
+            const postRetry = new PostRetry();
+            postRetry.id = generateId(IdType.POST_RETRY);
+            postRetry.pipeline_id = pipelineId;
+            postRetry.user_id = userId;
+            postRetry.credit_id = 'user_credit-20250204121438-281d1317';
+            postRetry.modified_date = null;
+            postRetry.created_at = new Date();
+            postRetry.retry_count = 5;
+            postRetry.status = status;
 
-        const postRetry = new PostRetry();
-        postRetry.id = generateId(IdType.POST_RETRY);
-        postRetry.pipeline_id = pipelineId;
-        postRetry.user_id = userId;
-        postRetry.credit_id = 'user_credit-20250204121438-281d1317';
-        postRetry.modified_date = null;
-        postRetry.created_at = new Date();
-        postRetry.retry_count = 5;
-        postRetry.status = status;
-
-        await this.postRetryRepository.create(postRetry);
-
-        this.scheduleRetry(postRetry); // Call retry scheduling function
+            await this.postRetryRepository.create(postRetry);
+            this.scheduleRetry(postRetry); // Call retry scheduling function
+        }
+        catch (error) {
+            console.log(`error in savePostRetry: ${error}`)
+        }
     }
 
     private async scheduleRetry(post: PostRetry) {
