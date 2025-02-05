@@ -49,7 +49,7 @@ export class GeneratePostService {
     // TODO: Call generatePostByAIAPI function where ever createPostForSubscription is called
     async generatePostByAIAPI(userCredit: UserCredit[]): Promise<void> {
         try {
-            console.log(userCredit, 'userCredit')
+            console.log(userCredit, 'generatePostByAIAPI userCredit')
             // TODO :
 
             // userCredit: dto for user credit - Required
@@ -63,7 +63,7 @@ export class GeneratePostService {
                 get connected social media account detail by social media account id
             */
             // const userRepository = this.unitOfWork.getRepository(UserRepository, User, false);
-           
+
 
             const details = await this.userRepository.findUserAnswersWithQuestionsAndSocialMedia(userCredit[0].user.id/*, userCredit.social_media_id*/);
 
@@ -111,7 +111,7 @@ export class GeneratePostService {
                 }
                 else if (details.userSubscription.cycle == 1) {
                     console.log('cycle==1')
-    
+
                     if (today >= subscriptionValidDate && element.current_credit_amount > daysDifference) {
                         console.log('today >= subscriptionValidDate && userCredit.currentCreditAmount > daysDifference', daysDifference)
                         PostRequestCount = daysDifference;
@@ -128,7 +128,7 @@ export class GeneratePostService {
                 }
                 else if (details.userSubscription.cycle >= 2) {
                     console.log('cycle>=2')
-    
+
                     if (today >= subscriptionValidDate && element.current_credit_amount > daysDifference) {
                         console.log('today >= subscriptionValidDate && userCredit.current_credit_amount > daysDifference', daysDifference)
                         PostRequestCount = daysDifference;
@@ -144,29 +144,29 @@ export class GeneratePostService {
                 }
 
                 console.log(PostRequestCount, 'PostRequestCount')
-    
+
                 console.log(element.social_media_id, 'userCredit.socialMediaId');
                 element.social_media = await this.socialMediaAccountRepository.findOne(element.social_media_id);
-    
+
                 console.log("element::: ", element);
                 console.log(element.social_media.platform, 'platform');
                 console.log(SocialMediaPlatformNames[SocialMediaPlatform.FACEBOOK], 'SocialMediaPlatformNames[SocialMediaPlatform.FACEBOOK]');
 
 
-                if(element.social_media.platform == SocialMediaPlatformNames[SocialMediaPlatform.FACEBOOK])
+                if (element.social_media.platform == SocialMediaPlatformNames[SocialMediaPlatform.FACEBOOK])
                     socialPostNumber.facebook_posts_number = PostRequestCount;
-                else if(element.social_media.platform == SocialMediaPlatformNames[SocialMediaPlatform.LINKEDIN])
+                else if (element.social_media.platform == SocialMediaPlatformNames[SocialMediaPlatform.LINKEDIN])
                     socialPostNumber.linkedin_posts_number = PostRequestCount;
-                else if(element.social_media.platform == SocialMediaPlatformNames[SocialMediaPlatform.TWITTER])
+                else if (element.social_media.platform == SocialMediaPlatformNames[SocialMediaPlatform.TWITTER])
                     socialPostNumber.twitter_posts_number = PostRequestCount;
-                else if(element.social_media.platform == SocialMediaPlatformNames[SocialMediaPlatform.INSTAGRAM])
+                else if (element.social_media.platform == SocialMediaPlatformNames[SocialMediaPlatform.INSTAGRAM])
                     socialPostNumber.instagram_posts_number = PostRequestCount;
 
                 console.log("socialPostNumber::: ", socialPostNumber);
 
 
             });
-            
+
             console.log(socialPostNumber, 'socialPostNumber')
 
             const generatePostRequest: GeneratePostPipelineRequestDTO = {
@@ -246,8 +246,9 @@ export class GeneratePostService {
         try {
             // const existingUser = await this.userRepository.findOne(userCredit.user);
             // const socialMediaAccountDetails = await this.socialMediaAccountRepository.findOne(socialMediaAccountId);
-            console.log(userCredit, 'userCredit');
+            console.log(userCredit, 'savePostDetails userCredit');
             const user = userCredit[0].user;
+            console.log(user, 'user savePostDetails')
             if (generatePostData.posts && generatePostData.posts.length > 0) {
                 for (const post of generatePostData.posts) {
 
@@ -316,7 +317,7 @@ export class GeneratePostService {
 
                     const userCreditEntity = await this.userCreditRepository.getUserCreditWithSocialMedia(user.id, element.social_media_id);
                     console.log('before credit', userCreditEntity.current_credit_amount)
-    
+
                     let count = 0;
                     if (element.social_media.platform == SocialMediaPlatformNames[SocialMediaPlatform.FACEBOOK])
                         count = generatePostData.posts.filter(x => x.platform == SocialMediaPlatformNames[SocialMediaPlatform.FACEBOOK]).length;
@@ -364,8 +365,8 @@ export class GeneratePostService {
         }
 
         console.log(`Scheduling retry for post ID ${post.id} in ${POST_RETRY_COUNT[post.retry_count]} ms DATE: ${new Date()}`);
-        setTimeout(async () => {
-            await this.reGeneratePost(post); // Ensuring full function execution
+        setTimeout(() => {
+            this.reGeneratePost(post); // Ensuring full function execution
         }, POST_RETRY_COUNT[post.retry_count]);
         // setTimeout(() => {
         //     this.reGeneratePost(post);
@@ -396,8 +397,8 @@ export class GeneratePostService {
             if (newResponse.status === POST_RESPONSE.SUCCESS) {
 
                 const userCredit = await this.userCreditRepository.getAllUserCredits(post.user_id);
-                console.log(userCredit, 'userCredit');
-                
+                console.log(userCredit, 'reGeneratePost userCredit');
+
                 await this.savePostDetails(userCredit, newResponse);
                 post.status = POST_RESPONSE.COMPLETED;
                 await this.postRetryRepository.update(post.id, post);
@@ -408,7 +409,7 @@ export class GeneratePostService {
 
                 post.retry_count -= 1; // Decrement retry count
                 await this.postRetryRepository.update(post.id, post);
-         
+
                 console.log(`Post ID ${post.id} count minus: ${post.retry_count}`);
                 await this.scheduleRetry(post); // Retry again if count is not zero
             }
