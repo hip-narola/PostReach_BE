@@ -45,7 +45,7 @@ export class SubscriptionService {
 		private configService: ConfigService,
 		private readonly userService: UserService,
 		private generatePostService: GeneratePostService,
-		private userSubscriptionRepository: UserSubscriptionRepository,
+		private userCreditRepository: UserCreditRepository,
 
 		// private readonly checkSubscriptionSchedulerService: CheckSubscriptionSchedulerService,
 	) {
@@ -99,7 +99,7 @@ export class SubscriptionService {
 		console.log("GeneratePostSubscriptionWiseOnFirstCycle::: started" )
 		try {
 			// Get all active user subscriptions for the first cycle
-			const userSubscriptionDetails = await this.userSubscriptionRepository.getAllUserToGeneratePost();
+			const userSubscriptionDetails = await this.userCreditRepository.getAllUserToGeneratePost();
 			console.log("GeneratePostSubscriptionWiseOnFirstCycle::: userSubscriptionDetails: ", userSubscriptionDetails);
 
 

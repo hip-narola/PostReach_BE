@@ -8,12 +8,12 @@ import { AwsSecretsServiceModule } from '../aws-secrets-service/aws-secrets-serv
 import { GeneratePostService } from 'src/services/generate-post/generate-post.service';
 import { HttpModule } from '@nestjs/axios';
 import { UserModule } from '../user/user.module';
-import { UserSubscriptionRepository } from 'src/repositories/user-subscription-repository';
+import { UserCreditRepository } from 'src/repositories/user-credit-repository';
 
 @Module({
     imports: [NotificationModule, SocialMediaAccountModule, AwsSecretsServiceModule, HttpModule, UserModule],
-    providers: [UnitOfWork, SubscriptionService, EmailService, GeneratePostService, UserSubscriptionRepository],
-    exports: [SubscriptionService, EmailService, GeneratePostService, UserSubscriptionRepository],
+    providers: [UnitOfWork, SubscriptionService, EmailService, GeneratePostService, UserCreditRepository],
+    exports: [SubscriptionService, EmailService, GeneratePostService, UserCreditRepository],
 })
 
 export class SubscriptionModule { }
