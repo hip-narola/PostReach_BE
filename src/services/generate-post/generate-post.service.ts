@@ -300,7 +300,11 @@ export class GeneratePostService {
                     // Check if update date is inserting as null or not. Should insert as null
                     await this.postRepository.save([createPost]);
                     console.log(createPost, 'after createPost')
+                    for (let i = 0; i < userCredit.length; i++) {
+                        const element = userCredit[i];
+                        console.log(element, 'element')
 
+                    }
                     // Create post || End
 
                     // Create asset || Started
