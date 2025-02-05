@@ -105,56 +105,56 @@ export class GeneratePostService {
                 PostRequestCount = 0;
 
                 element.social_media = await this.socialMediaAccountRepository.findOne(element.social_media_id);
-                console.log('await element.social_media');
+                // console.log('await element.social_media');
                 if (details.userSubscription.cycle == 0) {
-                    console.log('cycle0')
+                    // console.log('cycle0')
                     if (element.current_credit_amount >= daysDifference) {
-                        console.log('PostRequestCount = daysDifference', daysDifference);
+                        // console.log('PostRequestCount = daysDifference', daysDifference);
                         PostRequestCount = daysDifference;
                     }
                 }
                 else if (details.userSubscription.cycle == 1) {
-                    console.log('cycle==1')
+                    // console.log('cycle==1')
 
                     if (today >= subscriptionValidDate && element.current_credit_amount > daysDifference) {
-                        console.log('today >= subscriptionValidDate && userCredit.currentCreditAmount > daysDifference', daysDifference)
+                        // console.log('today >= subscriptionValidDate && userCredit.currentCreditAmount > daysDifference', daysDifference)
                         PostRequestCount = daysDifference;
                     } else {
                         if (element.last_trigger_date != null) {
-                            console.log('userCredit.lastTriggerDate != null', element.current_credit_amount)
+                            // console.log('userCredit.lastTriggerDate != null', element.current_credit_amount)
                             PostRequestCount = element.current_credit_amount;
                         }
                         else {
-                            console.log('cycle==1 if else else', element.current_credit_amount / 2)
+                            // console.log('cycle==1 if else else', element.current_credit_amount / 2)
                             PostRequestCount = element.current_credit_amount / 2;
                         }
                     }
                 }
                 else if (details.userSubscription.cycle >= 2) {
-                    console.log('cycle>=2')
+                    // console.log('cycle>=2')
 
                     if (today >= subscriptionValidDate && element.current_credit_amount > daysDifference) {
-                        console.log('today >= subscriptionValidDate && userCredit.current_credit_amount > daysDifference', daysDifference)
+                        // console.log('today >= subscriptionValidDate && userCredit.current_credit_amount > daysDifference', daysDifference)
                         PostRequestCount = daysDifference;
                     }
                     else {
-                        console.log('cycle>=2 else', element.current_credit_amount)
+                        // console.log('cycle>=2 else', element.current_credit_amount)
                         PostRequestCount = element.current_credit_amount;
                     }
                 }
                 else {
-                    console.log('else', element.current_credit_amount)
+                    // console.log('else', element.current_credit_amount)
                     PostRequestCount = element.current_credit_amount;
                 }
 
-                console.log(PostRequestCount, 'PostRequestCount')
+                // console.log(PostRequestCount, 'PostRequestCount')
 
-                console.log(element.social_media_id, 'userCredit.socialMediaId');
+                // console.log(element.social_media_id, 'userCredit.socialMediaId');
 
 
-                console.log("element::: ", element);
-                console.log(element.social_media.platform, 'platform');
-                console.log(SocialMediaPlatformNames[SocialMediaPlatform.FACEBOOK], 'SocialMediaPlatformNames[SocialMediaPlatform.FACEBOOK]');
+                // console.log("element::: ", element);
+                // console.log(element.social_media.platform, 'platform');
+                // console.log(SocialMediaPlatformNames[SocialMediaPlatform.FACEBOOK], 'SocialMediaPlatformNames[SocialMediaPlatform.FACEBOOK]');
 
                 if (element.social_media.platform == SocialMediaPlatformNames[SocialMediaPlatform.FACEBOOK])
                     socialPostNumber.facebook_posts_number = PostRequestCount;
@@ -165,9 +165,9 @@ export class GeneratePostService {
                 else if (element.social_media.platform == SocialMediaPlatformNames[SocialMediaPlatform.INSTAGRAM])
                     socialPostNumber.instagram_posts_number = PostRequestCount;
 
-                console.log("socialPostNumber::: ", socialPostNumber);
-
-                console.log('for credit loop end')
+                // console.log("socialPostNumber::: ", socialPostNumber);
+// 
+                // console.log('for credit loop end')
             }
 
             // userCredit.forEach(async (element) => {
@@ -175,7 +175,7 @@ export class GeneratePostService {
 
             // });
 
-            console.log(socialPostNumber, 'socialPostNumber')
+            // console.log(socialPostNumber, 'socialPostNumber')
 
             const generatePostRequest: GeneratePostPipelineRequestDTO = {
                 mode: Mode.AUTOPILOT,
@@ -187,7 +187,7 @@ export class GeneratePostService {
                 language: LANGUAGE.ENGLISH,
                 is_dummy: IS_DUMMY_STATUS.TRUE,
             };
-            console.log(generatePostRequest, 'generatePostRequest')
+            console.log('Request : generatePostRequest : ', generatePostRequest);
 
 
             // // TODO : Add URL in AWS
@@ -199,7 +199,7 @@ export class GeneratePostService {
 
             const apiUrl = secretData.APIURL;
             const token = secretData.TOKEN;
-            console.log(apiUrl, token, 'apiUrl, token')
+            // console.log(apiUrl, token, 'apiUrl, token')
             let response;
             try {
                 response = await axios.post(apiUrl, generatePostRequest, {
@@ -214,22 +214,19 @@ export class GeneratePostService {
             }
             if (response != undefined) {
                 const responseData = plainToInstance(generatePostResponseDTO, response.data);
-                console.log(responseData, 'responseData');
+                console.log("responseData : ", response.data);
 
                 // // TODO : Bind responseData in to one object and pass it to savePostDetails function
                 // // call savePostDetails function
 
                 if (responseData.status == POST_RESPONSE.COMPLETED) {
-                    console.log('SUCCESS here1')
+                    // console.log('SUCCESS here1')
                     await this.savePostDetails(userCredit, responseData)
 
                 }
                 else if ((responseData.status == POST_RESPONSE.PROCESSING && responseData.posts.length == 0) || responseData.status == POST_RESPONSE.FAILED) {
-                    console.log(' PROCESSINGhere1')
+                    // console.log(' PROCESSINGhere1')
                     await this.savePostRetry(userCredit[0].user.id, /*userCredit.id,*/ responseData.result_id, responseData.status)
-                }
-                else {
-                    console.log('else1');
                 }
             }
 
@@ -239,22 +236,17 @@ export class GeneratePostService {
         }
     }
 
-    private async savePostDetails(
-        // userId: number,
-        // socialMediaAccountDetails: SocialMediaAccount,
-        // platformId: number,
-        // subscriptionId: string,
-        userCredit: UserCredit[],
-        generatePostData: generatePostResponseDTO,
+    private async savePostDetails(userCredit: UserCredit[], generatePostData: generatePostResponseDTO,
     ): Promise<void> {
       
         // Loop for posts
         try {
           
-            console.log(userCredit, 'savePostDetails userCredit');
+            console.log('savePostDetails::: userCredit', userCredit);
             const user = userCredit[0].user;
             if (generatePostData.posts && generatePostData.posts.length > 0) {
                 for (const post of generatePostData.posts) {
+                    console.log("savePostDetails::: post ", post.id);
 
                     // Create post task | Started
                     const postTask = new PostTask();
@@ -265,36 +257,38 @@ export class GeneratePostService {
                     postTask.created_at = new Date(post.created_at);
                     postTask.user = user;
                     postTask.modified_date = null;
-                    // TODO: 
-                    // assign social media id -> get id from both dtos (do not add loop get id by filter)
-                    // Check if update date is inserting as null or not. Should insert as null
                     postTask.socialMediaAccount = userCredit.find(x => x.social_media.platform == post.platform).social_media;
-                    this.postTaskRepository.save1([postTask]);
-                    console.log("savePostDetails:::" , postTask, 'postTask', postTask.socialMediaAccount)
+
+                    await this.postTaskRepository.save([postTask]);
+
+                    console.log("savePostDetails::: post task saved: ", postTask);
+                    console.log('savePostDetails::: postTask socialMediaAccount: ', postTask.socialMediaAccount);
 
                     // Create post task | End
 
                     // Create post || Started
+                    console.log("savePostDetails::: post saved started: ");
                     const createPost = new Post();
                     createPost.postTask = postTask;
                     createPost.content = post.text;
                     createPost.hashtags = post.hashtags.join(', ');
                     createPost.created_By = user.id;
                     createPost.created_at = new Date(post.created_at);
-                    // createPost.postTask = postTask;
                     createPost.no_of_likes = 0;
                     createPost.no_of_comments = 0;
                     createPost.no_of_views = 0;
                     createPost.modified_date = null;
-                    console.log("savePostDetails:::", createPost, 'before createPost')
-                    // TODO:
-                    // Check if update date is inserting as null or not. Should insert as null
-                    this.postRepository.save1([createPost]);
-                    console.log("savePostDetails:::" , createPost, 'after createPost')
+
+                    console.log("savePostDetails::: post : ", createPost);
+
+                    await this.postRepository.save([createPost]);
+                    console.log("savePostDetails::: post save finish" , createPost);
                 
                     // Create post || End
 
                     // Create asset || Started
+
+                    console.log("savePostDetails::: asset save started post.image_url : ",post.image_url);
                     if (post.image_url != "") {
                         const createAsset = new Asset();
                         createAsset.url = post.image_url;
@@ -305,22 +299,21 @@ export class GeneratePostService {
                         // TODO:
                         // Check if update date is inserting as null or not. Should insert as null
                         createAsset.post = createPost;
-                        this.assetRepository.save1([createAsset]);
-                        console.log("savePostDetails:::", createAsset, 'createAsset')
+                        await this.assetRepository.save([createAsset]);
+                        console.log("savePostDetails::: asset save finish createAsset:  ", createAsset)
                     }
                     // Create asset || End
                 }
-                console.log("savePostDetails:::" ,userCredit.length, 'userCredit.length')
+                console.log("savePostDetails::: userCredit.length : " ,userCredit.length);
                 for (let i = 0; i < userCredit.length; i++) {
 
                     const element = userCredit[i];
-                    console.log(`savePostDetails::: element: ${i}`, element)
+                    console.log(`savePostDetails::: element: ${i}`, element);
+                    console.log("savePostDetails::: element.social_media_id in loop " , element.social_media_id)
+
                     element.social_media = await this.socialMediaAccountRepository.findOne(element.social_media_id);
+                    console.log("savePostDetails::: element.social_media " , element.social_media)
 
-
-                    console.log("savePostDetails:::" ,element.social_media_id, 'element.social_media_id in loop')
-
-                    console.log("savePostDetails:::" , element, 'element in for loop')
                     const userCreditEntity = await this.userCreditRepository.getUserCreditWithSocialMedia(user.id, element.social_media_id);
 
                     console.log("savePostDetails:::", userCreditEntity, 'userCreditEntity in loop')
@@ -410,12 +403,12 @@ export class GeneratePostService {
             });
 
             const newResponse = plainToInstance(generatePostResponseDTO, response.data);
-            console.log('API Response:', newResponse);
+            console.log('Retry API Response:', response.data);
 
             if (newResponse.status === POST_RESPONSE.SUCCESS) {
 
                 const userCredit = await this.userCreditRepository.getAllUserCredits(post.user_id);
-                console.log(userCredit, 'reGeneratePost userCredit');
+                console.log('reGeneratePost userCredit : ', userCredit);
 
                 try{
                     await this.savePostDetails(userCredit, newResponse);
