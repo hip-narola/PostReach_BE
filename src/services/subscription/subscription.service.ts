@@ -114,53 +114,6 @@ export class SubscriptionService {
 		}
 	}
 
-
-
-	async GenerateUserPostSubscriptionWise(user: User, subscription: Subscription, subscriptionDetail: UserSubscription, userPlatformId: number): Promise<void> {
-		try {
-			// await this.unitOfWork.startTransaction();
-
-			// get all active user credit details
-			const userCreditRepository = this.unitOfWork.getRepository(UserCreditRepository, UserCredit, true);
-			const userCreditDetails = await userCreditRepository.findUserCreditDetailWithSocialAccount(subscriptionDetail.user.id, subscriptionDetail.subscription.id, userPlatformId);
-
-			if (userCreditDetails) {
-				// 1st time 
-				if (subscriptionDetail.cycle == 1) {
-
-					// Post generation for 1st subsciption cycle
-
-					const nextPostGenerationDate = new Date(subscriptionDetail.start_Date);
-					nextPostGenerationDate.setDate(subscriptionDetail.start_Date.getDate() + 14);
-					//to-do
-					// if ((new Date() == new Date(subscriptionDetail.start_Date))) {
-
-					if ((new Date() == new Date(subscriptionDetail.start_Date))) {
-
-						// // TODO: Generate Post
-						// await this.createPostForSubscription(
-						// 	subscriptionDetail.user.id,
-						// 	userCreditDetails.social_media_id,
-						// 	userPlatformId,
-						// 	subscriptionDetail.id
-						// );
-
-						// TODO: Minus credit amount based on each social media post creation
-						userCreditDetails.last_trigger_date = new Date();
-						userCreditDetails.current_credit_amount = userCreditDetails.current_credit_amount - 1;
-						await userCreditRepository.update(userCreditDetails.id, userCreditDetails);
-					}
-				}
-				// }
-			}
-			// await this.unitOfWork.completeTransaction();
-		}
-		catch (error) {
-			// await this.unitOfWork.rollbackTransaction();
-			throw error;
-		}
-	}
-
 	async cancelUserSubscription(userId: number, subscriptionCancelled: Stripe.Subscription) {
 		try {
 			await this.unitOfWork.startTransaction();
@@ -451,6 +404,7 @@ export class SubscriptionService {
 		userCredit.social_media_id = socialMediaAccountId;
 
 		userCredit.status = UserCreditStatusType.ACTIVE;
+		userCredit.last_trigger_date = new Date();
 		return userCredit;
 	}
 
