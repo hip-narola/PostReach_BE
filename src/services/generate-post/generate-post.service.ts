@@ -105,7 +105,7 @@ export class GeneratePostService {
                 PostRequestCount = 0;
 
                 element.social_media = await this.socialMediaAccountRepository.findOne(element.social_media_id);
-                console.log( 'await element.social_media');
+                console.log('await element.social_media');
                 if (details.userSubscription.cycle == 0) {
                     console.log('cycle0')
                     if (element.current_credit_amount >= daysDifference) {
@@ -256,7 +256,6 @@ export class GeneratePostService {
             // const socialMediaAccountDetails = await this.socialMediaAccountRepository.findOne(socialMediaAccountId);
             console.log(userCredit, 'savePostDetails userCredit');
             const user = userCredit[0].user;
-            console.log(user, 'user savePostDetails')
             if (generatePostData.posts && generatePostData.posts.length > 0) {
                 for (const post of generatePostData.posts) {
 
@@ -280,7 +279,7 @@ export class GeneratePostService {
                     // Check if update date is inserting as null or not. Should insert as null
                     postTask.socialMediaAccount = userCredit.find(x => x.social_media.platform == post.platform).social_media;
                     await this.postTaskRepository.save([postTask]);
-                    console.log(postTask, 'postTask')
+                    console.log(postTask, 'postTask', postTask.socialMediaAccount)
 
                     // Create post task | End
 
@@ -321,8 +320,9 @@ export class GeneratePostService {
                     // Create asset || End
                 }
 
-                userCredit.forEach(async (element) => {
-
+                for (let i = 0; i < userCredit.length; i++) {
+                    const element = userCredit[i];
+                    console.log(element, 'element in for loop')
                     const userCreditEntity = await this.userCreditRepository.getUserCreditWithSocialMedia(user.id, element.social_media_id);
                     console.log('before credit', userCreditEntity.current_credit_amount)
 
@@ -339,7 +339,7 @@ export class GeneratePostService {
                     userCreditEntity.current_credit_amount = userCreditEntity.current_credit_amount - count;
                     console.log('after credit', userCreditEntity.current_credit_amount)
                     await this.userCreditRepository.update(userCreditEntity.id, userCreditEntity);
-                });
+                }
             }
         }
         catch (error) {
