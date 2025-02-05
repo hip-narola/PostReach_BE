@@ -148,10 +148,11 @@ export class UserSubscriptionRepository extends GenericRepository<UserSubscripti
 		const currentDate = new Date();
 		const currentDateOnly = currentDate.toISOString().split('T')[0];
 
-		const data1 = this.repository
+		const data1 = await this.repository
 			.createQueryBuilder('user_subscription')
 			.leftJoinAndSelect('user_subscription.user', 'user')
 			.leftJoinAndSelect('user.userCredits', 'user_credit')
+			.leftJoinAndSelect('user_credit.user', 'user')
 			.andWhere('user_subscription.status = :status', { status: UserSubscriptionStatusType.ACTIVE })
 			.andWhere('user_credit.status = :status', { status: UserCreditStatusType.ACTIVE })
 			.andWhere('user_subscription.cycle >= :cycle', { cycle: 1 })
