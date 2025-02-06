@@ -54,7 +54,7 @@ export class ApprovalQueueService {
                 
 
                 const record = await approvalQueueRepository.findOne(id);
-
+                console.log(record, 'record')
                 
 
                 if (!record) {
