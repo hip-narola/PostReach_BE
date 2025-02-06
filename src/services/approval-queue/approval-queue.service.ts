@@ -25,7 +25,6 @@ export class ApprovalQueueService {
         private readonly checkUserSubscriptionService: CheckUserSubscriptionService,
         private readonly approvalQueueRepository: ApprovalQueueRepository
 
-        
     ) { }
 
     async getApprovalQueueList(
@@ -53,24 +52,22 @@ export class ApprovalQueueService {
                 true,
             );
             for (const id of updateStatusParam.id) {
-                
+
 
                 // const record = await approvalQueueRepository.findOne(id);
                 const record = await this.approvalQueueRepository.findPosttaskWithUser(id);
                 console.log(record, 'record')
-                
 
                 if (!record) {
                     continue;
                 }
 
-                const isUserSubscriptionActive = await this.checkUserSubscriptionService.isUserSubscriptionExpire(record.user.id);
-                if (isUserSubscriptionActive) {
-                    return 'Please subscribe a subscription first!'
-                }
-
                 //if approved true then if block will executed.
                 if (updateStatusParam.isApproved == true) {
+                    const isUserSubscriptionActive = await this.checkUserSubscriptionService.isUserSubscriptionExpire(record.user.id);
+                    if (isUserSubscriptionActive) {
+                        return 'Please subscribe a subscription first!'
+                    }
                     //updated the status to scheduled
                     record.status = POST_TASK_STATUS.SCHEDULED;
                     await approvalQueueRepository.update(id, record);
@@ -99,9 +96,8 @@ export class ApprovalQueueService {
                 }
                 // if approved false then else if block executed.
                 else if (updateStatusParam.isApproved == false) {
-
+                    console.log('post rejected');
                     record.status = POST_TASK_STATUS.REJECTED;
-                    record.rejectReason = updateStatusParam.rejectReason;
                     const rejectReasonRepository =
                         this.unitOfWork.getRepository(
                             RejectReasonRepository,
@@ -111,12 +107,13 @@ export class ApprovalQueueService {
                     const rejectReason = await rejectReasonRepository.findOne(
                         updateStatusParam.rejectreasonId,
                     );
+
                     if (!rejectReason) {
                         continue;
                     }
 
                     record.RejectReason = rejectReason;
-
+                    console.log('record rejected', record)
                     await approvalQueueRepository.update(id, record);
                 }
             }
