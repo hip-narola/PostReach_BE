@@ -65,7 +65,7 @@ export class ApprovalQueueService {
                 }
 
                 const isUserSubscriptionActive = await this.checkUserSubscriptionService.isUserSubscriptionExpire(record.user.id);
-                if (!isUserSubscriptionActive) {
+                if (isUserSubscriptionActive) {
                     return 'Please subscribe a subscription first!'
                 }
 
