@@ -30,9 +30,13 @@ export class UserController {
         @UploadedFile() file: Express.Multer.File,
         @Param('id') id: number,
         @Body() userData: UserDto,
-    ): Promise<User> {
+    ) {
         try {
-            return await this.userService.updateUser(id, userData, file);
+            const data = await this.userService.updateUser(id, userData, file);
+            return {
+                message: 'Profile details updated successfully',
+                data: data,
+            };
         } catch (error) {
             throw new HttpException(
                 error,

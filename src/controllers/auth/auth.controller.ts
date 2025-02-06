@@ -66,7 +66,7 @@ export class AuthController {
 			`access_token=${encodeURIComponent(req.user.cognitoIdToken)}&` +
 			`refresh_token=${encodeURIComponent(req.user.refreshToken)}`;
 
-		this.setCookie(res, req.user.cognitoIdToken);
+		//	this.setCookie(res, req.user.cognitoIdToken);
 		res.redirect(redirectUrl);
 	}
 
@@ -100,7 +100,7 @@ export class AuthController {
 			`access_token=${encodeURIComponent(req.user.cognitoAccessToken)}&` +
 			`refresh_token=${encodeURIComponent(req.user.refreshToken)}`;
 
-		this.setCookie(res, req.user.cognitoAccessToken);
+		//this.setCookie(res, req.user.cognitoAccessToken);
 
 		res.redirect(redirectUrl);
 	}
@@ -134,7 +134,7 @@ export class AuthController {
 
 			GlobalConfig.secrets = { userId: data.userId.toString() };
 
-			this.setCookie(res, data.accessToken);
+			//this.setCookie(res, data.accessToken);
 
 			return res.status(HttpStatus.OK).json({
 				StatusCode: 200,
@@ -177,7 +177,7 @@ export class AuthController {
 	async confirmSignUp(@Body() confirmDto: { email: string; code: string, password: string }, @Req() req: Request, @Res() res: Response) {
 		try {
 			const details = await this.authService.confirmSignUp(confirmDto.email, confirmDto.code, confirmDto.password);
-			this.setCookie(res, details.accessToken);
+			//	this.setCookie(res, details.accessToken);
 
 			return res.json({
 				StatusCode: 200,
@@ -245,12 +245,12 @@ export class AuthController {
 	async logout(@Body('accessToken') accessToken: string, @Res() res: Response) {
 		try {
 			await this.authService.globalSignOut(accessToken);
-			res.clearCookie('accessToken', {
-				httpOnly: true,
-				secure: true,
-				sameSite: 'none',
-				domain: this.configService.get('COOKIE_DOMAIN')
-			});
+			// res.clearCookie('accessToken', {
+			// 	httpOnly: true,
+			// 	secure: true,
+			// 	sameSite: 'none',
+			// 	domain: this.configService.get('COOKIE_DOMAIN')
+			// });
 
 			return res.json({
 				StatusCode: 200,
@@ -260,12 +260,12 @@ export class AuthController {
 			});
 		} catch (error) {
 
-			res.clearCookie('accessToken', {
-				httpOnly: true,
-				secure: true,
-				sameSite: 'none',
-				domain: this.configService.get('COOKIE_DOMAIN')
-			});
+			// res.clearCookie('accessToken', {
+			// 	httpOnly: true,
+			// 	secure: true,
+			// 	sameSite: 'none',
+			// 	domain: this.configService.get('COOKIE_DOMAIN')
+			// });
 
 			return res.json({
 				StatusCode: 200,
@@ -276,21 +276,21 @@ export class AuthController {
 		}
 	}
 
-	private setCookie(res: Response, accessToken: string) {
-		res.cookie('accessToken', accessToken, {
-			httpOnly: true,
-			secure: true,
-			sameSite: 'none',
-			maxAge: 24 * 60 * 60 * 1000,
-			domain: this.configService.get('COOKIE_DOMAIN')
-		});
-	}
+	// private setCookie(res: Response, accessToken: string) {
+	// 	res.cookie('accessToken', accessToken, {
+	// 		httpOnly: true,
+	// 		secure: true,
+	// 		sameSite: 'none',
+	// 		maxAge: 60 * 1000,
+	// 		domain: this.configService.get('COOKIE_DOMAIN')
+	// 	});
+	// }
 
 	@Post('refresh-token')
 	@ApiBody({ type: RefreshTokenParamDto })
 	async refreshToken(@Body('refreshToken') refreshToken: string, @Res() res: Response) {
 		const details = await this.authService.refreshToken(refreshToken);
-		this.setCookie(res, details.accessToken);
+		//this.setCookie(res, details.accessToken);
 		return res.json({
 			StatusCode: 200,
 			Message: 'Access token refreshed successfully !',

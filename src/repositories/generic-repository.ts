@@ -21,15 +21,11 @@ export class GenericRepository<T> {
         return await this.getEntityManager().save(entities);
     }
 
-    save1(entities: T[]) {
-        // Add a save method to persist multiple entities
-        return this.getEntityManager().save(entities);
-    }
-
     async findOne(id: number|string): Promise<T | null> {
         const options: FindOptionsWhere<T> = { id } as unknown as FindOptionsWhere<T>;
         return await this.getEntityManager().findOne(this.repository.target, { where: options });
     }
+
     async update(id: string | number, data: QueryDeepPartialEntity<T>): Promise<UpdateResult> {
         return await this.getEntityManager().update(this.repository.target, id, data);
     }

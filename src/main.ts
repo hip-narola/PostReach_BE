@@ -31,13 +31,13 @@ async function bootstrap() {
       secret: configService.get('SESSION_SECRET') || '0716f5f0-4c0d-41d5-9564-a93f38b5a931',
       resave: false,
       saveUninitialized: false,
-      cookie: {
-        domain: configService.get('COOKIE_DOMAIN'),
-        secure: true,
-        httpOnly: true,
-        sameSite: 'none',
-        maxAge: 24 * 60 * 60 * 1000,
-      }
+      // cookie: {
+      //   domain: configService.get('COOKIE_DOMAIN'),
+      //   secure: true,
+      //   httpOnly: true,
+      //   sameSite: 'none',
+      //   maxAge: 24 * 60 * 60 * 1000,
+      // }
     })
   );
 
@@ -57,13 +57,13 @@ async function bootstrap() {
   });
 
   // Rate limiting for basic DOS protection
-  // app.use(
-  //   rateLimit({
-  //     windowMs: 15 * 60 * 1000, // 15 minutes
-  //     max: 200, // Limit each IP to 200 requests per windowMs
-  //     message: 'Too many requests from this IP, please try again later.',
-  //   }),
-  // );
+  app.use(
+    rateLimit({
+      windowMs: 15 * 60 * 1000, // 15 minutes
+      max: 200, // Limit each IP to 200 requests per windowMs
+      message: 'Too many requests from this IP, please try again later.',
+    }),
+  );
 
   // Swagger setup
   const swaggerConfig = new DocumentBuilder()
