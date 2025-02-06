@@ -110,6 +110,7 @@ export class ApprovalQueueService {
                 return false;
             }
         } catch (error) {
+            console.log('removeExpiredScheduledPosts error', error);
             await this.unitOfWork.rollbackTransaction();
             throw error;
         }

@@ -7,7 +7,7 @@ import { ApprovalQueueService } from 'src/services/approval-queue/approval-queue
 import { CheckUserSubscriptionService } from 'src/services/check-user-subscription/check-user-subscription.service';
 import { UserCreditRepository } from 'src/repositories/user-credit-repository';
 import { UserCredit } from 'src/entities/user_credit.entity';
-import { UnitOfWork } from 'src/unitofwork/unitofwork';
+import { UnitOfWork } from 'src/unitofwork/unitofwork';import { PostTaskRepository } from 'src/repositories/post-task-repository';
 
 @Injectable()
 export class JobSchedulerService {
@@ -21,7 +21,8 @@ export class JobSchedulerService {
         @Inject(forwardRef(() => ApprovalQueueService)) // Use forwardRef here
         private readonly approvalQueueService: ApprovalQueueService,
         private readonly checkUserSubscriptionService: CheckUserSubscriptionService,
-        private readonly unitOfWork: UnitOfWork
+        private readonly unitOfWork: UnitOfWork,
+        private readonly postTaskRepository: PostTaskRepository,
     ) { }
 
     async onModuleInit() {
@@ -128,26 +129,49 @@ export class JobSchedulerService {
         expiredSubscriptions: { userId: number; endDate: Date; subscription: string; cycle: number }[]
     ) {
         try {
-            // Fetch all jobs from the post queue
-            const jobs = await this.postQueue.getJobs(['delayed', 'waiting', 'active']);
-            const now = moment(); // Current date
-            // Filter jobs to find the ones to be removed
-            const jobsToRemove = await this.getJobsToRemove(jobs, expiredSubscriptions, now);
-            // Remove jobs and collect IDs
-            if (jobsToRemove.length > 0) {
-                const ids = await this.removeJobs(jobsToRemove);
-                // Update status for removed jobs
+
+            const ids: number[] = [];
+
+            for (let i = 0; i < expiredSubscriptions.length; i++) {
+                const element = expiredSubscriptions[i];
+                const posts = await this.postTaskRepository.fetchPostsofUser(element.userId);
+                console.log('removeExpiredScheduledPosts posts: ', posts)
+                for (let i = 0; i < posts.length; i++) {
+                    const data = posts[i];
+                    ids.push(data.id); // Collect valid job IDs                
+                }
+            }
+            if (ids.length > 0) {
                 const postTaskStatusData = {
                     id: ids,
                     isApproved: false,
                     rejectreasonId: 7, // Subscription cancelled or expired
                     rejectReason: REJECT_REASONS[7],
                 };
-
+                console.log('removeExpiredScheduledPosts postTaskStatusData:', postTaskStatusData)
                 await this.approvalQueueService.updateStatus(postTaskStatusData);
             }
 
+            // // Fetch all jobs from the post queue
+            // const jobs = await this.postQueue.getJobs(['delayed', 'waiting', 'active']);
+            // const now = moment(); // Current date
+            // // Filter jobs to find the ones to be removed
+            // const jobsToRemove = await this.getJobsToRemove(jobs, expiredSubscriptions, now);
+            // // Remove jobs and collect IDs
+            // if (jobsToRemove.length > 0) {
+            //     const ids = await this.removeJobs(jobsToRemove);
+            //     // Update status for removed jobs
+            //     const postTaskStatusData = {
+            //         id: ids,
+            //         isApproved: false,
+            //         rejectreasonId: 7, // Subscription cancelled or expired
+            //         rejectReason: REJECT_REASONS[7],
+            //     };
+
+            //     await this.approvalQueueService.updateStatus(postTaskStatusData);
+            // }
         } catch (error) {
+            console.log('removeExpiredScheduledPosts error in update status of rejected post:', error)
         }
     }
 
