@@ -40,17 +40,17 @@ export class JobSchedulerService {
                 'check-subscriptions',
                 {}, // Job data, if needed
                 {
-                    repeat: {
-                        every: 10 * 60 * 1000, // Run every 5 minute
-                    },
+                    // repeat: {
+                    //     every: 10 * 60 * 1000, // Run every 5 minute
+                    // },
                     // repeat: {
 
                     //     every: 24 * 60 * 60 * 1000, // Every 24 hours
                     //     startDate: new Date().setHours(0, 1, 0, 0), // Start at 12:01 AM
                     // }
-                    // repeat: {
-                    //     pattern: '0 0 * * *', // Every 24 hours
-                    // }
+                    repeat: {
+                        pattern: '0 0 * * *', // Every 24 hours
+                    }
                 },
             );
         } catch (error) {
@@ -296,8 +296,8 @@ export class JobSchedulerService {
             {}, // Empty payload for the job
             {
                 repeat: {
-                    pattern: '*/10 * * * *',
-                    // pattern: '0 0 * * *', // Cron pattern for daily at midnight
+                    // pattern: '*/10 * * * *',
+                    pattern: '0 0 * * *', // Cron pattern for daily at midnight
                     tz: 'UTC',
                 },
                 removeOnComplete: true,
