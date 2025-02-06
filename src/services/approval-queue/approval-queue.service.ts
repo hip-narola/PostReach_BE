@@ -22,7 +22,9 @@ export class ApprovalQueueService {
         private readonly schedulePostService: JobSchedulerService,
         private readonly emailService: EmailService,
         private readonly notificationService: NotificationService,
-        private readonly checkUserSubscriptionService: CheckUserSubscriptionService
+        private readonly checkUserSubscriptionService: CheckUserSubscriptionService,
+        private readonly approvalQueueRepository: ApprovalQueueRepository
+
         
     ) { }
 
@@ -53,7 +55,8 @@ export class ApprovalQueueService {
             for (const id of updateStatusParam.id) {
                 
 
-                const record = await approvalQueueRepository.findOne(id);
+                // const record = await approvalQueueRepository.findOne(id);
+                const record = await this.approvalQueueRepository.findPosttaskWithUser(id);
                 console.log(record, 'record')
                 
 

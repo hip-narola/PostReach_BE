@@ -7,10 +7,13 @@ import { PaginatedResponseDto } from 'src/dtos/response/pagination-response.dto'
 import { SocialMediaPlatformNames } from 'src/shared/constants/social-media.constants';
 import { POST_TASK_STATUS } from 'src/shared/constants/post-task-status-constants';
 import { ASSET_TYPE } from 'src/shared/constants/asset-type-constants';
+import { InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()
 export class ApprovalQueueRepository extends GenericRepository<PostTask> {
-    constructor(repository: Repository<PostTask>) {
+    constructor(
+        @InjectRepository(PostTask)
+        repository: Repository<PostTask>) {
         super(repository);
     }
 
@@ -154,5 +157,13 @@ export class ApprovalQueueRepository extends GenericRepository<PostTask> {
         } catch (error) {
             throw error;
         }
+    }
+
+    async findPosttaskWithUser(id: number): Promise<PostTask> {
+        return this.repository.findOne(
+            {
+                where: { id },
+                relations: ['user'],
+            });
     }
 }

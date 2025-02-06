@@ -30,6 +30,9 @@ import { Post } from 'src/entities/post.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { GeneratePostModule } from '../generate-post/generate-post.module';
 import { PaymentModule } from '../payment/payment.module';
+import { ApprovalQueueRepository } from 'src/repositories/approval-queue-repository';
+import { PostTaskRepository } from 'src/repositories/post-task-repository';
+import { PostTask } from 'src/entities/post-task.entity';
 
 async function getRedisConfig() {
     const configService = new ConfigService();
@@ -45,7 +48,7 @@ async function getRedisConfig() {
 
 @Module({
     imports: [
-        TypeOrmModule.forFeature([Post]),
+        TypeOrmModule.forFeature([Post, PostTask]),
         BullModule.forRootAsync({
             useFactory: async () => {
                 const redisConfig = await getRedisConfig();
@@ -89,7 +92,9 @@ async function getRedisConfig() {
         SubscriptionService,
         EmailService,
         CheckUserSubscriptionService,
-        PostRepository
+        PostRepository,
+        ApprovalQueueRepository,
+        PostTaskRepository
     ],
     exports: [
         BullModule,
@@ -99,7 +104,9 @@ async function getRedisConfig() {
         TwitterService,
         InstagramService,
         ApprovalQueueService,
-        SubscriptionService
+        SubscriptionService,
+        ApprovalQueueRepository,
+        PostTaskRepository
     ],
 })
 

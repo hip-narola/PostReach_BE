@@ -8,6 +8,8 @@ import { BullQueueModule } from '../bull/bull-queue.module';
 import { EmailService } from 'src/services/email/email.service';
 import { NotificationModule } from '../notification/notification.module';
 import { CheckUserSubscriptionService } from 'src/services/check-user-subscription/check-user-subscription.service';
+import { ApprovalQueueRepository } from 'src/repositories/approval-queue-repository';
+import { PostTaskRepository } from 'src/repositories/post-task-repository';
 
 @Module({
   imports: [TypeOrmModule.forFeature([PostTask]),
@@ -15,7 +17,7 @@ import { CheckUserSubscriptionService } from 'src/services/check-user-subscripti
     BullQueueModule,
     NotificationModule],
   controllers: [ApprovalQueueController],
-  providers: [ApprovalQueueService, CheckUserSubscriptionService, EmailService],
-  exports: [ApprovalQueueService, CheckUserSubscriptionService],
+  providers: [ApprovalQueueService, CheckUserSubscriptionService, EmailService, ApprovalQueueRepository, PostTaskRepository],
+  exports: [ApprovalQueueService, CheckUserSubscriptionService, ApprovalQueueRepository, PostTaskRepository],
 })
 export class ApprovalQueueModule { }
