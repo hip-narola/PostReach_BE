@@ -157,13 +157,13 @@ export class GeneratePostService {
                 // console.log(SocialMediaPlatformNames[SocialMediaPlatform.FACEBOOK], 'SocialMediaPlatformNames[SocialMediaPlatform.FACEBOOK]');
 
                 if (element.social_media.platform == SocialMediaPlatformNames[SocialMediaPlatform.FACEBOOK])
-                    socialPostNumber.facebook_posts_number = PostRequestCount;
+                    socialPostNumber.facebook_posts_number = Math.round(PostRequestCount);
                 else if (element.social_media.platform == SocialMediaPlatformNames[SocialMediaPlatform.LINKEDIN])
-                    socialPostNumber.linkedin_posts_number = PostRequestCount;
+                    socialPostNumber.linkedin_posts_number = Math.round(PostRequestCount);
                 else if (element.social_media.platform == SocialMediaPlatformNames[SocialMediaPlatform.TWITTER])
-                    socialPostNumber.twitter_posts_number = PostRequestCount;
+                    socialPostNumber.twitter_posts_number = Math.round(PostRequestCount);
                 else if (element.social_media.platform == SocialMediaPlatformNames[SocialMediaPlatform.INSTAGRAM])
-                    socialPostNumber.instagram_posts_number = PostRequestCount;
+                    socialPostNumber.instagram_posts_number = Math.round(PostRequestCount);
 
                 // console.log("socialPostNumber::: ", socialPostNumber);
                 // 
