@@ -41,7 +41,7 @@ export class JobSchedulerService {
                 {}, // Job data, if needed
                 {
                     repeat: {
-                        every: 5 * 60 * 1000, // Run every 5 minute
+                        every: 10 * 60 * 1000, // Run every 5 minute
                     },
                     // repeat: {
 
@@ -296,7 +296,8 @@ export class JobSchedulerService {
             {}, // Empty payload for the job
             {
                 repeat: {
-                    pattern: '0 0 * * *', // Cron pattern for daily at midnight
+                    pattern: '*/10 * * * *',
+                    // pattern: '0 0 * * *', // Cron pattern for daily at midnight
                     tz: 'UTC',
                 },
                 removeOnComplete: true,
