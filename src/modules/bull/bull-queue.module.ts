@@ -30,6 +30,7 @@ import { Post } from 'src/entities/post.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { GeneratePostModule } from '../generate-post/generate-post.module';
 import { PaymentModule } from '../payment/payment.module';
+import { Logger } from 'src/services/logger/logger.service';
 import { ApprovalQueueRepository } from 'src/repositories/approval-queue-repository';
 import { PostTaskRepository } from 'src/repositories/post-task-repository';
 import { PostTask } from 'src/entities/post-task.entity';
@@ -93,6 +94,7 @@ async function getRedisConfig() {
         EmailService,
         CheckUserSubscriptionService,
         PostRepository,
+        Logger,
         ApprovalQueueRepository,
         PostTaskRepository
     ],

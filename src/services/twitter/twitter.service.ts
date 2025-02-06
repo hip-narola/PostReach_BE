@@ -19,6 +19,7 @@ import { AwsSecretsService } from '../aws-secrets/aws-secrets.service';
 import { AWS_SECRET } from 'src/shared/constants/aws-secret-name-constants';
 import { REDIS_STORAGE } from 'src/shared/constants/redis_storage_contstants';
 import { CacheService } from 'src/modules/cache/cache-service';
+import { Logger } from '../logger/logger.service';
 
 @Injectable()
 export class TwitterService {
@@ -36,6 +37,9 @@ export class TwitterService {
 		private readonly unitOfWork: UnitOfWork,
 		private readonly secretService: AwsSecretsService,
 		private cacheSerive: CacheService,
+
+		private readonly logger: Logger
+
 	) {
 
 		this.initialize();
@@ -121,6 +125,11 @@ export class TwitterService {
 				return response;
 			}
 		} catch (error) {
+			this.logger.error(
+				`Error` +
+				error.stack || error.message,
+				'exchangeCodeForToken'
+			);
 
 			this.cacheSerive.deleteCache(REDIS_STORAGE.TWITTER_CODEVERIFIER.replace('{0}', state));
 			throw new Error(`Failed to exchange code for token: ${JSON.stringify(error.response?.data || error.message)}`);
@@ -163,6 +172,12 @@ export class TwitterService {
 				throw new Error('Failed to fetch Twitter user details.');
 			}
 		} catch (error) {
+			this.logger.error(
+				`Error` +
+				error.stack || error.message,
+				'fetchTwitterUser'
+			);
+
 			throw new Error(`Error fetching Twitter user: ${error.response?.data || error.message}`);
 		}
 	}
@@ -193,6 +208,11 @@ export class TwitterService {
 			return 'Twitter profile disconnected successfully.';
 		}
 		catch (error) {
+			this.logger.error(
+				`Error` +
+				error.stack || error.message,
+				'disconnectTwitterProfile'
+			);
 
 			await this.unitOfWork.rollbackTransaction();
 			throw error;
@@ -219,6 +239,12 @@ export class TwitterService {
 			} else {
 			}
 		} catch (error) {
+			this.logger.error(
+				`Error` +
+				error.stack || error.message,
+				'disconnectFromTwitter'
+			);
+
 			throw new Error(`Failed to revoke Twitter token: ${JSON.stringify(error.response?.data || error.message)}`);
 		}
 	}
@@ -323,6 +349,11 @@ export class TwitterService {
 				throw new Error(`Media upload failed: ${response.statusText}`);
 			}
 		} catch (error) {
+			this.logger.error(
+				`Error` +
+				error.stack || error.message,
+				'uploadMedia2'
+			);
 
 			throw new Error(`Failed to upload media: ${error.response?.data || error.message}`);
 		}
@@ -393,7 +424,11 @@ export class TwitterService {
 
 			return response.data;
 		} catch (error: any) {
-
+			this.logger.error(
+				`Error` +
+				error.stack || error.message,
+				'postToTwitter'
+			);
 			// Ensure rollback only happens if a transaction was started
 			await this.unitOfWork.rollbackTransaction();
 			const errorMessage = error.response?.data || error.message || 'An unexpected error occurred.';
@@ -430,6 +465,11 @@ export class TwitterService {
 			await this.unitOfWork.completeTransaction();
 		}
 		catch (error) {
+			this.logger.error(
+				`Error` +
+				error.stack || error.message,
+				'fetchAndUpdateTwitterPostData'
+			);
 			await this.unitOfWork.rollbackTransaction();
 		}
 	}
@@ -453,6 +493,11 @@ export class TwitterService {
 			};
 
 		} catch (error) {
+			this.logger.error(
+				`Error` +
+				error.stack || error.message,
+				'fetchTweetMetrics'
+			);
 			throw new Error(`Failed to fetch tweet metrics: ${error.response?.data || error.message}`);
 		}
 	}
@@ -464,7 +509,7 @@ export class TwitterService {
 		const params = new URLSearchParams();
 		params.append('grant_type', 'refresh_token');
 		params.append('refresh_token', twitterAccount.refresh_token);
-		params.append('client_id', clientId); 
+		params.append('client_id', clientId);
 
 		try {
 			// Start the transaction
@@ -500,6 +545,11 @@ export class TwitterService {
 			await this.unitOfWork.completeTransaction();
 		} catch (error) {
 			console.log("Twitter refresh token ERROR : ", error);
+			this.logger.error(
+				`Error` +
+				error.stack || error.message,
+				'refreshToken'
+			);
 			const errorDetails = error.response?.data || error.message;
 			// Rollback the transaction in case of an error
 			if (this.unitOfWork['queryRunner']) {  // Access queryRunner privately for rollback

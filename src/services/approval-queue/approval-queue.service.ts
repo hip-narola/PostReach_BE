@@ -14,6 +14,7 @@ import { POST_TASK_STATUS } from 'src/shared/constants/post-task-status-constant
 import { NotificationService } from '../notification/notification.service';
 import { NotificationMessage, NotificationType } from 'src/shared/constants/notification-constants';
 import { CheckUserSubscriptionService } from '../check-user-subscription/check-user-subscription.service';
+import { Logger } from '../logger/logger.service';
 @Injectable()
 export class ApprovalQueueService {
     constructor(
@@ -22,6 +23,7 @@ export class ApprovalQueueService {
         private readonly schedulePostService: JobSchedulerService,
         private readonly emailService: EmailService,
         private readonly notificationService: NotificationService,
+        private readonly logger: Logger,
         private readonly checkUserSubscriptionService: CheckUserSubscriptionService,
         private readonly approvalQueueRepository: ApprovalQueueRepository
 
@@ -126,6 +128,11 @@ export class ApprovalQueueService {
         } catch (error) {
             console.log('removeExpiredScheduledPosts error', error);
             await this.unitOfWork.rollbackTransaction();
+            this.logger.error(
+                `Error` +
+                error.stack || error.message,
+                'updateStatus'
+            );
             throw error;
         }
     }
@@ -172,6 +179,11 @@ export class ApprovalQueueService {
         } catch (error) {
             console.log("updateStatusAfterPostExecution error:: ", error);
             await this.unitOfWork.rollbackTransaction();
+            this.logger.error(
+                `Error` +
+                error.stack || error.message,
+                'updateStatusAfterPostExecution'
+            );
             throw error;
         }
     }

@@ -12,6 +12,7 @@ import { AwsSecretsService } from '../aws-secrets/aws-secrets.service';
 import { AWS_SECRET } from 'src/shared/constants/aws-secret-name-constants';
 import { TOKEN_TYPE } from 'src/shared/constants/token-type-constants';
 import { InstagramPageDetailsDTO } from 'src/entities/instagram-page-details.entity';
+import { Logger } from '../logger/logger.service';
 @Injectable()
 export class InstagramService {
   private clientId: string;
@@ -20,7 +21,8 @@ export class InstagramService {
   private readonly apiVersion: string = 'v18.0';
   private readonly facebookApiUrl = 'https://graph.facebook.com/v21.0';
 
-  constructor(private readonly socialMediaAccountService: SocialMediaAccountService, private readonly unitOfWork: UnitOfWork, private readonly secretService: AwsSecretsService) {
+  constructor(private readonly socialMediaAccountService: SocialMediaAccountService, private readonly unitOfWork: UnitOfWork, private readonly secretService: AwsSecretsService, private readonly logger: Logger
+  ) {
     this.initialize();
   }
 
@@ -48,6 +50,11 @@ export class InstagramService {
 
       return response.data;
     } catch (error) {
+      this.logger.error(
+        `Error` +
+        error.stack || error.message,
+        'GetAccessToken'
+      );
       throw new Error('Failed to get access token');
     }
   }
@@ -57,6 +64,11 @@ export class InstagramService {
       const response = await axios.get(`https://graph.instagram.com/me?fields=id,username&access_token=${accessToken}`);
       return response.data;
     } catch (error) {
+      this.logger.error(
+        `Error` +
+        error.stack || error.message,
+        'getUserProfile'
+      );
       throw new Error('Failed to get user profile');
     }
   }
@@ -80,6 +92,7 @@ export class InstagramService {
 
   async postToInstagram(PostId: number, igUserId: string, accessToken: string, imageUrl: string, content = '', hashtags = []) {
     try {
+
       // Step 1: Validate required fields
       if (!imageUrl) {
         throw new Error('Image URL is required');
@@ -122,6 +135,12 @@ export class InstagramService {
       await this.unitOfWork.completeTransaction();
 
     } catch (error) {
+      this.logger.error(
+        `Error` +
+        error.stack || error.message,
+        'PostToInstagram'
+      );
+
       throw error;
     }
   }
@@ -148,6 +167,11 @@ export class InstagramService {
           record.no_of_views = postDetails.impressions;
           await postRepository.update(post.id, record);
         } catch (error) {
+          this.logger.error(
+            `Error` +
+            error.stack || error.message,
+            'fetchAndUpdateInstagramPostData'
+          );
           await this.unitOfWork.rollbackTransaction();
           throw error;
         }
@@ -196,6 +220,11 @@ export class InstagramService {
         impressions: insights.impressions || 0,
       };
     } catch (error) {
+      this.logger.error(
+        `Error` +
+        error.stack || error.message,
+        'PostMetrics'
+      );
       throw new Error(error.response?.data?.error?.message || 'Failed to fetch metrics');
     }
   }
@@ -239,6 +268,11 @@ export class InstagramService {
       }
       await this.unitOfWork.completeTransaction();
     } catch (error: any) {
+      this.logger.error(
+        `Error` +
+        error.stack || error.message,
+        'connectedInstagramAccount'
+      );
       await this.unitOfWork.rollbackTransaction();
       throw new Error(`Failed to save connected page: ${error.message}`);
     }
@@ -252,6 +286,11 @@ export class InstagramService {
       );
       return instagramAccountDetails.data;
     } catch (error) {
+      this.logger.error(
+        `Error` +
+        error.stack || error.message,
+        'getInstagramPageDetails'
+      );
       throw error;
     }
   }
@@ -273,6 +312,11 @@ export class InstagramService {
       return 'instagram profile disconnected successfully.';
     }
     catch (error) {
+      this.logger.error(
+        `Error` +
+        error.stack || error.message,
+        'disconnectInstagramProfile'
+      );
       await this.unitOfWork.rollbackTransaction();
       throw error;
     }
@@ -287,6 +331,11 @@ export class InstagramService {
       }
     }
     catch (error) {
+      this.logger.error(
+        `Error` +
+        error.stack || error.message,
+        'revokePermissions'
+      );
       throw error;
     }
   }

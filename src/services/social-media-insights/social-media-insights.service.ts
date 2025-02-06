@@ -9,12 +9,13 @@ import { UnitOfWork } from 'src/unitofwork/unitofwork';
 import { DashboardInsightsService } from '../dashboard-insights/dashboard-insights.service';
 import { POST_TASK_STATUS } from 'src/shared/constants/post-task-status-constants';
 import { SocialMediaPlatformNames } from 'src/shared/constants/social-media.constants';
+import { Logger } from '../logger/logger.service';
 
 
 @Injectable()
 export class SocialMediaInsightsService {
 
-    constructor(private readonly unitOfWork: UnitOfWork, private readonly dashboardInsightsService: DashboardInsightsService) { }
+    constructor(private readonly unitOfWork: UnitOfWork, private readonly dashboardInsightsService: DashboardInsightsService, private readonly logger: Logger) { }
 
     async create(createStudentDto: SocialMediaInsightParamDTO): Promise<any> {
 
@@ -29,6 +30,12 @@ export class SocialMediaInsightsService {
             await socialMediaInsightsRepo.create(socialMediaInsightsData);
             await this.unitOfWork.completeTransaction();
         } catch (error) {
+            this.logger.error(
+                `Error` +
+                error.stack || error.message,
+                'SocialMediaInsightsService'
+            );
+
             await this.unitOfWork.rollbackTransaction();
             throw error;
         }
@@ -49,6 +56,11 @@ export class SocialMediaInsightsService {
             await socialMediaInsightsRepo.update(id, record);
             await this.unitOfWork.completeTransaction();
         } catch (error) {
+            this.logger.error(
+                `Error` +
+                error.stack || error.message,
+                'SocialMediaInsightsService'
+            );
             await this.unitOfWork.rollbackTransaction();
             throw error;
         }
@@ -71,9 +83,9 @@ export class SocialMediaInsightsService {
 
         const socialInsightsRepository = this.unitOfWork.getRepository(SocialMediaInsightsRepository, SocialMediaInsight, false);
         const socialMediaInsightsData = await socialInsightsRepository.getSocialinsightsList(GetSocilInsightsParamDto);
-
-        console.log("platform :", GetSocilInsightsParamDto.platform , platformName);
         
+        console.log("platform :", GetSocilInsightsParamDto.platform , platformName);
+
         const totalPostList = await this.dashboardInsightsService.getTotalPostList(GetSocilInsightsParamDto.userId, platformName, []);
         const approvedPostList = await this.dashboardInsightsService.getTotalPostList(GetSocilInsightsParamDto.userId, platformName, [POST_TASK_STATUS.EXECUTE_SUCCESS, POST_TASK_STATUS.SCHEDULED]);
         const rejectedPostList = await this.dashboardInsightsService.getTotalPostList(GetSocilInsightsParamDto.userId, platformName, [POST_TASK_STATUS.REJECTED]);

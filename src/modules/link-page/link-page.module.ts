@@ -21,10 +21,11 @@ import { InstagramBusinessStrategyProvider } from 'src/shared/common/configurati
 import { GeneratePostModule } from '../generate-post/generate-post.module';
 import { PaymentModule } from '../payment/payment.module';
 import { CacheModule } from '../cache/cache-module';
+import { Logger } from 'src/services/logger/logger.service';
 @Module({
     imports: [
         ConfigModule, PassportModule, TwitterModule, LinkPageModule, SocialMediaAccountModule, UnitOfWorkModule, NotificationModule, GeneratePostModule, PaymentModule, CacheModule],
-    providers: [AwsSecretsService, TwitterService, FacebookGroupStrategyProvider, FacebookPageStrategyProvider, InstagramService, FacebookService, LinkedinService, InstagramBusinessStrategyProvider, SocialMediaAccountService, ImageUploadService, SubscriptionService, EmailService],
+    providers: [AwsSecretsService, TwitterService, FacebookGroupStrategyProvider, FacebookPageStrategyProvider, InstagramService, FacebookService, LinkedinService, InstagramBusinessStrategyProvider, SocialMediaAccountService, ImageUploadService, SubscriptionService, EmailService,Logger],
     controllers: [LinkPageController],
 })
 export class LinkPageModule { }

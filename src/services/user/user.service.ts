@@ -10,6 +10,7 @@ import { UserAnswerRepository } from 'src/repositories/user-answer-repository';
 import { UserAnswer } from 'src/entities/user-answer.entity';
 import { QuestionnaireRepository } from 'src/repositories/questionnaire-repository';
 import { Questionnaire } from 'src/entities/questionnaire.entity';
+import { Logger } from '../logger/logger.service';
 
 @Injectable()
 export class UserService {
@@ -17,17 +18,28 @@ export class UserService {
 		@InjectRepository(User)
 		private readonly userRepository: UserRepository,
 		private readonly unitOfWork: UnitOfWork,
-		private readonly imageUploadService: ImageUploadService
+		private readonly imageUploadService: ImageUploadService,
+		private readonly logger: Logger
 	) { }
 
 	// Method to find user by email
 	async findUserByEmail(email: string): Promise<User | undefined> {
-		const userRepository = this.unitOfWork.getRepository(
-			UserRepository,
-			User,
-			false,
-		);
-		return userRepository.findByField('email', email);
+		try {
+			const userRepository = this.unitOfWork.getRepository(
+				UserRepository,
+				User,
+				false,
+			);
+			return userRepository.findByField('email', email);
+		}
+		catch (error) {
+			this.logger.error(
+				`Error` +
+				error.stack || error.message,
+				'findUserByEmail'
+			);
+
+		}
 	}
 
 	// Method to update user password
@@ -37,6 +49,11 @@ export class UserService {
 			await this.userRepository.create(user);
 			await this.unitOfWork.completeTransaction();
 		} catch (error) {
+			this.logger.error(
+				`Error` +
+				error.stack || error.message,
+				'updateUserPassword'
+			);
 			await this.unitOfWork.rollbackTransaction();
 			throw error;
 		}
@@ -86,6 +103,11 @@ export class UserService {
 			await this.unitOfWork.completeTransaction();
 			return updatedUser;
 		} catch (error) {
+			this.logger.error(
+				`Error` +
+				error.stack || error.message,
+				'updateUser'
+			);
 			await this.unitOfWork.rollbackTransaction();
 			throw error;
 		}
@@ -173,6 +195,11 @@ export class UserService {
 				onboardingCompleted: onboardingCompleted,
 			};
 		} catch (error) {
+			this.logger.error(
+				`Error` +
+				error.stack || error.message,
+				'onboardingCompletedSteps'
+			);
 			// Return -1 and false as a fallback value when an error occurs
 			return { maxStep: -1, onboardingCompleted: false };
 		}
@@ -196,6 +223,11 @@ export class UserService {
 				socialMediaAccounts,
 			};
 		} catch (error) {
+			this.logger.error(
+				`Error` +
+				error.stack || error.message,
+				'findUserProfileStatus'
+			);
 			// Return default response or rethrow the error
 			throw error; // Propagate any errors up or handle as needed
 		}
@@ -218,6 +250,11 @@ export class UserService {
 				},
 			};
 		} catch (error) {
+			this.logger.error(
+				`Error` +
+				error.stack || error.message,
+				'profileStatus'
+			);
 			throw error;
 		}
 	}
@@ -240,6 +277,11 @@ export class UserService {
 			return data;
 		}
 		catch (error) {
+			this.logger.error(
+				`Error` +
+				error.stack || error.message,
+				'findBySocialMediaId'
+			);
 			await this.unitOfWork.rollbackTransaction();
 
 			throw error;
@@ -263,6 +305,11 @@ export class UserService {
 			return data;
 		}
 		catch (error) {
+			this.logger.error(
+				`Error` +
+				error.stack || error.message,
+				'createUser'
+			);
 			if (isFacebook == false) {
 				await this.unitOfWork.rollbackTransaction();
 			}

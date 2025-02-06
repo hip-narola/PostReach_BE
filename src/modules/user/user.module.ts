@@ -11,6 +11,7 @@ import { UserBusinessService } from 'src/services/user-business/user-business.se
 import { ImageUploadModule } from 'src/src/modules/image-upload/image-upload.module';
 import { QuestionnaireModule } from '../questionnaire/questionnaire.module'; // Import QuestionnaireModule
 import { UserRepository } from 'src/repositories/userRepository';
+import { Logger } from 'src/services/logger/logger.service';
 
 @Module({
 	imports: [
@@ -21,7 +22,7 @@ import { UserRepository } from 'src/repositories/userRepository';
 		QuestionnaireModule
 	],
 	controllers: [UserController, UserBusinessController],
-	providers: [UserService, UserBusinessService, UserRepository],
+	providers: [UserService, UserBusinessService, UserRepository,Logger],
 	exports: [UserService, UserRepository],
 })
 export class UserModule { }

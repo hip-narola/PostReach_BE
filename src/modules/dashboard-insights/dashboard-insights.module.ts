@@ -13,11 +13,12 @@ import { LinkedinService } from 'src/services/linkedin/linkedin.service';
 import { NotificationModule } from '../notification/notification.module';
 import { CheckUserSubscriptionService } from 'src/services/check-user-subscription/check-user-subscription.service';
 import { AwsSecretsServiceModule } from '../aws-secrets-service/aws-secrets-service.module';
+import { Logger } from 'src/services/logger/logger.service';
 @Module({
     imports: [TypeOrmModule.forFeature([PostTask]),
-        UnitOfWorkModule, HttpModule, SocialMediaAccountModule, NotificationModule,AwsSecretsServiceModule],
+        UnitOfWorkModule, HttpModule, SocialMediaAccountModule, NotificationModule, AwsSecretsServiceModule],
     controllers: [DashboardInsightsController],
-    providers: [DashboardInsightsService, SocialMediaInsightsService, FacebookService, InstagramService, LinkedinService, CheckUserSubscriptionService],
+    providers: [DashboardInsightsService, SocialMediaInsightsService, FacebookService, InstagramService, LinkedinService, CheckUserSubscriptionService, Logger],
     exports: [DashboardInsightsService],
 })
 export class DashboardInsightsModule { }

@@ -1,4 +1,4 @@
-import { Processor, WorkerHost,  } from '@nestjs/bullmq';
+import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
 import { ApprovalQueueService } from '../../services/approval-queue/approval-queue.service';
 import { FacebookService } from '../../services/facebook/facebook.service';
@@ -10,10 +10,10 @@ import { EmailService } from '../../services/email/email.service';
 import { UserService } from '../../services/user/user.service';
 import { EMAIL_SEND, EMAIL_SEND_FILE } from 'src/shared/constants/email-notification-constants';
 import { POST_TASK_STATUS } from 'src/shared/constants/post-task-status-constants';
+import { Logger } from 'src/services/logger/logger.service';
 
 @Processor('post-queue')
 export class SchedulePostProcessor extends WorkerHost {
-	
 	constructor(private readonly approvalQueueService: ApprovalQueueService,
 		private readonly facebookService: FacebookService,
 		private readonly linkedinService: LinkedinService,
@@ -21,7 +21,7 @@ export class SchedulePostProcessor extends WorkerHost {
 		private readonly twitterService: TwitterService,
 		private readonly emailService: EmailService,
 		private readonly userService: UserService,
-
+		private readonly logger: Logger
 	) {
 		super();
 	}
@@ -62,6 +62,11 @@ export class SchedulePostProcessor extends WorkerHost {
 		}
 		catch (error) {
 			console.log("post-queue error: ", error, job.attemptsMade);
+			this.logger.error(
+				`Error processing scheduled post for PostId: ${PostId}` +
+				error.stack || error.message,
+				'SchedulePostProcessor'
+			);
 			if (job.attemptsMade >= 4) {
 				await this.approvalQueueService.updateStatusAfterPostExecution(Id, POST_TASK_STATUS.FAIL, userId);
 				const user = await this.userService.findOne(userId);

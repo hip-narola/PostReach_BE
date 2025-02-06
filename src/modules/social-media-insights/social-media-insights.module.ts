@@ -5,11 +5,12 @@ import { SocialMediaInsightsService } from 'src/services/social-media-insights/s
 import { SocialMediaInsightsRepository } from 'src/repositories/social-media-insights-repository';
 import { SocialMediaInsight } from 'src/entities/social-media-insights.entity';
 import { DashboardInsightsModule } from '../dashboard-insights/dashboard-insights.module';
+import { Logger } from 'src/services/logger/logger.service';
 
 @Module({
     imports: [TypeOrmModule.forFeature([SocialMediaInsight]),
         UnitOfWorkModule,DashboardInsightsModule],
-    providers: [SocialMediaInsightsService, SocialMediaInsightsRepository],
+    providers: [SocialMediaInsightsService, SocialMediaInsightsRepository,Logger],
     controllers: [],
     exports: [SocialMediaInsightsService, SocialMediaInsightsRepository],
 })

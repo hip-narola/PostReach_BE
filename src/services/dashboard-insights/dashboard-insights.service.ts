@@ -16,13 +16,15 @@ import { SocialMediaPlatform, SocialMediaPlatformNames } from 'src/shared/consta
 import { Throttle } from '@nestjs/throttler';
 import { SocialTokenDataDTO } from 'src/dtos/params/social-token-data-dto';
 import { plainToInstance } from 'class-transformer';
+import { Logger } from '../logger/logger.service';
 
 @Injectable()
 export class DashboardInsightsService {
 
     constructor(
         private readonly unitOfWork: UnitOfWork,
-        private readonly httpService: HttpService
+        private readonly httpService: HttpService,
+        private readonly logger: Logger
     ) { }
 
     // services for facebook count
@@ -31,7 +33,7 @@ export class DashboardInsightsService {
         const data = await postHistoryRepository.getTotalPostList(userID, platform, statuses);
         return data;
     }
-    
+
 
     // facebook insights
     async getFacebookInsights(socialTokenDataDTO: SocialMediaAccount): Promise<SocialMediaInsightParamDTO> {
@@ -53,6 +55,12 @@ export class DashboardInsightsService {
             return result;
         }
         catch (error) {
+            this.logger.error(
+                `Error` +
+                error.stack || error.message,
+                'getFacebookInsights'
+            );
+
             throw error;
         }
     }
@@ -81,6 +89,11 @@ export class DashboardInsightsService {
             }, { impressions: 0, engagements: 0, followers: 0 });
             return insights;
         } catch (error) {
+            this.logger.error(
+                `Error` +
+                error.stack || error.message,
+                'fetchPageInsights'
+            );
             throw error;
         }
     }
@@ -102,6 +115,11 @@ export class DashboardInsightsService {
             return result;
         }
         catch (error) {
+            this.logger.error(
+                `Error` +
+                error.stack || error.message,
+                'getinstagramInsights'
+            );
             throw error;
         }
     }
@@ -168,6 +186,11 @@ export class DashboardInsightsService {
 
             return metrics;
         } catch (error) {
+            this.logger.error(
+                `Error` +
+                error.stack || error.message,
+                'fetchInstagramInsights'
+            );
             throw new Error(`Error fetching Instagram insights: ${error.message}`);
         }
     }
@@ -196,6 +219,11 @@ export class DashboardInsightsService {
             }
         }
         catch (error) {
+            this.logger.error(
+                `Error` +
+                error.stack || error.message,
+                'gelinkedInInsights'
+            );
             throw new Error(`Error fetching LinkedIn insight: ${error}`);
         }
     }
@@ -223,6 +251,11 @@ export class DashboardInsightsService {
             return statsData;
 
         } catch (error: any) {
+            this.logger.error(
+                `Error` +
+                error.stack || error.message,
+                'fetchLinkedInPageInsights'
+            );
             // Provide a meaningful error message
             throw new Error(
                 `Failed to fetch LinkedIn insights: ${error.response?.data?.message || error.message}`
@@ -268,6 +301,11 @@ export class DashboardInsightsService {
 
             return totalFollowerCount;
         } catch (error) {
+            this.logger.error(
+                `Error` +
+                error.stack || error.message,
+                'fetchLinkedinOrganizationFollowers'
+            );
             throw new Error(`Failed to fetch organization followers: ${error.response?.data || error.message}`);
         }
     }
@@ -379,6 +417,11 @@ export class DashboardInsightsService {
             return resultItem;
 
         } catch (error) {
+            this.logger.error(
+                `Error` +
+                error.stack || error.message,
+                'fetchUserInsights'
+            );
             throw new Error('Failed to fetch LinkedIn insights for user: ' + error.message);
         }
     }
@@ -416,6 +459,11 @@ export class DashboardInsightsService {
                 }
             }
         } catch (error) {
+            this.logger.error(
+                `Error` +
+                error.stack || error.message,
+                'fetchTwitterfollowersMetrics'
+            );
             throw new Error(`Error fetching Twitter data: ${error.response?.data || error.message}`);
         }
     }
@@ -446,6 +494,11 @@ export class DashboardInsightsService {
             // };
 
         } catch (error) {
+            this.logger.error(
+                `Error` +
+                error.stack || error.message,
+                'fetchTweetMetrics'
+            );
             throw new Error(`Failed to fetch tweet metrics: ${error.response?.data || error.message}`);
         }
     }
@@ -483,6 +536,11 @@ export class DashboardInsightsService {
 
             // return { metrics, metrics1 };
         } catch (error) {
+            this.logger.error(
+                `Error` +
+                error.stack || error.message,
+                'fetchTwitterInsights'
+            );
             throw new Error(`Error fetching Twitter user statssadas sadasd: ${error.message}`);
         }
     }
@@ -501,6 +559,11 @@ export class DashboardInsightsService {
             return response.data.data;
 
         } catch (error) {
+            this.logger.error(
+                `Error` +
+                error.stack || error.message,
+                'getUserTweets'
+            );
             throw error;
         }
     }

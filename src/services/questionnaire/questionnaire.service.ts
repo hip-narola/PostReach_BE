@@ -164,9 +164,7 @@ export class QuestionnaireService {
         return formattedQuestions;
     }
     async storeData(id: number, userId: number, answers: any[]): Promise<any> {
-        console.log(answers, 'answers')
-        console.time('storeData execution time');
-
+     
         // Start transaction
         await this.unitOfWork.startTransaction();
 
@@ -203,9 +201,6 @@ export class QuestionnaireService {
                     textAnswers.push(answer); // Collect text-based answers
                 }
             }
-            console.timeEnd('storeData answer execution time');
-            console.log(optionAnswers, textAnswers, 'textAnswers');
-
             // Delete outdated option-based answers in a single batch
             if (optionAnswers.length > 0) {
                 console.time('deleteOptionData');
@@ -233,7 +228,7 @@ export class QuestionnaireService {
                         createUserBusiness[fieldName] = answer.answer_text; // Update field in createUserBusiness
                     }
                 }
-                console.log(createUserBusiness);
+
                 // Handle option-based answers
                 if (answer.question_option_id) {
                     for (const optionId of answer.question_option_id) {
@@ -286,7 +281,6 @@ export class QuestionnaireService {
             );
             if(createUserBusiness){
                 createUserBusiness.user_id = userId;
-                console.log(createUserBusiness, 'createUserBusinessdd')
                 await this.userBusinessService.createUserBusiness(createUserBusiness)
             }
           
@@ -317,27 +311,20 @@ export class QuestionnaireService {
 
         const questionnaireRepository = this.unitOfWork.getRepository(QuestionnaireRepository, Questionnaire, false);
         console.time('findAllWithRelation execution time');
-        console.log('Fetching all questionnaires with relations...');
-
-
         // Retrieve all questionnaires with their relations
         // const Questionnaires = await questionnaireRepository.findAllWithRelation({
         //     relations: ['questions', 'questions.options', 'questions.questionValidator', 'questions.answer'],
         // });
         const Questionnaires = await questionnaireRepository.getQuestionnaires(userId);
         console.timeEnd('findAllWithRelation execution time');
-        console.log(`Fetched ${Questionnaires.length} questionnaires.`);
-
+      
         const result = [];
         console.time('questionnaire formatting execution time');
 
         for (const questionnaire of Questionnaires) {
-            console.log(`Processing questionnaire: ${questionnaire.name} (ID: ${questionnaire.id})`);
 
             // Filter answers by userId for each question
             questionnaire.questions.forEach(question => {
-                console.log(`Filtering answers for question: ${question.id}`);
-
                 // Filter answers for the specific userId
                 question.answer = question.answer.filter((answer) => answer.user_id == userId);
             });
@@ -351,8 +338,7 @@ export class QuestionnaireService {
                 acc[stepId].push(question);
                 return acc;
             }, {});
-            console.log(`Grouped questions into ${Object.keys(steps).length} steps.`);
-
+           
             // Calculate the total steps and completed steps
             const totalSteps = Object.keys(steps).length;
 
@@ -381,11 +367,9 @@ export class QuestionnaireService {
                 totalStep: totalSteps,
                 id: questionnaire.id
             });
-            console.log(`Processed questionnaire: ${questionnaire.name} - Completion: ${Math.round(percentage)}%`);
 
         }
         console.timeEnd('questionnaire formatting execution time');
-        console.log('Finished formatting all questionnaires.');
         return result;
     }
 

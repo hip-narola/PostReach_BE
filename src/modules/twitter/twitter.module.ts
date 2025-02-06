@@ -12,6 +12,7 @@ import { QuestionnaireModule } from '../questionnaire/questionnaire.module'; // 
 import { NotificationModule } from '../notification/notification.module';
 import { AwsSecretsServiceModule } from '../aws-secrets-service/aws-secrets-service.module';
 import { CacheModule } from '../cache/cache-module';
+import { Logger } from 'src/services/logger/logger.service';
 
 @Module({
   imports: [
@@ -23,7 +24,7 @@ import { CacheModule } from '../cache/cache-module';
     AwsSecretsServiceModule,
     CacheModule
   ],
-  providers: [TwitterService, UserService, ImageUploadService
+  providers: [TwitterService, UserService, ImageUploadService, Logger
   ],
   exports: [UserService],
 })

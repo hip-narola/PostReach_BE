@@ -15,12 +15,13 @@ import { PostRepository } from 'src/repositories/post-repository';
 import { PostJobLogRepository } from 'src/repositories/postJobLog-repository';
 import { generateId, IdType } from 'src/shared/utils/generate-id.util';
 import { UnitOfWork } from 'src/unitofwork/unitofwork';
+import { Logger } from '../logger/logger.service';
 
 @Injectable()
 export class PostHistoryService {
 
   constructor(
-    private readonly unitOfWork: UnitOfWork
+    private readonly unitOfWork: UnitOfWork, private readonly logger: Logger
   ) { }
 
   async getPostHistoryList(paginatedParams: PaginationParamDto): Promise<PaginatedResponseDto> {
@@ -47,7 +48,7 @@ export class PostHistoryService {
         if (postRecord) {
           const postTaskRecord = await postTaskRepository.getPostTaskWithUserDetails(postRecord.postTask.id);
           const postJobLogRecord = await postJobLogRepository.findPostJobLogByPostTaskId(postRecord.postTask.id);
-        
+
           const postArchive = new PostArchive();
           postArchive.id = generatedIdForPostArchive;
           postArchive.content = postRecord.content;
@@ -98,6 +99,11 @@ export class PostHistoryService {
       return true;
     }
     catch (error) {
+      this.logger.error(
+        `Error` +
+        error.stack || error.message,
+        'archivePosts'
+      );
 
       await this.unitOfWork.rollbackTransaction();
       throw error;

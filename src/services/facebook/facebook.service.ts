@@ -13,6 +13,7 @@ import { AWS_SECRET } from 'src/shared/constants/aws-secret-name-constants';
 import { AwsSecretsService } from '../aws-secrets/aws-secrets.service';
 import { TOKEN_TYPE } from 'src/shared/constants/token-type-constants';
 import { FacebookPageDetailsDTO } from 'src/entities/facebook-page-details.entity';
+import { Logger } from '../logger/logger.service';
 
 @Injectable()
 export class FacebookService {
@@ -20,7 +21,7 @@ export class FacebookService {
     private addId: string;
     private appSecret: string;
 
-    constructor(private readonly socialMediaAccountService: SocialMediaAccountService, private readonly unitOfWork: UnitOfWork, private readonly configService: ConfigService, private readonly secretService: AwsSecretsService,) {
+    constructor(private readonly socialMediaAccountService: SocialMediaAccountService, private readonly unitOfWork: UnitOfWork, private readonly configService: ConfigService, private readonly secretService: AwsSecretsService, private readonly logger: Logger) {
         this.initialize();
     }
 
@@ -59,17 +60,26 @@ export class FacebookService {
     }
 
     async exchangeToLongLivedUserToken(shortLivedToken: string): Promise<string> {
-        const appId = this.addId;
-        const appSecret = this.appSecret;
+        try {
+            const appId = this.addId;
+            const appSecret = this.appSecret;
 
-        const url = `https://graph.facebook.com/v21.0/oauth/access_token?` +
-            `grant_type=fb_exchange_token&` +
-            `client_id=${appId}&` +
-            `client_secret=${appSecret}&` +
-            `fb_exchange_token=${shortLivedToken}`;
+            const url = `https://graph.facebook.com/v21.0/oauth/access_token?` +
+                `grant_type=fb_exchange_token&` +
+                `client_id=${appId}&` +
+                `client_secret=${appSecret}&` +
+                `fb_exchange_token=${shortLivedToken}`;
 
-        const response = await axios.get(url);
-        return response.data.access_token;
+            const response = await axios.get(url);
+            return response.data.access_token;
+        }
+        catch (error) {
+            this.logger.error(
+                `Error` +
+                error.stack || error.message,
+                'exchangeToLongLivedUserToken'
+            );
+        }
     }
 
     async postToFacebook(
@@ -83,7 +93,6 @@ export class FacebookService {
         const graphApiUrl = 'https://graph.facebook.com/v21.0';
 
         try {
-
             let finalMessage = message || '';
 
             // Append hashtags if provided
@@ -147,6 +156,11 @@ export class FacebookService {
 
             return response.data;
         } catch (error: any) {
+            this.logger.error(
+                `Error` +
+                error.stack || error.message,
+                'PostToFacebook'
+            );
             await this.unitOfWork.rollbackTransaction();
             throw new Error(`Failed to post to Facebook: ${error.response?.data?.error?.message || error.message}`);
         }
@@ -165,6 +179,11 @@ export class FacebookService {
                 fileName,
             };
         } catch (error) {
+            this.logger.error(
+                `Error` +
+                error.stack || error.message,
+                'fetchImageFromUrl'
+            );
             throw error;
             throw new Error('Failed to fetch image from URL');
         }
@@ -200,6 +219,11 @@ export class FacebookService {
             await this.unitOfWork.completeTransaction();
         }
         catch (error) {
+            this.logger.error(
+                `Error` +
+                error.stack || error.message,
+                'fetchAndUpdatePostData'
+            );
             await this.unitOfWork.rollbackTransaction();
             throw error;
         }
@@ -217,6 +241,11 @@ export class FacebookService {
                 views: insights?.data?.find(metric => metric.name === 'post_impressions')?.values[0]?.value || 0,
             };
         } catch (error) {
+            this.logger.error(
+                `Error` +
+                error.stack || error.message,
+                'getPostDetails'
+            );
             throw error;
         }
     }
@@ -259,6 +288,11 @@ export class FacebookService {
             }
             await this.unitOfWork.completeTransaction();
         } catch (error: any) {
+            this.logger.error(
+                `Error` +
+                error.stack || error.message,
+                'connectedFacebookAccount'
+            );
             await this.unitOfWork.rollbackTransaction();
             throw new Error(`Failed to save connected page: ${error.message}`);
         }
@@ -271,6 +305,11 @@ export class FacebookService {
             const response = await axios.get(url);
             return response.data;
         } catch (error) {
+            this.logger.error(
+                `Error` +
+                error.stack || error.message,
+                'getPagePicture'
+            );
             throw error;
         }
     }
@@ -295,6 +334,11 @@ export class FacebookService {
             return 'Facebook profile disconnected successfully.';
         }
         catch (error) {
+            this.logger.error(
+                `Error` +
+                error.stack || error.message,
+                'disconnectFacebookProfile'
+            );
             await this.unitOfWork.rollbackTransaction();
             throw error;
         }
@@ -308,6 +352,11 @@ export class FacebookService {
                 { params: { access_token: accessToken } }
             );
         } catch (error) {
+            this.logger.error(
+                `Error` +
+                error.stack || error.message,
+                'revokeFacebookAccess'
+            );
             throw error;
         }
     }
@@ -321,6 +370,11 @@ export class FacebookService {
             });
             return response;
         } catch (error) {
+            this.logger.error(
+                `Error` +
+                error.stack || error.message,
+                'getUserPages'
+            );
             throw new HttpException(
                 error.response?.data || 'Failed to fetch pages',
                 error.response?.status || HttpStatus.INTERNAL_SERVER_ERROR,

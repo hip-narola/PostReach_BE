@@ -17,7 +17,6 @@ export class DashboardInsightsRepository extends GenericRepository<PostTask> {
                 .andWhere('pt.user_id = :userid', { userid: userId });
 
             if (platform != null) {
-                console.log("platform :", platform);
                 queryBuilder.andWhere('sm.platform = :platform', { platform: platform });
             }
 

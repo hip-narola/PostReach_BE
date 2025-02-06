@@ -8,6 +8,7 @@ import {
     AdminCreateUserCommand,
     AdminSetUserPasswordCommand
 } from "@aws-sdk/client-cognito-identity-provider";
+import { Logger } from '../logger/logger.service';
 
 @Injectable()
 export class CognitoIdentityService {
@@ -17,7 +18,7 @@ export class CognitoIdentityService {
     private userPoolId: string;
     private appClientId: string;
 
-    constructor(private readonly configService: ConfigService, private readonly secretService: AwsSecretsService) {
+    constructor(private readonly configService: ConfigService, private readonly secretService: AwsSecretsService,private readonly logger: Logger) {
         this.cognitoClient = new CognitoIdentityProviderClient({
             region: this.configService.get<string>('REGION'),
         });
@@ -48,6 +49,12 @@ export class CognitoIdentityService {
             const response = await this.cognitoClient.send(command);
             return response.AuthenticationResult.AccessToken;
         } catch (error) {
+            this.logger.error(
+                `Error` +
+                error.stack || error.message,
+                'getIdToken'
+            );
+
             throw new Error('Failed to get ID Token from Cognito:' + error);
         }
     }
@@ -83,6 +90,12 @@ export class CognitoIdentityService {
             await this.cognitoClient.send(setPasswordCommand);
             return response.User;
         } catch (error) {
+            this.logger.error(
+                `Error` +
+                error.stack || error.message,
+                'createUser'
+            );
+
             throw new Error('Failed to create user in cognito:' + error);
         }
     }

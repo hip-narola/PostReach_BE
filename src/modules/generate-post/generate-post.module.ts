@@ -1,7 +1,6 @@
 import { HttpModule } from '@nestjs/axios';
 import { Module } from '@nestjs/common';
 import { GeneratePostService } from 'src/services/generate-post/generate-post.service';
-import { SubscriptionModule } from '../subscription/subscription.module';
 import { UnitOfWork } from 'src/unitofwork/unitofwork';
 import { AwsSecretsService } from 'src/services/aws-secrets/aws-secrets.service';
 import { SocialMediaAccountModule } from '../social-media-account/social-media-account.module';
@@ -19,10 +18,11 @@ import { UserRepository } from 'src/repositories/userRepository';
 import { User } from 'src/entities/user.entity';
 import { PostRetry } from 'src/entities/post-retry.entity';
 import { PostRetryRepository } from 'src/repositories/post-retry-repository';
+import { Logger } from 'src/services/logger/logger.service';
 
 @Module({
     imports: [HttpModule, SocialMediaAccountModule, UserModule, TypeOrmModule.forFeature([PostTask, Post, Asset, UserCredit, User, PostRetry])],
-    providers: [GeneratePostService, UnitOfWork, AwsSecretsService, PostTaskRepository, PostRepository, AssetRepository, UserCreditRepository, UserRepository, PostRetryRepository],
+    providers: [GeneratePostService, UnitOfWork, AwsSecretsService, PostTaskRepository, PostRepository, AssetRepository, UserCreditRepository, UserRepository, PostRetryRepository,Logger],
     exports: [GeneratePostService, AwsSecretsService, PostTaskRepository, PostRepository, AssetRepository, UserCreditRepository, UserRepository, PostRetryRepository],
 })
 export class GeneratePostModule { }
