@@ -45,6 +45,7 @@ export class ApprovalQueueRepository extends GenericRepository<PostTask> {
                 .andWhere('pt.user_id = :userid', { userid: paginatedParams.userId })
                 .andWhere('pt.scheduled_at > :now', { now: new Date() })
                 .addSelect('pt.scheduled_at::text AS scheduled_at')
+                .orderBy('pt.scheduled_at', 'ASC')
                 .getRawMany();
             const data = postTasks.map(queryResult => ({
                 id: queryResult.post_task_id,

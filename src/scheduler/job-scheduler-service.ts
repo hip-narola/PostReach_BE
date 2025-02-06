@@ -41,7 +41,7 @@ export class JobSchedulerService {
                 {}, // Job data, if needed
                 {
                     repeat: {
-                        every: 10 * 60 * 1000, // Run every 5 minute
+                        every: 5 * 60 * 1000, // Run every 5 minute
                     },
                     // repeat: {
 

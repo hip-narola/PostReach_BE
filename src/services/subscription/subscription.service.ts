@@ -759,9 +759,10 @@ export class SubscriptionService {
 			const userSubscriptions = await userSubscriptionRepository.getAllExpiringSubscription();
 			// const expiredUserIds: number[] = []; // Array to store user IDs
 			const expiredSubscriptions: { userId: number; endDate: Date; subscription: any, cycle: number }[] = []; // Array to store user details
-
+			console.log('expiredSubscriptions: userSubscriptionsall', userSubscriptions)
 			//expire subscription of users
 			for (const userSubscription of userSubscriptions) {
+				console.log('checkAndExpireSubscriptions: userSubscription', userSubscription)
 				userSubscription.status = UserSubscriptionStatusType.EXPIRED;
 				await userSubscriptionRepository.update(
 					userSubscription.id,
@@ -773,15 +774,17 @@ export class SubscriptionService {
 
 				// add cancelled plan notification 
 				await this.notificationService.saveData(userSubscription.user.id, NotificationType.SUBSCRIPTION_CANCELLED, NotificationMessage[NotificationType.SUBSCRIPTION_CANCELLED]);
-
+				
 				expiredSubscriptions.push({
 					userId: userSubscription.user.id,
 					endDate: userSubscription.end_Date,
 					subscription: userSubscription.id,
 					cycle: userSubscription.cycle
 				});
+				console.log('in expiredSubscriptions loop', expiredSubscriptions);
 			}
 			await this.unitOfWork.completeTransaction();
+			console.log(' checkAndExpireSubscriptions: expiredSubscriptions', expiredSubscriptions)
 			return expiredSubscriptions;
 		} catch (error) {
 			await this.unitOfWork.rollbackTransaction();
