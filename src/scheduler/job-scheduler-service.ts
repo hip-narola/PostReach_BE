@@ -7,7 +7,8 @@ import { ApprovalQueueService } from 'src/services/approval-queue/approval-queue
 import { CheckUserSubscriptionService } from 'src/services/check-user-subscription/check-user-subscription.service';
 import { UserCreditRepository } from 'src/repositories/user-credit-repository';
 import { UserCredit } from 'src/entities/user_credit.entity';
-import { UnitOfWork } from 'src/unitofwork/unitofwork';import { PostTaskRepository } from 'src/repositories/post-task-repository';
+import { UnitOfWork } from 'src/unitofwork/unitofwork';
+import { PostTaskRepository } from 'src/repositories/post-task-repository';
 
 @Injectable()
 export class JobSchedulerService {
@@ -129,6 +130,7 @@ export class JobSchedulerService {
         expiredSubscriptions: { userId: number; endDate: Date; subscription: string; cycle: number }[]
     ) {
         try {
+            console.log('removeExpiredScheduledPosts: expiredSubscriptions', expiredSubscriptions);
 
             const ids: number[] = [];
 
@@ -141,6 +143,7 @@ export class JobSchedulerService {
                     ids.push(data.id); // Collect valid job IDs                
                 }
             }
+            console.log('removeExpiredScheduledPosts: ids', ids);
             if (ids.length > 0) {
                 const postTaskStatusData = {
                     id: ids,

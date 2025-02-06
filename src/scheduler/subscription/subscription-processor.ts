@@ -20,7 +20,7 @@ export class SubscriptionProcessor extends WorkerHost {
         logger.log(message);
 
         const expiredUserIds = await this.subscriptionService.checkAndExpireSubscriptions();
-
+        console.log('expiredSubscriptions data', expiredUserIds)
         // Call method to remove expired scheduled posts
         await this.jobSchedulerService.removeExpiredScheduledPosts(expiredUserIds);
     }
