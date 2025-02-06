@@ -35,18 +35,15 @@ export class ApprovalQueueController {
             rejectReason?: string;
         },
     ): Promise<any> {
+
         const data = await this.approvalQueueService.updateStatus(
             UpdatePostTaskStatusDTO,
         );
-        if (data == true) {
-            return {
-                message: 'Post(s) approved successfully.',
-            };
-        } else {
-            return {
-                message: 'Post(s) rejected successfully.',
-            };
-        }
+
+        return {
+            message: data,
+        };
+
     }
 
     @Get('RejectReasonList')

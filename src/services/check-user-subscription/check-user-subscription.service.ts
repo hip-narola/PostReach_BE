@@ -19,4 +19,14 @@ export class CheckUserSubscriptionService {
         }
         return false;
     }
+
+    async isUserSubscriptionExpire(userId: number): Promise<boolean> {
+        const userSubscriptionRepository = this.unitOfWork.getRepository(UserSubscriptionRepository, UserSubscription, false);
+        const usersubscription = await userSubscriptionRepository.findUseExpiredSubscriptionWithoutSubscriptionId(userId);
+        
+        if (usersubscription) {
+            return true;
+        }
+        return false;
+    }
 }

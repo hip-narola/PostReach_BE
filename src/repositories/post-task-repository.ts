@@ -29,9 +29,9 @@ export class PostTaskRepository extends GenericRepository<PostTask> {
             .andWhere('postTask.status = :status', {
                 status: POST_TASK_STATUS.SCHEDULED,
             })
-            .andWhere('postTask.created_at = :created_at', {
-                created_at: currentDateOnly,
-            })
+            // .andWhere('postTask.created_at = :created_at', {
+            //     created_at: currentDateOnly,
+            // })
             .getMany();         
 
         return posts;

@@ -13,6 +13,7 @@ import { JobSchedulerService } from 'src/scheduler/job-scheduler-service';
 import { POST_TASK_STATUS } from 'src/shared/constants/post-task-status-constants';
 import { NotificationService } from '../notification/notification.service';
 import { NotificationMessage, NotificationType } from 'src/shared/constants/notification-constants';
+import { CheckUserSubscriptionService } from '../check-user-subscription/check-user-subscription.service';
 @Injectable()
 export class ApprovalQueueService {
     constructor(
@@ -21,6 +22,8 @@ export class ApprovalQueueService {
         private readonly schedulePostService: JobSchedulerService,
         private readonly emailService: EmailService,
         private readonly notificationService: NotificationService,
+        private readonly checkUserSubscriptionService: CheckUserSubscriptionService
+        
     ) { }
 
     async getApprovalQueueList(
@@ -38,7 +41,7 @@ export class ApprovalQueueService {
 
     async updateStatus(
         updateStatusParam: UpdatePostTaskStatusDTO,
-    ): Promise<any> {
+    ): Promise<string> {
         try {
 
             await this.unitOfWork.startTransaction();
@@ -48,10 +51,21 @@ export class ApprovalQueueService {
                 true,
             );
             for (const id of updateStatusParam.id) {
+                
+
                 const record = await approvalQueueRepository.findOne(id);
+
+                
+
                 if (!record) {
                     continue;
                 }
+
+                const isUserSubscriptionActive = await this.checkUserSubscriptionService.isUserSubscriptionExpire(record.user.id);
+                if (!isUserSubscriptionActive) {
+                    return 'Please subscribe a subscription first!'
+                }
+
                 //if approved true then if block will executed.
                 if (updateStatusParam.isApproved == true) {
                     //updated the status to scheduled
@@ -105,9 +119,9 @@ export class ApprovalQueueService {
             }
             await this.unitOfWork.completeTransaction();
             if (updateStatusParam.isApproved == true) {
-                return true;
+                return 'Post(s) approved successfully.';
             } else if (updateStatusParam.isApproved == false) {
-                return false;
+                return 'Post(s) rejected successfully.';
             }
         } catch (error) {
             console.log('removeExpiredScheduledPosts error', error);

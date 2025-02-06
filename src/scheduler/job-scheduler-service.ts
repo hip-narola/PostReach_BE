@@ -39,17 +39,17 @@ export class JobSchedulerService {
                 'check-subscriptions',
                 {}, // Job data, if needed
                 {
-                    // repeat: {
-                    //     every: 5 * 60 * 1000, // Run every 5 minute
-                    // },
+                    repeat: {
+                        every: 10 * 60 * 1000, // Run every 5 minute
+                    },
                     // repeat: {
 
                     //     every: 24 * 60 * 60 * 1000, // Every 24 hours
                     //     startDate: new Date().setHours(0, 1, 0, 0), // Start at 12:01 AM
                     // }
-                    repeat: {
-                        pattern: '0 0 * * *', // Every 24 hours
-                    }
+                    // repeat: {
+                    //     pattern: '0 0 * * *', // Every 24 hours
+                    // }
                 },
             );
         } catch (error) {
@@ -76,12 +76,12 @@ export class JobSchedulerService {
         const now = moment();
         const publishAt = moment(scheduleTime, 'YYYY-MM-DD HH:mm:ss');
 
-        const isUserSubscriptionActive = await this.checkUserSubscriptionService.isUserSubscriptionActive(userId);
-        if (!isUserSubscriptionActive) {
-            throw new BadRequestException(
-                'Please purchase a subscription first!',
-            );
-        }
+        // const isUserSubscriptionActive = await this.checkUserSubscriptionService.isUserSubscriptionExpire(userId);
+        // if (isUserSubscriptionActive) {
+        //     throw new BadRequestException(
+        //         'Please purchase a subscription first!',
+        //     );
+        // }
 
         if (!publishAt.isValid()) {
             throw new BadRequestException(
