@@ -46,6 +46,8 @@ export class SubscriptionService {
 		private readonly userService: UserService,
 		private generatePostService: GeneratePostService,
 		private userCreditRepository: UserCreditRepository,
+		private userSubscriptionRepository: UserSubscriptionRepository
+
 
 		// private readonly checkSubscriptionSchedulerService: CheckSubscriptionSchedulerService,
 	) {
@@ -555,7 +557,7 @@ export class SubscriptionService {
 			//Inavtive existing subscription
 			if (userSubscription) {
 				userSubscription.status = UserSubscriptionStatusType.INACTIVE;
-				await userSubscriptionRepository.update(
+				await this.userSubscriptionRepository.update(
 					userSubscription.id,
 					userSubscription,
 				);
@@ -568,7 +570,7 @@ export class SubscriptionService {
 				stripeSubscription
 			);
 
-			await userSubscriptionRepository.create(userSubscriptionCreate);
+			await this.userSubscriptionRepository.create(userSubscriptionCreate);
 
 
 			await this.createUserCredit(
