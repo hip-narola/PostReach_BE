@@ -52,7 +52,7 @@ export class GeneratePostService {
             const details = await this.userRepository.findUserAnswersWithQuestionsAndSocialMedia(userCredit[0].user.id/*, userCredit.social_media_id*/);
 
             console.log('generatePostByAIAPI::: details', details)
-            
+
             // Bind data from these info
             const userInfo: UserInfoDTO[] = details?.userAnswers?.map((answer: any) => ({
                 name: answer.question?.questionName || '',
@@ -83,7 +83,7 @@ export class GeneratePostService {
                 linkedin_posts_number: 0,
                 twitter_posts_number: 0
             }
-            
+
             console.log("generatePostByAIAPI::: socialPostNumber : ", socialPostNumber);
             for (let i = 0; i < userCredit.length; i++) {
                 console.log('generatePostByAIAPI::: for credit loop start')
@@ -92,13 +92,13 @@ export class GeneratePostService {
 
                 element.social_media = await this.socialMediaAccountRepository.findOne(element.social_media_id);
                 if (details.userSubscription.cycle == 0) {
-                    if (details.userSubscription.start_Date == new Date()) {
+                    if (details.userSubscription.start_Date.toISOString().split('T')[0] == today.toISOString().split('T')[0] || daysDifference >= element.current_credit_amount) {
                         console.log('generatePostByAIAPI::: if block', PostRequestCount)
                         PostRequestCount = element.current_credit_amount;
                     }
                     else {
-                        console.log('generatePostByAIAPI::: else block', PostRequestCount)
                         PostRequestCount = daysDifference;
+                        console.log('generatePostByAIAPI::: else block', PostRequestCount)
                     }
                     console.log('generatePostByAIAPI::: cycle0 PostRequestCount', PostRequestCount)
                 }
