@@ -58,8 +58,8 @@ export class SubscriptionService {
 		this.stripeSecretKey = secretData.STRIPE_SECRET_KEY;
 		this.stripeWebhookSecret = secretData.STRIPE_WEBHOOK_SECRET;
 		this.stripe = new Stripe(this.stripeSecretKey, {
-			// apiVersion: '2025-01-27.acacia'
-			apiVersion: '2024-12-18.acacia'
+			apiVersion: '2025-01-27.acacia'
+			// apiVersion: '2024-12-18.acacia'
 		});
 	}
 
