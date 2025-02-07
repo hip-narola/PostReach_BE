@@ -92,11 +92,15 @@ export class GeneratePostService {
 
                 element.social_media = await this.socialMediaAccountRepository.findOne(element.social_media_id);
                 if (details.userSubscription.cycle == 0) {
-                    console.log('generatePostByAIAPI::: cycle0')
-                    if (element.current_credit_amount >= daysDifference) {
-                        console.log('generatePostByAIAPI::: PostRequestCount = daysDifference', daysDifference);
+                    if (details.userSubscription.start_Date == new Date()) {
+                        console.log('generatePostByAIAPI::: if block', PostRequestCount)
+                        PostRequestCount = element.current_credit_amount;
+                    }
+                    else {
+                        console.log('generatePostByAIAPI::: else block', PostRequestCount)
                         PostRequestCount = daysDifference;
                     }
+                    console.log('generatePostByAIAPI::: cycle0 PostRequestCount', PostRequestCount)
                 }
                 else if (details.userSubscription.cycle == 1) {
                     console.log('generatePostByAIAPI::: cycle==1')
