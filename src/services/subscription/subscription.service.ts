@@ -290,7 +290,7 @@ export class SubscriptionService {
 		}
 		
 		userCredit.end_Date = new Date(
-			new Date().setDate(new Date(userSubscription.start_Date).getDate() + 7),
+			new Date().setDate(new Date(userSubscription.start_Date).getDate() + 6),
 		);
 		userCredit.social_media_id = socialMediaAccountId;
 		// userCredit.start_Date = userSubscription.start_Date;
