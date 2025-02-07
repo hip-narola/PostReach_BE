@@ -303,7 +303,7 @@ export class JobSchedulerService {
             {}, // Empty payload for the job
             {
                 repeat: {
-                    pattern: '*/10 * * * *',
+                    pattern: '*/20 * * * *',
                     // pattern: '0 0 * * *', // Cron pattern for daily at midnight
                     tz: 'UTC',
                 },

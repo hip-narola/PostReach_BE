@@ -61,7 +61,7 @@ export class GeneratePostService {
                 isUrl: answer.question?.questionName == 'personal_website',
             })) || [];
 
-            const posts = this.postTaskRepository.fetchPostTaskOfSocialMedia(socialMediaIds);
+            const posts = await this.postTaskRepository.fetchPostTaskOfSocialMedia(socialMediaIds);
             console.log('generatePostByAIAPI:: posts', posts)
             //generate post only for left days of subscription
             const daysDifference = (Math.floor(Math.abs(new Date(details.userSubscription.end_Date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))) + 1;
