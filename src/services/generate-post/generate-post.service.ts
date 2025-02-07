@@ -49,12 +49,10 @@ export class GeneratePostService {
     async generatePostByAIAPI(userCredit: UserCredit[]): Promise<void> {
         try {
             console.log('generatePostByAIAPI:::  userCredit', userCredit)
-            
-
             const details = await this.userRepository.findUserAnswersWithQuestionsAndSocialMedia(userCredit[0].user.id/*, userCredit.social_media_id*/);
-
+            const socialMediaIds = details.socialMedia.map((media) => media.id);
             console.log('generatePostByAIAPI::: details', details)
-            
+            console.log('generatePostByAIAPI::: socialMediaIds', socialMediaIds);
             // Bind data from these info
             const userInfo: UserInfoDTO[] = details?.userAnswers?.map((answer: any) => ({
                 name: answer.question?.questionName || '',
@@ -63,13 +61,11 @@ export class GeneratePostService {
                 isUrl: answer.question?.questionName == 'personal_website',
             })) || [];
 
-            console.log('generatePostByAIAPI::: userInfo', userInfo);
-
+            const posts = await this.postTaskRepository.fetchPostTaskOfSocialMedia(socialMediaIds);
+            console.log('generatePostByAIAPI:: posts', posts)
             //generate post only for left days of subscription
             const daysDifference = (Math.floor(Math.abs(new Date(details.userSubscription.end_Date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))) + 1;
-            console.log('generatePostByAIAPI::: Math.abs(new Date(details.userSubscription.end_Date).getTime()', Math.abs(new Date(details.userSubscription.end_Date).getTime()), 'new Date().getTime())', new Date().getTime());
-            console.log('generatePostByAIAPI::: Math.abs(new Date(details.userSubscription.end_Date).getTime() - new Date().getTime())', Math.abs(new Date(details.userSubscription.end_Date).getTime() - new Date().getTime()))
-            console.log('generatePostByAIAPI::: (1000 * 60 * 60 * 24)', (1000 * 60 * 60 * 24));
+
             console.log('generatePostByAIAPI::: daysDifference', daysDifference);
 
             let PostRequestCount: number;
@@ -85,8 +81,7 @@ export class GeneratePostService {
                 linkedin_posts_number: 0,
                 twitter_posts_number: 0
             }
-            
-            console.log("generatePostByAIAPI::: socialPostNumber : ", socialPostNumber);
+
             for (let i = 0; i < userCredit.length; i++) {
                 console.log('generatePostByAIAPI::: for credit loop start')
                 const element = userCredit[i];
@@ -94,11 +89,15 @@ export class GeneratePostService {
 
                 element.social_media = await this.socialMediaAccountRepository.findOne(element.social_media_id);
                 if (details.userSubscription.cycle == 0) {
-                    console.log('generatePostByAIAPI::: cycle0')
-                    if (element.current_credit_amount >= daysDifference) {
-                        console.log('generatePostByAIAPI::: PostRequestCount = daysDifference', daysDifference);
-                        PostRequestCount = daysDifference;
-                    }
+                    // if (details.userSubscription.start_Date.toISOString().split('T')[0] == today.toISOString().split('T')[0] || daysDifference >= element.current_credit_amount) {
+                    //     console.log('generatePostByAIAPI::: if block', PostRequestCount)
+                    PostRequestCount = element.current_credit_amount;
+                    // }
+                    // else {
+                    //     PostRequestCount = daysDifference;
+                    //     console.log('generatePostByAIAPI::: else block', PostRequestCount)
+                    // }
+                    console.log('generatePostByAIAPI::: cycle0 PostRequestCount', PostRequestCount)
                 }
                 else if (details.userSubscription.cycle == 1) {
                     console.log('generatePostByAIAPI::: cycle==1')
@@ -149,9 +148,7 @@ export class GeneratePostService {
                 console.log("generatePostByAIAPI::: socialPostNumber inside loop ", socialPostNumber);
                 console.log('generatePostByAIAPI::: for credit loop end')
             }
-            
-
-            console.log('generatePostByAIAPI::: socialPostNumber: ', socialPostNumber)
+            console.log('generatePostByAIAPI::: socialPostNumber: ', socialPostNumber);
 
             const generatePostRequest: GeneratePostPipelineRequestDTO = {
                 mode: Mode.AUTOPILOT,
