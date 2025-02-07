@@ -79,11 +79,10 @@ export class PostTaskRepository extends GenericRepository<PostTask> {
 
     // }
 
-    async fetchPostTaskOfSocialMedia(social_media_ids: { id: number }[]): Promise<PostTask[]> {
+    async fetchPostTaskOfSocialMedia(social_media_ids: number[]): Promise<PostTask[]> {
         const statuses = [POST_TASK_STATUS.PENDING, POST_TASK_STATUS.SCHEDULED];
 
         // Extract the social media ids into an array of numbers
-        const socialMediaIds = social_media_ids.map(socialMedia => socialMedia.id);
 
         const posts = await this.repository
             .createQueryBuilder('postTask')
@@ -92,7 +91,7 @@ export class PostTaskRepository extends GenericRepository<PostTask> {
             .leftJoinAndSelect('postTask.socialMediaAccount', 'socialMediaAccount')
             .leftJoinAndSelect('socialMediaAccount.user', 'user')
             .andWhere('postTask.status IN (:...statuses)', { statuses })
-            .andWhere('socialMediaAccount.id IN (:...socialMediaIds)', { socialMediaIds })
+            .andWhere('socialMediaAccount.id IN (:...social_media_ids)', { social_media_ids })
             .addSelect(
                 qb => {
                     return qb

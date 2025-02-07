@@ -278,7 +278,8 @@ export class SubscriptionService {
 		userCredit.user = user;
 		userCredit.subscription = subscription;
 		userCredit.current_credit_amount = subscription.creditAmount;
-		if (userSubscription.start_Date == new Date()) {
+
+		if (userSubscription.start_Date.toISOString().split('T')[0] == new Date().toISOString().split('T')[0] ) {
 			userCredit.start_Date = new Date(
 				new Date().setDate(new Date(userSubscription.start_Date).getDate() + 2)
 			);
@@ -401,7 +402,7 @@ export class SubscriptionService {
 				: subscription.creditAmount;
 		// Add 3 days to today's date for start_Date
 		// userCredit.start_Date = new Date();
-		if (userSubscription.start_Date == new Date()) {
+		if(userSubscription.start_Date.toISOString().split('T')[0] == new Date().toISOString().split('T')[0]){
 			userCredit.start_Date = new Date(userSubscription.start_Date);
 			userCredit.start_Date.setDate(userCredit.start_Date.getDate() + 3);
 			// Add 1 month and 3 days to today's date for end_Date

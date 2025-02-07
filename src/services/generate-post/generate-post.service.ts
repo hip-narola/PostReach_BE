@@ -50,9 +50,9 @@ export class GeneratePostService {
         try {
             console.log('generatePostByAIAPI:::  userCredit', userCredit)
             const details = await this.userRepository.findUserAnswersWithQuestionsAndSocialMedia(userCredit[0].user.id/*, userCredit.social_media_id*/);
-
+            const socialMediaIds = details.socialMedia.map((media) => media.id);
             console.log('generatePostByAIAPI::: details', details)
-
+            console.log('generatePostByAIAPI::: socialMediaIds', socialMediaIds);
             // Bind data from these info
             const userInfo: UserInfoDTO[] = details?.userAnswers?.map((answer: any) => ({
                 name: answer.question?.questionName || '',
@@ -61,13 +61,11 @@ export class GeneratePostService {
                 isUrl: answer.question?.questionName == 'personal_website',
             })) || [];
 
-            console.log('generatePostByAIAPI::: userInfo', userInfo);
-
+            const posts = this.postTaskRepository.fetchPostTaskOfSocialMedia(socialMediaIds);
+            console.log('generatePostByAIAPI:: posts', posts)
             //generate post only for left days of subscription
             const daysDifference = (Math.floor(Math.abs(new Date(details.userSubscription.end_Date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))) + 1;
-            console.log('generatePostByAIAPI::: Math.abs(new Date(details.userSubscription.end_Date).getTime()', Math.abs(new Date(details.userSubscription.end_Date).getTime()), 'new Date().getTime())', new Date().getTime());
-            console.log('generatePostByAIAPI::: Math.abs(new Date(details.userSubscription.end_Date).getTime() - new Date().getTime())', Math.abs(new Date(details.userSubscription.end_Date).getTime() - new Date().getTime()))
-            console.log('generatePostByAIAPI::: (1000 * 60 * 60 * 24)', (1000 * 60 * 60 * 24));
+
             console.log('generatePostByAIAPI::: daysDifference', daysDifference);
 
             let PostRequestCount: number;
@@ -84,7 +82,6 @@ export class GeneratePostService {
                 twitter_posts_number: 0
             }
 
-            console.log("generatePostByAIAPI::: socialPostNumber : ", socialPostNumber);
             for (let i = 0; i < userCredit.length; i++) {
                 console.log('generatePostByAIAPI::: for credit loop start')
                 const element = userCredit[i];
@@ -94,7 +91,7 @@ export class GeneratePostService {
                 if (details.userSubscription.cycle == 0) {
                     // if (details.userSubscription.start_Date.toISOString().split('T')[0] == today.toISOString().split('T')[0] || daysDifference >= element.current_credit_amount) {
                     //     console.log('generatePostByAIAPI::: if block', PostRequestCount)
-                        PostRequestCount = element.current_credit_amount;
+                    PostRequestCount = element.current_credit_amount;
                     // }
                     // else {
                     //     PostRequestCount = daysDifference;
