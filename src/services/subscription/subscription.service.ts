@@ -104,11 +104,24 @@ export class SubscriptionService {
 			const userCreditDetails = await this.userCreditRepository.getAllUserToGeneratePost();
 			console.log("GeneratePostSubscriptionWiseOnFirstCycle::: userCreditDetails: ", userCreditDetails);
 
-
 			if (userCreditDetails && userCreditDetails.length > 0) {
-				// Iterate over user credits and generate posts
+
+				for (const userCredit of userCreditDetails) {
+
+					userCredit.start_Date = new Date(userCredit.end_Date);
+					userCredit.start_Date.setDate(userCredit.start_Date.getDate() + 3);
+
+					userCredit.end_Date = new Date(userCredit.start_Date);
+					userCredit.end_Date.setMonth(userCredit.end_Date.getMonth() + 1);
+
+					console.log(userCredit, 'new userCredit')
+					await this.userCreditRepository.update(userCredit.id, userCredit);
+				}
+
+			// Iterate over user credits and generate posts
 				await this.generatePostService.generatePostByAIAPI(userCreditDetails);
 			}
+
 
 		} catch (error) {
 			console.log("GeneratePostSubscriptionWiseOnFirstCycle::: error: ", error);
@@ -378,33 +391,23 @@ export class SubscriptionService {
 			userSubscription.cycle === 1
 				? subscription.creditAmount * 2
 				: subscription.creditAmount;
-		// Add 3 days to start_Date
-		// userCredit.start_Date = new Date(
-		// 	new Date(userSubscription.start_Date).setDate(
-		// 		new Date(userSubscription.start_Date).getDate() + 3
-		// 	)
-		// );
-		// // Add 3 days to end_Date
-		// userCredit.end_Date = new Date(
-		// 	new Date(userSubscription.end_Date).setDate(
-		// 		new Date(userSubscription.end_Date).getDate() + 3
-		// 	)
-		// );
-
 		// Add 3 days to today's date for start_Date
 		// userCredit.start_Date = new Date();
-		userCredit.start_Date = new Date(userSubscription.start_Date);
-		userCredit.start_Date.setDate(userCredit.start_Date.getDate() + 3);
-
-		// Add 1 month and 3 days to today's date for end_Date
-		// userCredit.end_Date = new Date();
+		if (userSubscription.start_Date == new Date()) {
+			userCredit.start_Date = new Date(userSubscription.start_Date);
+			userCredit.start_Date.setDate(userCredit.start_Date.getDate() + 3);
+			// Add 1 month and 3 days to today's date for end_Date
+			// userCredit.end_Date = new Date();
+			// userCredit.end_Date.setDate(userCredit.end_Date.getDate() + 3);
+		}
+		else {
+			userCredit.start_Date = new Date();
+			userCredit.start_Date.setDate(userCredit.start_Date.getDate() + 1);
+		}
 		userCredit.end_Date = new Date(userSubscription.start_Date);
 		userCredit.end_Date.setMonth(userCredit.end_Date.getMonth() + 1);
-		userCredit.end_Date.setDate(userCredit.end_Date.getDate() + 3);
 		userCredit.cancel_Date = null;
-
 		userCredit.social_media_id = socialMediaAccountId;
-
 		userCredit.status = UserCreditStatusType.ACTIVE;
 		return userCredit;
 	}
@@ -774,7 +777,7 @@ export class SubscriptionService {
 
 				// add cancelled plan notification 
 				await this.notificationService.saveData(userSubscription.user.id, NotificationType.SUBSCRIPTION_CANCELLED, NotificationMessage[NotificationType.SUBSCRIPTION_CANCELLED]);
-				
+
 				expiredSubscriptions.push({
 					userId: userSubscription.user.id,
 					endDate: userSubscription.end_Date,

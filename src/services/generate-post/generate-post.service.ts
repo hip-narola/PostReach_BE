@@ -49,8 +49,6 @@ export class GeneratePostService {
     async generatePostByAIAPI(userCredit: UserCredit[]): Promise<void> {
         try {
             console.log('generatePostByAIAPI:::  userCredit', userCredit)
-            
-
             const details = await this.userRepository.findUserAnswersWithQuestionsAndSocialMedia(userCredit[0].user.id/*, userCredit.social_media_id*/);
 
             console.log('generatePostByAIAPI::: details', details)
@@ -149,9 +147,7 @@ export class GeneratePostService {
                 console.log("generatePostByAIAPI::: socialPostNumber inside loop ", socialPostNumber);
                 console.log('generatePostByAIAPI::: for credit loop end')
             }
-            
-
-            console.log('generatePostByAIAPI::: socialPostNumber: ', socialPostNumber)
+            console.log('generatePostByAIAPI::: socialPostNumber: ', socialPostNumber);
 
             const generatePostRequest: GeneratePostPipelineRequestDTO = {
                 mode: Mode.AUTOPILOT,

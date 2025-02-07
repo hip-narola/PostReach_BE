@@ -40,17 +40,17 @@ export class JobSchedulerService {
                 'check-subscriptions',
                 {}, // Job data, if needed
                 {
-                    // repeat: {
-                    //     every: 10 * 60 * 1000, // Run every 5 minute
-                    // },
+                    repeat: {
+                        every: 10 * 60 * 1000, // Run every 5 minute
+                    },
                     // repeat: {
 
                     //     every: 24 * 60 * 60 * 1000, // Every 24 hours
                     //     startDate: new Date().setHours(0, 1, 0, 0), // Start at 12:01 AM
                     // }
-                    repeat: {
-                        pattern: '0 0 * * *', // Every 24 hours
-                    }
+                    // repeat: {
+                    //     pattern: '0 0 * * *', // Every 24 hours
+                    // }
                 },
             );
         } catch (error) {
@@ -157,8 +157,15 @@ export class JobSchedulerService {
 
             // // Fetch all jobs from the post queue
             // const jobs = await this.postQueue.getJobs(['delayed', 'waiting', 'active']);
+            // console.log('post queue jobs: ', jobs); 
             // const now = moment(); // Current date
             // // Filter jobs to find the ones to be removed
+
+            // jobs.filter(async (job) => {
+            //     return ids.includes(job.data.id)
+            // });
+            // console.log('filtered post queue jobs: ', jobs);
+
             // const jobsToRemove = await this.getJobsToRemove(jobs, expiredSubscriptions, now);
             // // Remove jobs and collect IDs
             // if (jobsToRemove.length > 0) {
@@ -296,8 +303,8 @@ export class JobSchedulerService {
             {}, // Empty payload for the job
             {
                 repeat: {
-                    // pattern: '*/10 * * * *',
-                    pattern: '0 0 * * *', // Cron pattern for daily at midnight
+                    pattern: '*/10 * * * *',
+                    // pattern: '0 0 * * *', // Cron pattern for daily at midnight
                     tz: 'UTC',
                 },
                 removeOnComplete: true,
