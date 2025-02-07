@@ -418,6 +418,7 @@ export class SubscriptionService {
 		userCredit.cancel_Date = null;
 		userCredit.social_media_id = socialMediaAccountId;
 		userCredit.status = UserCreditStatusType.ACTIVE;
+		console.log('new userCredit', userCredit);
 		return userCredit;
 	}
 
