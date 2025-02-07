@@ -81,11 +81,9 @@ export class PostTaskRepository extends GenericRepository<PostTask> {
 
     async fetchPostTaskOfSocialMedia(social_media_ids: number[]): Promise<PostTask[]> {
         const statuses = [POST_TASK_STATUS.PENDING, POST_TASK_STATUS.SCHEDULED];
-
-        // Extract the social media ids into an array of numbers
-
+    
         const posts = await this.repository
-            .createQueryBuilder('postTask')
+            .createQueryBuilder('postTask') // Alias for post_task table
             .leftJoinAndSelect('postTask.post', 'post')
             .leftJoinAndSelect('post.assets', 'assets')
             .leftJoinAndSelect('postTask.socialMediaAccount', 'socialMediaAccount')
@@ -96,8 +94,8 @@ export class PostTaskRepository extends GenericRepository<PostTask> {
                 qb => {
                     return qb
                         .select('COUNT(postTask.id)')
-                        .from(PostTask, 'postTask')
-                        .where('postTask.socialMediaAccountId = socialMediaAccount.id');
+                        .from(PostTask, 'postTask')  // Reference to the PostTask table in the subquery
+                        .where('postTask.social_media_account_id = socialMediaAccount.id');
                 },
                 'postTaskCount'
             )  // Add subquery to count PostTask per social media account
@@ -105,7 +103,7 @@ export class PostTaskRepository extends GenericRepository<PostTask> {
             .orderBy('postTaskCount', 'DESC')  // Order by the highest count of PostTasks
             .limit(1)  // Limit to the social media account with the highest task count
             .getMany();  // Get all the posts related to that top account
-
+    
         console.log('new posts', posts);
         return posts;
     }
