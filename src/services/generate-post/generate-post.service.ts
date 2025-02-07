@@ -92,14 +92,14 @@ export class GeneratePostService {
 
                 element.social_media = await this.socialMediaAccountRepository.findOne(element.social_media_id);
                 if (details.userSubscription.cycle == 0) {
-                    if (details.userSubscription.start_Date.toISOString().split('T')[0] == today.toISOString().split('T')[0] || daysDifference >= element.current_credit_amount) {
-                        console.log('generatePostByAIAPI::: if block', PostRequestCount)
+                    // if (details.userSubscription.start_Date.toISOString().split('T')[0] == today.toISOString().split('T')[0] || daysDifference >= element.current_credit_amount) {
+                    //     console.log('generatePostByAIAPI::: if block', PostRequestCount)
                         PostRequestCount = element.current_credit_amount;
-                    }
-                    else {
-                        PostRequestCount = daysDifference;
-                        console.log('generatePostByAIAPI::: else block', PostRequestCount)
-                    }
+                    // }
+                    // else {
+                    //     PostRequestCount = daysDifference;
+                    //     console.log('generatePostByAIAPI::: else block', PostRequestCount)
+                    // }
                     console.log('generatePostByAIAPI::: cycle0 PostRequestCount', PostRequestCount)
                 }
                 else if (details.userSubscription.cycle == 1) {
