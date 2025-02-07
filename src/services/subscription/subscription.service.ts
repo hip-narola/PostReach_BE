@@ -118,7 +118,7 @@ export class SubscriptionService {
 					await this.userCreditRepository.update(userCredit.id, userCredit);
 				}
 
-			// Iterate over user credits and generate posts
+				// Iterate over user credits and generate posts
 				await this.generatePostService.generatePostByAIAPI(userCreditDetails);
 			}
 
@@ -278,9 +278,17 @@ export class SubscriptionService {
 		userCredit.user = user;
 		userCredit.subscription = subscription;
 		userCredit.current_credit_amount = subscription.creditAmount;
-		userCredit.start_Date = new Date(
-			new Date().setDate(new Date(userSubscription.start_Date).getDate() + 2),
-		);
+		if (userSubscription.start_Date == new Date()) {
+			userCredit.start_Date = new Date(
+				new Date().setDate(new Date(userSubscription.start_Date).getDate() + 2)
+			);
+		}
+		else {
+			userCredit.start_Date = new Date(
+				new Date().setDate(new Date().getDate() + 1)
+			);
+		}
+		
 		userCredit.end_Date = new Date(
 			new Date().setDate(new Date(userSubscription.start_Date).getDate() + 7),
 		);
