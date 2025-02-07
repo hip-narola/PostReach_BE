@@ -67,7 +67,7 @@ export class PostRepository extends GenericRepository<Post> {
             relations: ['postTask'],
         });
     }
-    
+
     async updateRejectedPost(postId: number): Promise<Post | null> {
         return await this.repository.findOne({
             where: { id: postId },
@@ -76,36 +76,42 @@ export class PostRepository extends GenericRepository<Post> {
     }
 
     async getPostsWithActiveSubscription() {
-        const posts = await this.repository
-            .createQueryBuilder('post')
-            .innerJoin('post.postTask', 'postTask')
-            .innerJoin('postTask.socialMediaAccount', 'socialMediaAccount')
-            .innerJoin('socialMediaAccount.user', 'user')
-            .andWhere('postTask.status = :status', { status: POST_TASK_STATUS.EXECUTE_SUCCESS })
-            .andWhere(
-                `EXISTS (
+        try {
+            const posts = await this.repository
+                .createQueryBuilder('post')
+                .innerJoin('post.postTask', 'postTask')
+                .innerJoin('postTask.socialMediaAccount', 'socialMediaAccount')
+                .innerJoin('socialMediaAccount.user', 'user')
+                .andWhere('postTask.status = :status', { status: POST_TASK_STATUS.EXECUTE_SUCCESS })
+                .andWhere(
+                    `EXISTS (
                     SELECT 1 FROM user_subscription us
                     WHERE us.user_id = "user"."id"
                     AND us.status IN (:...statuses)
                 )`,
-                {
-                    statuses: [
-                        UserSubscriptionStatusType.TRIAL,
-                        UserSubscriptionStatusType.ACTIVE,
-                    ],
-                }
-            )
-            .select([
-                'post.id',
-                'post.external_platform_id',
-                'postTask.id',
-                'postTask.status',
-                'socialMediaAccount.id',
-                'socialMediaAccount.platform',
-                'socialMediaAccount.encrypted_access_token',
-            ])
-            .getMany();
-        return posts;
+                    {
+                        statuses: [
+                            UserSubscriptionStatusType.TRIAL,
+                            UserSubscriptionStatusType.ACTIVE,
+                        ],
+                    }
+                )
+                .select([
+                    'post.id',
+                    'post.external_platform_id',
+                    'postTask.id',
+                    'postTask.status',
+                    'socialMediaAccount.id',
+                    'socialMediaAccount.platform',
+                    'socialMediaAccount.encrypted_access_token',
+                ])
+                .getMany();
+
+            console.log("post-insight repo posts", posts);
+
+            return posts;
+        } catch (error) {
+            console.log("post-insight repo error", error);
+        }
     }
-    
 }
