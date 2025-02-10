@@ -82,32 +82,38 @@ export class PostTaskRepository extends GenericRepository<PostTask> {
     async fetchPostTaskOfSocialMedia(social_media_ids: number[]): Promise<PostTask[]> {
         const statuses = [POST_TASK_STATUS.PENDING, POST_TASK_STATUS.SCHEDULED];
 
-        // Extract the social media ids into an array of numbers
+        // Step 1: First, find the social media account with the highest number of post tasks
+        const topSocialMediaAccount = await this.repository
+            .createQueryBuilder('postTask')
+            .select('postTask.social_media_account_id', 'socialMediaAccountId')
+            .addSelect('COUNT(postTask.id)', 'postTaskCount') // Here, the alias `postTaskCount` is valid
+            .where('postTask.status IN (:...statuses)', { statuses })
+            .andWhere('postTask.social_media_account_id IN (:...social_media_ids)', { social_media_ids })
+            .groupBy('postTask.social_media_account_id')
+            .orderBy('"postTaskCount"', 'DESC') // Use double quotes around the alias
+            .limit(1)
+            .getRawOne(); // Use `getRawOne` since you're using raw SQL and need access to the alias.
 
+        if (!topSocialMediaAccount) {
+            return []; // No social media account found
+        }
+
+        const topSocialMediaAccountId = topSocialMediaAccount.socialMediaAccountId;
+
+        // Step 2: Fetch all post tasks for the top social media account
         const posts = await this.repository
             .createQueryBuilder('postTask')
             .leftJoinAndSelect('postTask.post', 'post')
             .leftJoinAndSelect('post.assets', 'assets')
             .leftJoinAndSelect('postTask.socialMediaAccount', 'socialMediaAccount')
             .leftJoinAndSelect('socialMediaAccount.user', 'user')
-            .andWhere('postTask.status IN (:...statuses)', { statuses })
-            .andWhere('socialMediaAccount.id IN (:...social_media_ids)', { social_media_ids })
-            .addSelect(
-                qb => {
-                    return qb
-                        .select('COUNT(postTask.id)')
-                        .from(PostTask, 'postTask')
-                        .where('postTask.socialMediaAccountId = socialMediaAccount.id');
-                },
-                'postTaskCount'
-            )  // Add subquery to count PostTask per social media account
-            .groupBy('socialMediaAccount.id')  // Group by social media account to count tasks
-            .orderBy('postTaskCount', 'DESC')  // Order by the highest count of PostTasks
-            .limit(1)  // Limit to the social media account with the highest task count
-            .getMany();  // Get all the posts related to that top account
+            .where('postTask.status IN (:...statuses)', { statuses })
+            .andWhere('postTask.social_media_account_id = :topSocialMediaAccountId', { topSocialMediaAccountId })
+            .getMany();
 
         console.log('new posts', posts);
         return posts;
     }
+
 
 }

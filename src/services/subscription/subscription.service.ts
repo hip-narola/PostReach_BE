@@ -291,7 +291,7 @@ export class SubscriptionService {
 		}
 		
 		userCredit.end_Date = new Date(
-			new Date().setDate(new Date(userSubscription.start_Date).getDate() + 6),
+			new Date().setDate(new Date(userSubscription.start_Date).getDate() + 8),
 		);
 		userCredit.social_media_id = socialMediaAccountId;
 		// userCredit.start_Date = userSubscription.start_Date;
@@ -418,6 +418,7 @@ export class SubscriptionService {
 		userCredit.cancel_Date = null;
 		userCredit.social_media_id = socialMediaAccountId;
 		userCredit.status = UserCreditStatusType.ACTIVE;
+		console.log('new userCredit', userCredit);
 		return userCredit;
 	}
 
