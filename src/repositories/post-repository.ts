@@ -19,18 +19,6 @@ export class PostRepository extends GenericRepository<Post> {
         super(repository);
     }
 
-    async fetchTwitterPosts() {
-        return await this.fetchPosts(
-            `${SocialMediaPlatformNames[SocialMediaPlatform.TWITTER]}`,
-        );
-    }
-
-    // fetch posts with platform instagram
-    async fetchLinkedInPosts() {
-        return await this.fetchPosts(
-            `${SocialMediaPlatformNames[SocialMediaPlatform.LINKEDIN]}`,
-        );
-    }
 
     async fetchPosts(platform: string) {
         const posts = await this.repository
@@ -53,6 +41,7 @@ export class PostRepository extends GenericRepository<Post> {
                 }
             )
             .where('socialMediaAccount.platform = :platform', { platform })
+            .andWhere('socialMediaAccount.isDisconnect = :isDisconnect', { isDisconnect: false })
             .andWhere('postTask.status = :status', {
                 status: POST_TASK_STATUS.EXECUTE_SUCCESS,
             })
@@ -83,6 +72,7 @@ export class PostRepository extends GenericRepository<Post> {
                 .innerJoin('postTask.socialMediaAccount', 'socialMediaAccount')
                 .innerJoin('socialMediaAccount.user', 'user')
                 .andWhere('postTask.status = :status', { status: POST_TASK_STATUS.EXECUTE_SUCCESS })
+                .andWhere('socialMediaAccount.isDisconnect = :isDisconnect', { isDisconnect: false })
                 .andWhere(
                     `EXISTS (
                     SELECT 1 FROM user_subscription us

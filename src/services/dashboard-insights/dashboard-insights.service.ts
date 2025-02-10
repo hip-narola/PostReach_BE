@@ -326,7 +326,7 @@ export class DashboardInsightsService {
     //         //     }
     //         // });
 
-    //         const posts = await postRepository.fetchLinkedInPosts();
+    //         const posts = await postRepository.fetchPosts(`${SocialMediaPlatformNames[SocialMediaPlatform.LINKEDIN]}`);
 
     //         // Array to hold the insights for all posts
     //         const insightsData = [];
@@ -508,16 +508,17 @@ export class DashboardInsightsService {
             const postRepository = this.unitOfWork.getRepository(PostRepository, Post, false);
 
             // const allTweet = await this.getUserTweets(userId, accessToken);
-            const allTweet = await postRepository.fetchTwitterPosts();
+            const allTweet = await postRepository.fetchPosts(`${SocialMediaPlatformNames[SocialMediaPlatform.TWITTER]}`);
 
-            const followerCount = await this.fetchTwitterfollowersMetrics(accessToken);
+            let followerCount = 0;
             let totalImpressions = 0;
             let totalEngagements = 0;
+            
             if (allTweet) {
+                followerCount = await this.fetchTwitterfollowersMetrics(accessToken);
                 // Step 2: Fetch Metrics for Each Tweet and Aggregate
                 for (const tweet of allTweet) {
-                    const tweetId = tweet.external_platform_id;
-                    const insightsData = await this.fetchTweetMetrics(tweetId, accessToken);
+                    const insightsData = await this.fetchTweetMetrics(tweet.external_platform_id, accessToken);
                     totalImpressions += insightsData.impressions || 0;
                     totalEngagements += insightsData.engagements || 0;
                 }

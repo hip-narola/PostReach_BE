@@ -14,7 +14,8 @@ export class DashboardInsightsRepository extends GenericRepository<PostTask> {
 
             const queryBuilder = this.repository.createQueryBuilder('pt')
                 .leftJoin('pt.socialMediaAccount', 'sm')
-                .andWhere('pt.user_id = :userid', { userid: userId });
+                .andWhere('pt.user_id = :userid', { userid: userId })
+                .andWhere('sm.isDisconnect = :isDisconnect', { isDisconnect: false });
 
             if (platform != null) {
                 queryBuilder.andWhere('sm.platform = :platform', { platform: platform });
