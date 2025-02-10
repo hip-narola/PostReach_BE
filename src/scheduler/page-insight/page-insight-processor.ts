@@ -50,7 +50,7 @@ export class PageInsightProcessor extends WorkerHost {
             const twitterAccounts = await this.socialMediaService.getActiveSocialMediaAccountAsync(SocialMediaPlatformNames[SocialMediaPlatform['TWITTER']]);
             twitterAccounts.forEach(twitterAccount => {
                 console.log("twitterAccount : ", twitterAccount);
-                // this.twitterService.refreshToken(twitterAccount);
+                 this.twitterService.refreshToken(twitterAccount);
             });
 
         } catch (error) {
