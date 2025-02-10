@@ -9,7 +9,7 @@ import { DashboardInsightsModule } from '../dashboard-insights/dashboard-insight
 import { FacebookService } from 'src/services/facebook/facebook.service';
 import { SocialMediaAccountModule } from '../social-media-account/social-media-account.module';
 import { LinkedinService } from 'src/services/linkedin/linkedin.service';
-import { PostInsightProcessor } from 'src/scheduler/post-insight/post-insight-processor.processor';
+import { PostInsightProcessor } from 'src/scheduler/post-insight/post-insight-processor';
 import { InstagramService } from 'src/services/instagram/instagram.service';
 import { TwitterService } from 'src/services/twitter/twitter.service';
 import { UserModule } from '../user/user.module';

@@ -57,13 +57,13 @@ async function bootstrap() {
   });
 
   // Rate limiting for basic DOS protection
-  app.use(
-    rateLimit({
-      windowMs: 15 * 60 * 1000, // 15 minutes
-      max: 200, // Limit each IP to 200 requests per windowMs
-      message: 'Too many requests from this IP, please try again later.',
-    }),
-  );
+  // app.use(
+  //   rateLimit({
+  //     windowMs: 15 * 60 * 1000, // 15 minutes
+  //     max: 200, // Limit each IP to 200 requests per windowMs
+  //     message: 'Too many requests from this IP, please try again later.',
+  //   }),
+  // );
 
   // Swagger setup
   const swaggerConfig = new DocumentBuilder()

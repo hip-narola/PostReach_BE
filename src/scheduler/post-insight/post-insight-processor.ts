@@ -23,10 +23,13 @@ export class PostInsightProcessor extends WorkerHost {
 		try {
 
 			const posts = await this.postRepository.getPostsWithActiveSubscription();
+			console.log("post-insight posts", posts);
 
 			const facebookPosts = posts.filter(post =>
 				post.postTask.socialMediaAccount.platform === SocialMediaPlatformNames[SocialMediaPlatform.FACEBOOK]
 			);
+			console.log("post-insight facebookPosts: ", facebookPosts);
+
 			await this.facebookService.fetchAndUpdatePostData(facebookPosts);
 
 			const instagramPosts = posts.filter(post =>
@@ -46,7 +49,8 @@ export class PostInsightProcessor extends WorkerHost {
 			await this.linkedinService.fetchAndUpdatePostData(LinkedinPosts);
 
 		} catch (error) {
+			console.log("post-insight error", error);
 			throw error;
-		}
+		}		 
 	}
 }
