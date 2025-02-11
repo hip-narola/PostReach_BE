@@ -64,7 +64,8 @@ export class AuthController {
 			`email=${encodeURIComponent(req.user.email)}&` +
 			`picture=${encodeURIComponent(req.user.picture)}&` +
 			`access_token=${encodeURIComponent(req.user.cognitoIdToken)}&` +
-			`refresh_token=${encodeURIComponent(req.user.refreshToken)}`;
+			`refresh_token=${encodeURIComponent(req.user.refreshToken)}&` +
+			`userId=${encodeURIComponent(req.user.userId)}`;
 
 		//	this.setCookie(res, req.user.cognitoIdToken);
 		res.redirect(redirectUrl);
@@ -98,7 +99,8 @@ export class AuthController {
 			`email=${encodeURIComponent(req.user.email)}&` +
 			`picture=${encodeURIComponent(req.user.picture)}&` +
 			`access_token=${encodeURIComponent(req.user.cognitoAccessToken)}&` +
-			`refresh_token=${encodeURIComponent(req.user.refreshToken)}`;
+			`refresh_token=${encodeURIComponent(req.user.refreshToken)}&` +
+			`userId=${encodeURIComponent(req.user.userId)}`;
 
 		//this.setCookie(res, req.user.cognitoAccessToken);
 
