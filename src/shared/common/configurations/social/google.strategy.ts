@@ -82,6 +82,7 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
 
       done(null, user);
     } catch (error) {
+      console.log("GOOGLE LOGIN ERROR: ", error);
       throw error;
       done(null, { redirect: "" });
     }
