@@ -1,7 +1,5 @@
 import { Entity, Column, ManyToOne, JoinColumn, CreateDateColumn, PrimaryColumn } from 'typeorm';
 import { User } from './user.entity';
-import { UserCredit } from './user_credit.entity';
-
 
 @Entity('post-retry')
 export class PostRetry {
@@ -15,12 +13,6 @@ export class PostRetry {
     @ManyToOne(() => User, user => user.PostRetry)
     @JoinColumn({ name: 'user_id' })
     user: User;
-
-    @Column()
-    credit_id:string;
-    @ManyToOne(() => UserCredit, userCredit => userCredit.PostRetry)
-    @JoinColumn({ name: 'credit_id' })
-    userCredit: UserCredit;
 
     @Column()
     pipeline_id: string;

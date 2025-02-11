@@ -330,7 +330,6 @@ export class GeneratePostService {
             postRetry.id = generateId(IdType.POST_RETRY);
             postRetry.pipeline_id = pipelineId;
             postRetry.user_id = userId;
-            postRetry.credit_id = 'user_credit-20250204121438-281d1317';
             postRetry.modified_date = null;
             postRetry.created_at = new Date();
             postRetry.retry_count = 5;

@@ -407,45 +407,44 @@ export class SubscriptionService {
 			userSubscription.cycle === 1
 				? subscription.creditAmount * 2
 				: subscription.creditAmount;
+	
 		// Add 3 days to today's date for start_Date
-		// userCredit.start_Date = new Date();
 		if (userSubscription.start_Date.toISOString().split('T')[0] == new Date().toISOString().split('T')[0]) {
 			userCredit.start_Date = new Date(userSubscription.start_Date);
 			userCredit.start_Date.setDate(userCredit.start_Date.getDate() + 3);
-			// Add 1 month and 3 days to today's date for end_Date
-			// userCredit.end_Date = new Date();
-			// userCredit.end_Date.setDate(userCredit.end_Date.getDate() + 3);
-		}
-		else {
+		} else {
 			userCredit.start_Date = new Date();
 			userCredit.start_Date.setDate(userCredit.start_Date.getDate() + 1);
 		}
-		const credits = this.userCreditRepository.getAllUserCreditsOncreate(userSubscription.user.id)
-		if (credits) {
-			console.log('credits::::',credits)
-			if(credits[0]?.end_Date){
-				userCredit.end_Date = new Date(credits[0].end_Date);
-			}
-			else{
+	
+		// Handling the asynchronous operation with .then()
+		this.userCreditRepository.getAllUserCreditsOncreate(userSubscription.user.id).then(credits => {
+			if (credits && credits.length > 0) {
+				console.log('credits::::', credits);
+				if (credits[0]?.end_Date) {
+					userCredit.end_Date = new Date(credits[0].end_Date);
+				} else {
+					userCredit.end_Date = new Date(userSubscription.start_Date);
+					userCredit.end_Date.setMonth(userCredit.end_Date.getMonth() + 1);
+					userCredit.end_Date.setDate(userCredit.end_Date.getDate() + 3);
+				}
+			} else {
 				userCredit.end_Date = new Date(userSubscription.start_Date);
 				userCredit.end_Date.setMonth(userCredit.end_Date.getMonth() + 1);
 				userCredit.end_Date.setDate(userCredit.end_Date.getDate() + 3);
 			}
-		}
-		else {
-			userCredit.end_Date = new Date(userSubscription.start_Date);
-			userCredit.end_Date.setMonth(userCredit.end_Date.getMonth() + 1);
-			userCredit.end_Date.setDate(userCredit.end_Date.getDate() + 3);
-		}
-
-		userCredit.cancel_Date = null;
-
-		userCredit.social_media_id = socialMediaAccountId;
-		userCredit.status = UserCreditStatusType.ACTIVE;
-		console.log('new userCredit', userCredit);
-		return userCredit;
+	
+			userCredit.cancel_Date = null;
+			userCredit.social_media_id = socialMediaAccountId;
+			userCredit.status = UserCreditStatusType.ACTIVE;
+	
+			console.log('new userCredit', userCredit);
+		});
+	
+		return userCredit; // This will return before the async operation is complete
 	}
-
+	
+	
 	async checkUserHasSubscription(userId: number) {
 		const userSubscriptionRepository = this.unitOfWork.getRepository(
 			UserSubscriptionRepository,
