@@ -162,5 +162,18 @@ export class UserCreditRepository extends GenericRepository<UserCredit> {
 
 		return data1;
 	}
+
+    getAllUserCreditsOncreate(userId: number): Promise<UserCredit[]> {
+        return this.repository.find({
+            where: {
+                user: { id: userId },
+                status: UserCreditStatusType.ACTIVE,
+            },
+            relations: ['social_media', 'user'],
+            order: {
+                start_Date: 'DESC', // Order by start_Date in descending order
+            },
+        });
+    }
 }
 

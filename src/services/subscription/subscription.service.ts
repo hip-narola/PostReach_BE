@@ -273,14 +273,14 @@ export class SubscriptionService {
 		userSubscription: UserSubscription,
 		socialMediaAccountId?: number
 	): Promise<UserCredit> {
-		console.log( 'new user trial credit:: subscription', userSubscription)
+		console.log('new user trial credit:: subscription', userSubscription)
 		const userCredit = new UserCredit();
 		userCredit.id = generateId(IdType.USER_SUBSCRIPTION_CREDIT);
 		userCredit.user = user;
 		userCredit.subscription = subscription;
 		userCredit.current_credit_amount = subscription.creditAmount;
 
-		if (userSubscription.start_Date.toISOString().split('T')[0] == new Date().toISOString().split('T')[0] ) {
+		if (userSubscription.start_Date.toISOString().split('T')[0] == new Date().toISOString().split('T')[0]) {
 			userCredit.start_Date = new Date(
 				new Date().setDate(new Date(userSubscription.start_Date).getDate() + 2)
 			);
@@ -290,7 +290,7 @@ export class SubscriptionService {
 				new Date().setDate(new Date().getDate() + 1)
 			);
 		}
-		
+
 		// userCredit.end_Date = new Date(
 		// 	new Date().setDate(new Date(userSubscription.start_Date).getDate() + 8),
 		// );
@@ -409,7 +409,7 @@ export class SubscriptionService {
 				: subscription.creditAmount;
 		// Add 3 days to today's date for start_Date
 		// userCredit.start_Date = new Date();
-		if(userSubscription.start_Date.toISOString().split('T')[0] == new Date().toISOString().split('T')[0]){
+		if (userSubscription.start_Date.toISOString().split('T')[0] == new Date().toISOString().split('T')[0]) {
 			userCredit.start_Date = new Date(userSubscription.start_Date);
 			userCredit.start_Date.setDate(userCredit.start_Date.getDate() + 3);
 			// Add 1 month and 3 days to today's date for end_Date
@@ -420,10 +420,18 @@ export class SubscriptionService {
 			userCredit.start_Date = new Date();
 			userCredit.start_Date.setDate(userCredit.start_Date.getDate() + 1);
 		}
-		userCredit.end_Date = new Date(userSubscription.start_Date);
-		userCredit.end_Date.setMonth(userCredit.end_Date.getMonth() + 1);
-		userCredit.end_Date.setDate(userCredit.end_Date.getDate() + 3);
+		const credits = this.userCreditRepository.getAllUserCreditsOncreate(userSubscription.user.id)
+		if (credits) {
+			userCredit.end_Date = new Date(credits[0].end_Date);
+		}
+		else {
+			userCredit.end_Date = new Date(userSubscription.start_Date);
+			userCredit.end_Date.setMonth(userCredit.end_Date.getMonth() + 1);
+			userCredit.end_Date.setDate(userCredit.end_Date.getDate() + 3);
+		}
+
 		userCredit.cancel_Date = null;
+
 		userCredit.social_media_id = socialMediaAccountId;
 		userCredit.status = UserCreditStatusType.ACTIVE;
 		console.log('new userCredit', userCredit);
