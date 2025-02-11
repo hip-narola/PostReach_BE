@@ -58,10 +58,6 @@ import { SubscriptionService } from './services/subscription/subscription.servic
         name: 'twitetrMe',
         ttl: 86400000,
         limit: 24,
-      },
-      {
-        ttl: 30,
-        limit: 1000,
       }
     ]),
     DatabaseModule,
