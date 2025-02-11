@@ -163,7 +163,7 @@ export class UserCreditRepository extends GenericRepository<UserCredit> {
 		return data1;
 	}
 
-    getAllUserCreditsOncreate(userId: number): Promise<UserCredit[]> {
+    async getAllUserCreditsOncreate(userId: number): Promise<UserCredit[]> {
         return this.repository.find({
             where: {
                 user: { id: userId },
