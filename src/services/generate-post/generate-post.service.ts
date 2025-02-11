@@ -182,7 +182,7 @@ export class GeneratePostService {
                 const responseData = plainToInstance(generatePostResponseDTO, response.data);
                 console.log("generatePostByAIAPI::: responseData : ", response.data);
 
-                if (responseData.status == POST_RESPONSE.COMPLETED && responseData.posts.length > 0) {
+                if ((responseData.status == POST_RESPONSE.SUCCESS || responseData.status == POST_RESPONSE.COMPLETED) && responseData.posts.length > 0) {
                     console.log("generatePostByAIAPI::: inside POST response completed");
                     await this.savePostDetails(userCredit, responseData)
                 }
