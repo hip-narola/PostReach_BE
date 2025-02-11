@@ -187,7 +187,7 @@ export class SubscriptionService {
 		userSubscription.cycle = 0;
 		userSubscription.start_Date = new Date();
 		userSubscription.end_Date = new Date(
-			new Date().setDate(new Date().getDate() + 7),
+			new Date().setDate(new Date().getDate() + 6),
 		);
 		return userSubscription;
 	}
@@ -273,6 +273,7 @@ export class SubscriptionService {
 		userSubscription: UserSubscription,
 		socialMediaAccountId?: number
 	): Promise<UserCredit> {
+		console.log( 'new user trial credit:: subscription', userSubscription)
 		const userCredit = new UserCredit();
 		userCredit.id = generateId(IdType.USER_SUBSCRIPTION_CREDIT);
 		userCredit.user = user;
@@ -290,14 +291,18 @@ export class SubscriptionService {
 			);
 		}
 		
+		// userCredit.end_Date = new Date(
+		// 	new Date().setDate(new Date(userSubscription.start_Date).getDate() + 8),
+		// );
 		userCredit.end_Date = new Date(
-			new Date().setDate(new Date(userSubscription.start_Date).getDate() + 8),
+			new Date().setDate(new Date(userSubscription.end_Date).getDate()),
 		);
 		userCredit.social_media_id = socialMediaAccountId;
 		// userCredit.start_Date = userSubscription.start_Date;
 		// userCredit.end_Date = userSubscription.end_Date;
 		userCredit.status = UserCreditStatusType.ACTIVE;
 		userCredit.cancel_Date = null;
+		console.log('new user trial credit', userCredit)
 		return userCredit;
 	}
 
@@ -346,7 +351,7 @@ export class SubscriptionService {
 				? platforms.slice(0, -1).join(', ') + ' and ' + platforms[platforms.length - 1]
 				: platforms[0]; // If there's only one platform, just return it
 
-
+			console.log('userSubscriptionCreate userCredits', userCredits)
 			// Save all UserCredit instances at once
 			await userCreditRepository.save(userCredits);
 			if (userSubscription.cycle == 1) {
@@ -372,6 +377,8 @@ export class SubscriptionService {
 				socialMediaAccountId
 			);
 			// this.GenerateUserPostSubscriptionWise(user, subscription, userSubscription, socialMediaAccountId);
+			console.log('userSubscriptionCreate userCredit', userCredit)
+
 			await userCreditRepository.create(userCredit);
 			if (userSubscription.cycle == 1) {
 				{
@@ -585,7 +592,7 @@ export class SubscriptionService {
 
 			await this.userSubscriptionRepository.create(userSubscriptionCreate);
 
-
+			console.log('userSubscriptionCreate', userSubscriptionCreate)
 			await this.createUserCredit(
 				user,
 				subscription,
