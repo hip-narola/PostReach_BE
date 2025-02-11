@@ -35,6 +35,7 @@ export class AuthController {
 
 		const appUrl = this.configService.get<string>('APP_URL_FRONTEND');
 		const error = req.query.error;
+		console.log("GOOGLE LOGIN (google/callback) ERROR: ",error);
 		if (error) {
 			if (error === 'access_denied') {
 				const isSuccess = false;
