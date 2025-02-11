@@ -28,7 +28,7 @@ export class PostHistoryRepository extends GenericRepository<PostTask> {
                     'p.no_of_comments AS no_of_comments',
                     'p.no_of_views AS no_of_views',
                     'p.hashtags AS hashtags',
-                    'ur.name AS user',
+                    'sm.user_name AS user',
                     'ur.profilePicture AS profileimage',
                 ])
                 .addSelect('pt.scheduled_at::text AS scheduled_at')

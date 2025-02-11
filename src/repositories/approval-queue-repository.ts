@@ -31,7 +31,7 @@ export class ApprovalQueueRepository extends GenericRepository<PostTask> {
                     'p.hashtags AS hashtags',
                     'sm.platform AS channel',
                     'pt.scheduled_at AS schedule_date',
-                    'ur.name AS user',
+                    'sm.user_name AS user',
                     'sm.user_profile AS profileimage',
                     'p.no_of_likes AS no_of_likes',
                     'p.no_of_comments AS no_of_comments',
@@ -47,6 +47,7 @@ export class ApprovalQueueRepository extends GenericRepository<PostTask> {
                 .addSelect('pt.scheduled_at::text AS scheduled_at')
                 .orderBy('pt.scheduled_at', 'ASC')
                 .getRawMany();
+
             const data = postTasks.map(queryResult => ({
                 id: queryResult.post_task_id,
                 postId: queryResult.post_id,
