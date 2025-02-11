@@ -334,22 +334,14 @@ export class SubscriptionService {
 
 			// Create an array of UserCredit instances and generate post
 
-			// const userCredits = await Promise.all(
-			// 	userPlatforms.map(async (userPlatform) => {
-			// 		const creditInstance = this.createUserCreditInstance(user, subscription, userSubscription, userPlatform.id);
-			// 		// await this.GenerateUserPostSubscriptionWise(user, subscription, userSubscription, userPlatform.id);
-			// 		return creditInstance;
-			// 	})
-			// );
-			const userCredits = [];
+			const userCredits = await Promise.all(
+				userPlatforms.map(async (userPlatform) => {
+					const creditInstance = await this.createUserCreditInstance(user, subscription, userSubscription, userPlatform.id);
+					// await this.GenerateUserPostSubscriptionWise(user, subscription, userSubscription, userPlatform.id);
+					return creditInstance;
+				})
+			);
 
-			for (const userPlatform of userPlatforms) {
-				// Create the credit instance with necessary properties
-				const creditInstance = this.createUserCreditInstance(user, subscription, userSubscription, userPlatform.id);
-
-				// Push the credit instance into the array
-				userCredits.push(creditInstance);
-			}
 
 			// userPlatforms is an array of objects with a 'platform' property
 			const platforms = userPlatforms.map(userPlatform => userPlatform.platform);
@@ -378,7 +370,7 @@ export class SubscriptionService {
 		} else {
 
 			// Create UserCredit instances
-			const userCredit = this.createUserCreditInstance(
+			const userCredit = await this.createUserCreditInstance(
 				user,
 				subscription,
 				userSubscription,
@@ -401,13 +393,15 @@ export class SubscriptionService {
 	/**
 	* Helper function to create a UserCredit instance.
 	*/
-	private createUserCreditInstance(
+	private async createUserCreditInstance(
 		user: User,
 		subscription: Subscription,
 		userSubscription: UserSubscription,
 		socialMediaAccountId: number
-	): UserCredit {
+	): Promise<UserCredit> {
 		const userCredit = new UserCredit();
+
+		// Assign initial values
 		userCredit.id = generateId(IdType.USER_SUBSCRIPTION_CREDIT);
 		userCredit.user = user;
 		userCredit.subscription = subscription;
@@ -416,43 +410,39 @@ export class SubscriptionService {
 				? subscription.creditAmount * 2
 				: subscription.creditAmount;
 
-		// Add 3 days to today's date for start_Date
-		if (userSubscription.start_Date.toISOString().split('T')[0] == new Date().toISOString().split('T')[0]) {
-			userCredit.start_Date = new Date(userSubscription.start_Date);
-			userCredit.start_Date.setDate(userCredit.start_Date.getDate() + 3);
+		// Determine start date
+		let startDate: Date;
+		const currentDate = new Date();
+		if (userSubscription.start_Date.toISOString().split('T')[0] === currentDate.toISOString().split('T')[0]) {
+			startDate = new Date(userSubscription.start_Date);
+			startDate.setDate(startDate.getDate() + 3); // Add 3 days to start date
 		} else {
-			userCredit.start_Date = new Date();
-			userCredit.start_Date.setDate(userCredit.start_Date.getDate() + 1);
+			startDate = new Date();
+			startDate.setDate(startDate.getDate() + 1); // Set start date to tomorrow
 		}
+		userCredit.start_Date = startDate;
 
-		// Handling the asynchronous operation with .then()
-		this.userCreditRepository.getAllUserCreditsOncreate(userSubscription.user.id).then(credits => {
-			if (credits && credits.length > 0) {
-				console.log('credits::::', credits);
-				if (credits[0]?.end_Date) {
-					userCredit.end_Date = new Date(credits[0].end_Date);
-				} else {
-					userCredit.end_Date = new Date(userSubscription.start_Date);
-					userCredit.end_Date.setMonth(userCredit.end_Date.getMonth() + 1);
-					userCredit.end_Date.setDate(userCredit.end_Date.getDate() + 3);
-				}
-			} else {
-				userCredit.end_Date = new Date(userSubscription.start_Date);
-				userCredit.end_Date.setMonth(userCredit.end_Date.getMonth() + 1);
-				userCredit.end_Date.setDate(userCredit.end_Date.getDate() + 3);
-			}
+		// Get all previous credits and calculate the end date
+		const credits = await this.userCreditRepository.getAllUserCreditsOncreate(userSubscription.user.id);
+		let endDate: Date;
 
-			userCredit.cancel_Date = null;
-			userCredit.social_media_id = socialMediaAccountId;
-			userCredit.status = UserCreditStatusType.ACTIVE;
+		if (credits.length > 0 && credits[0]?.end_Date) {
+			endDate = new Date(credits[0].end_Date);
+		} else {
+			endDate = new Date(userSubscription.start_Date);
+			endDate.setMonth(endDate.getMonth() + 1); // Add 1 month to the end date
+			endDate.setDate(endDate.getDate() + 3); // Add 3 days to the end date
+		}
+		userCredit.end_Date = endDate;
 
-			console.log('new userCredit', userCredit);
-		});
-		console.log('new userCredit All', userCredit);
+		// Set other values
+		userCredit.cancel_Date = null;
+		userCredit.social_media_id = socialMediaAccountId;
+		userCredit.status = UserCreditStatusType.ACTIVE;
 
-		return userCredit; // This will return before the async operation is complete
+		console.log('new userCredit', userCredit);
+		return userCredit;
 	}
-
 
 	async checkUserHasSubscription(userId: number) {
 		const userSubscriptionRepository = this.unitOfWork.getRepository(
