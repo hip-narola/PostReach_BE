@@ -422,7 +422,15 @@ export class SubscriptionService {
 		}
 		const credits = this.userCreditRepository.getAllUserCreditsOncreate(userSubscription.user.id)
 		if (credits) {
-			userCredit.end_Date = new Date(credits[0].end_Date);
+			console.log('credits::::',credits)
+			if(credits[0]?.end_Date){
+				userCredit.end_Date = new Date(credits[0].end_Date);
+			}
+			else{
+				userCredit.end_Date = new Date(userSubscription.start_Date);
+				userCredit.end_Date.setMonth(userCredit.end_Date.getMonth() + 1);
+				userCredit.end_Date.setDate(userCredit.end_Date.getDate() + 3);
+			}
 		}
 		else {
 			userCredit.end_Date = new Date(userSubscription.start_Date);
