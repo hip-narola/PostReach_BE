@@ -29,7 +29,7 @@ export class PostHistoryRepository extends GenericRepository<PostTask> {
                     'p.no_of_views AS no_of_views',
                     'p.hashtags AS hashtags',
                     'sm.user_name AS user',
-                    'ur.profilePicture AS profileimage',
+                    'sm.user_profile AS profileimage',
                 ])
                 .addSelect('pt.scheduled_at::text AS scheduled_at')
                 .leftJoin('pt.post', 'p')
