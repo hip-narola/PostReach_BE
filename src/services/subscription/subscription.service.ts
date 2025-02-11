@@ -422,6 +422,7 @@ export class SubscriptionService {
 		}
 		userCredit.end_Date = new Date(userSubscription.start_Date);
 		userCredit.end_Date.setMonth(userCredit.end_Date.getMonth() + 1);
+		userCredit.end_Date.setDate(userCredit.end_Date.getDate() + 3);
 		userCredit.cancel_Date = null;
 		userCredit.social_media_id = socialMediaAccountId;
 		userCredit.status = UserCreditStatusType.ACTIVE;
