@@ -137,3 +137,62 @@ export class GeneratePostPipelineRequestDTO {
     @IsBoolean()
     is_dummy?: boolean = false;
 }
+
+export class ReGeneratePostPipelineRequestDTO {
+    @ValidateNested()
+    @Type(() => PostTemplateDTO)
+    @IsOptional()
+    post_templates?: PostTemplateDTO[];
+
+    @IsOptional()
+    @IsBoolean()
+    is_dummy?: boolean = false;
+}
+
+export class PostTemplateDTO {
+    @IsNotEmpty()
+    @IsString()
+    post_id: number;
+
+    @IsNotEmpty()
+    @IsString()
+    platform: string;
+
+    image_generation?: {
+        regenerate_prompt: boolean;
+        regenerate_image: boolean;
+    } = {
+            regenerate_prompt: false,
+            regenerate_image: false,
+        };
+
+    @IsString()
+    language?: string;
+
+    @IsString()
+    text?: string;
+
+    @IsOptional()
+    @IsInt()
+    social_task_version?: number = 0;
+
+    @IsOptional()
+    @IsInt()
+    hashtag_number?: number = 0;
+
+    @IsOptional()
+    @IsInt()
+    post_word_count?: number = 1000;
+
+    @IsOptional()
+    @IsInt()
+    image_prompt_generation_task_version?: number = 1;
+
+    @IsDateString()
+    @IsOptional()
+    schedule_start_date?: string;
+
+    @IsDateString()
+    @IsOptional()
+    schedule_end_date?: string;
+}

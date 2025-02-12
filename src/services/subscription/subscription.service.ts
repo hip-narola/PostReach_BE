@@ -311,7 +311,7 @@ export class SubscriptionService {
 		user: User,
 		subscription: Subscription,
 		userSubscription: UserSubscription,
-		socialMediaAccountId?: number
+		socialMediaAccount?: SocialMediaAccount
 	): Promise<void> {
 
 		const userCreditRepository = this.unitOfWork.getRepository(
@@ -320,7 +320,7 @@ export class SubscriptionService {
 			true
 		);
 
-		if (!socialMediaAccountId) {
+		if (!socialMediaAccount) {
 			//expire old credit
 			await userCreditRepository.updateUserCreditsToExpired(user.id);
 			const socialMediaAccountRepository = this.unitOfWork.getRepository(
@@ -336,7 +336,7 @@ export class SubscriptionService {
 
 			const userCredits = await Promise.all(
 				userPlatforms.map(async (userPlatform) => {
-					const creditInstance = await this.createUserCreditInstance(user, subscription, userSubscription, userPlatform.id);
+					const creditInstance = await this.createUserCreditInstance(user, subscription, userSubscription, userPlatform);
 					// await this.GenerateUserPostSubscriptionWise(user, subscription, userSubscription, userPlatform.id);
 					return creditInstance;
 				})
@@ -374,7 +374,7 @@ export class SubscriptionService {
 				user,
 				subscription,
 				userSubscription,
-				socialMediaAccountId
+				socialMediaAccount
 			);
 			// this.GenerateUserPostSubscriptionWise(user, subscription, userSubscription, socialMediaAccountId);
 			console.log('userSubscriptionCreate userCredit', userCredit)
@@ -397,7 +397,7 @@ export class SubscriptionService {
 		user: User,
 		subscription: Subscription,
 		userSubscription: UserSubscription,
-		socialMediaAccountId: number
+		socialMediaAccount: SocialMediaAccount
 	): Promise<UserCredit> {
 		const userCredit = new UserCredit();
 
@@ -412,14 +412,18 @@ export class SubscriptionService {
 
 		// Determine start date
 		let startDate: Date;
-		const currentDate = new Date();
-		if (userSubscription.start_Date.toISOString().split('T')[0] === currentDate.toISOString().split('T')[0]) {
+		if (socialMediaAccount.connected_at.toISOString().split('T')[0] >= userSubscription.start_Date.toISOString().split('T')[0]) {
+			startDate = new Date();
+			startDate.setDate(startDate.getDate() + 1);
+		}
+		else {
 			startDate = new Date(userSubscription.start_Date);
 			startDate.setDate(startDate.getDate() + 3); // Add 3 days to start date
-		} else {
-			startDate = new Date();
-			startDate.setDate(startDate.getDate() + 1); // Set start date to tomorrow
 		}
+		// if (userSubscription.start_Date.toISOString().split('T')[0] === currentDate.toISOString().split('T')[0]) {
+		// } else {
+		// 	// Set start date to tomorrow
+		// }
 		userCredit.start_Date = startDate;
 
 		// Get all previous credits and calculate the end date
@@ -437,7 +441,7 @@ export class SubscriptionService {
 
 		// Set other values
 		userCredit.cancel_Date = null;
-		userCredit.social_media_id = socialMediaAccountId;
+		userCredit.social_media_id = socialMediaAccount.id;
 		userCredit.status = UserCreditStatusType.ACTIVE;
 
 		console.log('new userCredit', userCredit);
@@ -882,7 +886,7 @@ export class SubscriptionService {
 
 				}
 				else {
-					await this.createUserCredit(userSubscription.user, subscription, userSubscription, userSocialAcc.id);
+					await this.createUserCredit(userSubscription.user, subscription, userSubscription, userSocialAcc);
 				}
 				//Generate posts
 				await this.notificationService.saveData(userSubscription.user.id, NotificationType.SOCIAL_CREDIT_ADDED, `${NotificationMessage[NotificationType.SOCIAL_CREDIT_ADDED]} ${userSocialAcc.platform}`);

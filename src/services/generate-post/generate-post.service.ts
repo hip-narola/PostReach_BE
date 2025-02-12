@@ -1,7 +1,7 @@
 import { HttpService } from '@nestjs/axios';
 import { Injectable } from '@nestjs/common';
 import { plainToInstance } from 'class-transformer';
-import { GeneratePostPipelineRequestDTO, Mode, SocialPostNumberDTO, UserInfoDTO, UserInfoType } from 'src/dtos/params/generate-post-param.dto';
+import { GeneratePostPipelineRequestDTO, Mode, PostTemplateDTO, ReGeneratePostPipelineRequestDTO, SocialPostNumberDTO, UserInfoDTO, UserInfoType } from 'src/dtos/params/generate-post-param.dto';
 import { generatePostResponseDTO } from 'src/dtos/response/generate-post-response.dto';
 import { PostTaskRepository } from 'src/repositories/post-task-repository';
 import { PostRepository } from 'src/repositories/post-repository';
@@ -49,20 +49,9 @@ export class GeneratePostService {
     async generatePostByAIAPI(userCredit: UserCredit[]): Promise<void> {
         try {
             console.log('generatePostByAIAPI:::  userCredit', userCredit)
-            const details = await this.userRepository.findUserAnswersWithQuestionsAndSocialMedia(userCredit[0].user.id/*, userCredit.social_media_id*/);
-            const socialMediaIds = details.socialMedia.map((media) => media.id);
+            const details = await this.userRepository.findUserAnswersWithQuestionsAndSocialMedia(userCredit[0].user.id);
             console.log('generatePostByAIAPI::: details', details)
-            console.log('generatePostByAIAPI::: socialMediaIds', socialMediaIds);
-            // Bind data from these info
-            const userInfo: UserInfoDTO[] = details?.userAnswers?.map((answer: any) => ({
-                name: answer.question?.questionName || '',
-                value: answer.answerText || '',
-                type: UserInfoType.TEXT,
-                isUrl: answer.question?.questionName == 'personal_website',
-            })) || [];
 
-            const posts = await this.postTaskRepository.fetchPostTaskOfSocialMedia(socialMediaIds);
-            console.log('generatePostByAIAPI:: posts', posts)
             //generate post only for left days of subscription
             const daysDifference = (Math.floor(Math.abs(new Date(details.userSubscription.end_Date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))) + 1;
 
@@ -75,6 +64,10 @@ export class GeneratePostService {
             subscriptionValidDate.setDate(subscriptionValidDate.getDate() + 14);
             console.log('generatePostByAIAPI::: today: ', today, 'subscriptionStart: ', subscriptionStart, 'subscriptionValidDate :', subscriptionValidDate);
 
+            const secretData = await this.secretService.getSecret(AWS_SECRET.AWSSECRETNAME);
+
+            const token = secretData.TOKEN;
+            let apiUrl: string;
             const socialPostNumber: SocialPostNumberDTO = {
                 facebook_posts_number: 0,
                 instagram_posts_number: 0,
@@ -82,59 +75,41 @@ export class GeneratePostService {
                 twitter_posts_number: 0
             }
 
+            let generatePostRequest: ReGeneratePostPipelineRequestDTO | GeneratePostPipelineRequestDTO;
+
             for (let i = 0; i < userCredit.length; i++) {
-                console.log('generatePostByAIAPI::: for credit loop start')
                 const element = userCredit[i];
                 PostRequestCount = 0;
 
                 element.social_media = await this.socialMediaAccountRepository.findOne(element.social_media_id);
                 if (details.userSubscription.cycle == 0) {
-                    // if (details.userSubscription.start_Date.toISOString().split('T')[0] == today.toISOString().split('T')[0] || daysDifference >= element.current_credit_amount) {
-                    //     console.log('generatePostByAIAPI::: if block', PostRequestCount)
                     PostRequestCount = element.current_credit_amount;
-                    // }
-                    // else {
-                    //     PostRequestCount = daysDifference;
-                    //     console.log('generatePostByAIAPI::: else block', PostRequestCount)
-                    // }
-                    console.log('generatePostByAIAPI::: cycle0 PostRequestCount', PostRequestCount)
                 }
                 else if (details.userSubscription.cycle == 1) {
-                    console.log('generatePostByAIAPI::: cycle==1')
 
                     if (today >= subscriptionValidDate && element.current_credit_amount > daysDifference) {
-                        console.log('generatePostByAIAPI::: today >= subscriptionValidDate && userCredit.currentCreditAmount > daysDifference', daysDifference)
                         PostRequestCount = daysDifference;
                     } else {
                         if (element.last_trigger_date != null) {
-                            console.log('generatePostByAIAPI::: userCredit.lastTriggerDate != null', element.current_credit_amount)
                             PostRequestCount = element.current_credit_amount;
                         }
                         else {
-                            console.log('generatePostByAIAPI::: cycle==1 if else else', element.current_credit_amount / 2)
                             PostRequestCount = element.current_credit_amount / 2;
                         }
                     }
                 }
                 else if (details.userSubscription.cycle >= 2) {
-                    console.log('generatePostByAIAPI::: cycle>=2')
 
                     if (today >= subscriptionValidDate && element.current_credit_amount > daysDifference) {
-                        console.log('generatePostByAIAPI::: today >= subscriptionValidDate && userCredit.current_credit_amount > daysDifference', daysDifference)
                         PostRequestCount = daysDifference;
                     }
                     else {
-                        console.log('generatePostByAIAPI::: cycle>=2 else', element.current_credit_amount)
                         PostRequestCount = element.current_credit_amount;
                     }
                 }
                 else {
-                    console.log('generatePostByAIAPI::: else', element.current_credit_amount)
                     PostRequestCount = element.current_credit_amount;
                 }
-
-                console.log('generatePostByAIAPI::: PostRequestCount: ', PostRequestCount);
-                console.log('generatePostByAIAPI::: element.social_media.platform: ', element.social_media.platform);
 
                 if (element.social_media.platform == SocialMediaPlatformNames[SocialMediaPlatform.FACEBOOK])
                     socialPostNumber.facebook_posts_number = Math.round(PostRequestCount);
@@ -144,40 +119,65 @@ export class GeneratePostService {
                     socialPostNumber.twitter_posts_number = Math.round(PostRequestCount);
                 else if (element.social_media.platform == SocialMediaPlatformNames[SocialMediaPlatform.INSTAGRAM])
                     socialPostNumber.instagram_posts_number = Math.round(PostRequestCount);
-
-                console.log("generatePostByAIAPI::: socialPostNumber inside loop ", socialPostNumber);
-                console.log('generatePostByAIAPI::: for credit loop end')
             }
-            console.log('generatePostByAIAPI::: socialPostNumber: ', socialPostNumber);
 
-            const generatePostRequest: GeneratePostPipelineRequestDTO = {
-                mode: Mode.AUTOPILOT,
-                social_post_number: socialPostNumber,
-                user_info: userInfo,
-                schedule_start_date: userCredit[0]?.start_Date ? userCredit[0].start_Date.toISOString().split('T')[0] : '',
-                schedule_end_date: userCredit[0]?.end_Date ? userCredit[0].end_Date.toISOString().split('T')[0] : '',
-                country: COUNTRY.SINGAPORE,
-                language: LANGUAGE.ENGLISH,
-                is_dummy: IS_DUMMY_STATUS.TRUE,
-            };
-            console.log('generatePostByAIAPI::: REQUEST generatePostRequest : ', generatePostRequest);
+            console.log("generatePostByAIAPI::: socialPostNumber ", socialPostNumber);
 
-            const secretData = await this.secretService.getSecret(AWS_SECRET.AWSSECRETNAME);
+            if (userCredit.length == 1 && PostRequestCount < 15 && details.userSubscription.cycle != 0) {
+                const socialMediaIds = details.socialMedia.map((media) => media.id);
 
-            const apiUrl = secretData.APIURL;
-            const token = secretData.TOKEN;
-            let response;
-            try {
-                response = await axios.post(apiUrl, generatePostRequest, {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    },
-                });
+                console.log('generatePostByAIAPI::: socialMediaIds', socialMediaIds);
+
+                const posts = await this.postTaskRepository.fetchPostTaskOfSocialMedia(socialMediaIds);
+                console.log('generatePostByAIAPI:: posts', posts)
+                const postsForPlatform = posts.slice(0, PostRequestCount).map(postTask => ({
+                    post_id: postTask.id,
+                    platform: userCredit[0].social_media.platform,  // Set the platform dynamically
+                    image_generation: { regenerate_prompt: false, regenerate_image: false },
+                    schedule_start_date: userCredit[0]?.start_Date ? userCredit[0].start_Date.toISOString().split('T')[0] : '',
+                    schedule_end_date: userCredit[0]?.end_Date ? userCredit[0].end_Date.toISOString().split('T')[0] : ''
+                }));
+
+                console.log('generatePostByAIAPI::: postsForPlatform', postsForPlatform)
+                apiUrl = secretData.REGENERATE_AI_API;
+
+                generatePostRequest = {
+                    post_templates: postsForPlatform,
+                    is_dummy: IS_DUMMY_STATUS.TRUE,
+                };
+
             }
-            catch (error) {
-                console.log('generatePostByAIAPI::: API error', error)
+            else {
+                apiUrl = secretData.APIURL;
+
+                // Bind data from these info
+                const userInfo: UserInfoDTO[] = details?.userAnswers?.map((answer: any) => ({
+                    name: answer.question?.questionName || '',
+                    value: answer.answerText || '',
+                    type: UserInfoType.TEXT,
+                    isUrl: answer.question?.questionName == 'personal_website',
+                })) || [];
+
+                generatePostRequest = {
+                    mode: Mode.AUTOPILOT,
+                    social_post_number: socialPostNumber,
+                    user_info: userInfo,
+                    schedule_start_date: userCredit[0]?.start_Date ? userCredit[0].start_Date.toISOString().split('T')[0] : '',
+                    schedule_end_date: userCredit[0]?.end_Date ? userCredit[0].end_Date.toISOString().split('T')[0] : '',
+                    country: COUNTRY.SINGAPORE,
+                    language: LANGUAGE.ENGLISH,
+                    is_dummy: IS_DUMMY_STATUS.TRUE,
+                }
             }
+
+            console.log('generatePostByAIAPI::: generatePostRequest', generatePostRequest)
+            const response = await axios.post(apiUrl, generatePostRequest, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+            });
+
             if (response != undefined) {
                 const responseData = plainToInstance(generatePostResponseDTO, response.data);
                 console.log("generatePostByAIAPI::: responseData : ", response.data);
@@ -191,8 +191,8 @@ export class GeneratePostService {
                     await this.savePostRetry(userCredit[0].user.id, responseData.result_id, responseData.status)
                 }
             }
-
-        } catch (error) {
+        }
+        catch (error) {
             console.log(`error in generatePostByAIAPI: ${error}`);
             throw error;
         }
@@ -210,9 +210,6 @@ export class GeneratePostService {
                 for (const post of generatePostData.posts) {
                     console.log("savePostDetails::: post ", post.id);
 
-                    console.log("savePostDetails:::  post.platform", post.platform);
-
-
                     const sm = userCredit.find(x => x.social_media.platform == post.platform);
                     console.log("savePostDetails:::  sm", sm);
 
@@ -228,11 +225,10 @@ export class GeneratePostService {
                         postTask.user = user;
                         postTask.modified_date = null;
                         postTask.socialMediaAccount = sm.social_media;
-
+                        postTask.external_post_id = post.id;
                         await this.postTaskRepository.save([postTask]);
 
                         console.log("savePostDetails::: post task saved: ", postTask);
-                        console.log('savePostDetails::: postTask socialMediaAccount: ', postTask.socialMediaAccount);
 
                         // Create post task | End
 
