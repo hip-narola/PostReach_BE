@@ -125,7 +125,6 @@ export class GeneratePostService {
             const currentDate = new Date();
             const currentDateOnly = currentDate.toISOString().split('T')[0];
 
-
             const startDate = new Date(details.userSubscription.start_Date); // Create a Date object from the start date
             startDate.setDate(startDate.getDate() + 14); // Add 14 days
             const checkDate = startDate; // Store the updated date in checkDate
@@ -139,7 +138,15 @@ export class GeneratePostService {
 
                 const posts = await this.postTaskRepository.fetchPostTaskOfSocialMedia(socialMediaIds);
                 console.log('generatePostByAIAPI:: posts', posts)
-                const postsForPlatform = posts.slice(0, PostRequestCount).map(postTask => ({
+                let postTogenerate: PostTask[];
+                if (posts.length >= PostRequestCount) {
+                    postTogenerate = posts.slice(0, PostRequestCount);
+                }
+                else {
+                    postTogenerate = posts;
+                }
+                console.log('generatePostByAIAPI::: postTogenerate', postTogenerate)
+                const postsForPlatform = postTogenerate.map(postTask => ({
                     post_id: postTask.id,
                     platform: userCredit[0].social_media.platform,  // Set the platform dynamically
                     image_generation: { regenerate_prompt: false, regenerate_image: false },
