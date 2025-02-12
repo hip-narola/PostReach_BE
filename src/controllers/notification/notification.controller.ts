@@ -1,20 +1,19 @@
-import { Body, Controller, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { NotificationService } from 'src/services/notification/notification.service';
 import { Notification } from 'src/entities/notification.entity';
 import { NotificationSaveParamDto } from 'src/dtos/params/notification-save-param.dto';
 import { ApiBody, ApiQuery } from '@nestjs/swagger';
 import { NotificationUpdateParamDto } from 'src/dtos/params/notification-update-param.dto';
 import { NotificationUpdateQueryDto } from 'src/dtos/params/notification-query-param.dto';
-import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
+import { SkipThrottle } from '@nestjs/throttler';
 
 @Controller('notification')
-@UseGuards(ThrottlerGuard) // Apply the ThrottlerGuard globally to the controller
+@SkipThrottle()
 export class NotificationController {
     constructor(
         private readonly notificationService: NotificationService
     ) { }
 
-    @Throttle({ default: { limit: 1000, ttl: 10 } })
     @Get('getList/:userId/:isRead')
     async getList(@Param('userId') userId: number, @Param('isRead') isRead: boolean): Promise<Notification[]> {
         try {
