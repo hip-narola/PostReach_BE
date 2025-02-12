@@ -59,10 +59,10 @@ import { SubscriptionService } from './services/subscription/subscription.servic
         ttl: 86400000,
         limit: 24,
       },
-      {
-        ttl: 10, // Time to live in seconds
-        limit: 1000, // Maximum number of requests
-      }
+      // {
+      //   ttl: 10, // Time to live in seconds
+      //   limit: 1000, // Maximum number of requests
+      // }
     ]),
     DatabaseModule,
     CalenderModule,
