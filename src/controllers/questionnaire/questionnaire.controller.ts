@@ -5,8 +5,10 @@ import {
     Param,
     Post,
 } from '@nestjs/common';
+import { SkipThrottle } from '@nestjs/throttler';
 import { QuestionnaireService } from 'src/services/questionnaire/questionnaire.service';
 
+@SkipThrottle()
 @Controller('questionnaire')
 export class QuestionnaireController {
     constructor(private readonly questionnaireService: QuestionnaireService) { }

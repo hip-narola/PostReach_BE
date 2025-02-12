@@ -8,9 +8,11 @@ import {
     Req,
     Res,
 } from '@nestjs/common';
+import { SkipThrottle } from '@nestjs/throttler';
 import { Request, Response } from 'express';
 import { SubscriptionService } from 'src/services/subscription/subscription.service';
 
+@SkipThrottle()
 @Controller('payment')
 export class PaymentController {
     constructor(

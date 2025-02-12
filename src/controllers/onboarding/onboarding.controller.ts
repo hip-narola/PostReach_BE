@@ -1,7 +1,9 @@
 import { Controller, Get } from '@nestjs/common';
+import { SkipThrottle } from '@nestjs/throttler';
 import { OnboardingService } from 'src/services/onboarding/onboarding.service';
 
 @Controller('onboarding')
+@SkipThrottle()
 export class OnboardingController {
     constructor(private readonly onboardingService: OnboardingService) {}
 

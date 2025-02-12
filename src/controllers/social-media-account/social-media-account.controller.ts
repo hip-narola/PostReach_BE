@@ -1,8 +1,10 @@
 import { Controller, Get, Param, UseGuards } from '@nestjs/common';
+import { SkipThrottle } from '@nestjs/throttler';
 import { SocialMediaAccountService } from 'src/services/social-media-account/social-media-account.service';
 import { JwtAuthGuard } from 'src/shared/common/guards/jwt/jwt.guard';
 import { SocialMediaPlatform, SocialMediaPlatformNames } from 'src/shared/constants/social-media.constants';
 
+@SkipThrottle()
 @Controller('social-media-account')
 export class SocialMediaAccountController {
     constructor(private readonly socialMediaAccountService: SocialMediaAccountService) { }

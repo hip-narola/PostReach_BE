@@ -1,10 +1,12 @@
 import { Body, Controller, Post } from '@nestjs/common';
 import { ApiBody } from '@nestjs/swagger';
+import { SkipThrottle } from '@nestjs/throttler';
 import { ArchivePostsDto } from 'src/dtos/params/archive-post-param.dto';
 import { PaginationParamDto } from 'src/dtos/params/pagination-param.dto';
 import { PaginatedResponseDto } from 'src/dtos/response/pagination-response.dto';
 import { PostHistoryService } from 'src/services/post-history/post-history.service';
 
+@SkipThrottle()
 @Controller('post-history')
 export class PostHistoryController {
 

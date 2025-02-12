@@ -2,8 +2,10 @@ import { Body, Controller, Post } from '@nestjs/common';
 import { ApiBody } from '@nestjs/swagger';
 import { CalenderService } from 'src/services/calender/calender.service';
 import { CalenderParamDto } from 'src/dtos/params/calender-param.dto';
+import { SkipThrottle } from '@nestjs/throttler';
 
 @Controller('calendar')
+@SkipThrottle()
 export class CalenderController {
 
     constructor(private readonly calenderService: CalenderService) { }
