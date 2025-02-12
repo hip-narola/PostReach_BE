@@ -137,17 +137,19 @@ export class GeneratePostService {
                 console.log('generatePostByAIAPI::: socialMediaIds', socialMediaIds);
 
                 const posts = await this.postTaskRepository.fetchPostTaskOfSocialMedia(socialMediaIds);
-                console.log('generatePostByAIAPI:: posts', posts)
+                // console.log('generatePostByAIAPI:: posts', posts)
                 let postTogenerate: PostTask[];
                 if (posts.length >= PostRequestCount) {
+                    console.log('generatePostByAIAPI::: posts.length in', posts.length, PostRequestCount)
                     postTogenerate = posts.slice(0, PostRequestCount);
                 }
                 else {
+                    console.log('generatePostByAIAPI::: posts.length else', posts.length, PostRequestCount)
                     postTogenerate = posts;
                 }
                 console.log('generatePostByAIAPI::: postTogenerate', postTogenerate)
                 const postsForPlatform = postTogenerate.map(postTask => ({
-                    post_id: postTask.id,
+                    post_id: postTask.external_post_id,
                     platform: userCredit[0].social_media.platform,  // Set the platform dynamically
                     image_generation: { regenerate_prompt: false, regenerate_image: false },
                     schedule_start_date: userCredit[0]?.start_Date ? userCredit[0].start_Date.toISOString().split('T')[0] : '',

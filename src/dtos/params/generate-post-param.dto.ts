@@ -152,7 +152,7 @@ export class ReGeneratePostPipelineRequestDTO {
 export class PostTemplateDTO {
     @IsNotEmpty()
     @IsString()
-    post_id: number;
+    post_id: string;
 
     @IsNotEmpty()
     @IsString()

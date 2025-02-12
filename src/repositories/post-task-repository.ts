@@ -112,7 +112,7 @@ export class PostTaskRepository extends GenericRepository<PostTask> {
             .andWhere('postTask.social_media_account_id = :topSocialMediaAccountId', { topSocialMediaAccountId })
             .getMany();
 
-        console.log('new posts', posts);
+        // console.log('new posts', posts);
         return posts;
     }
 
