@@ -11,14 +11,15 @@ import {
     HttpStatus,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { SkipThrottle } from '@nestjs/throttler';
 import { UserDto } from 'src/dtos/params/user.dto';
 import { User } from 'src/entities/user.entity';
 import { UserService } from 'src/services/user/user.service';
 import { JwtAuthGuard } from 'src/shared/common/guards/jwt/jwt.guard';
 
+@SkipThrottle()
 @Controller('user')
 export class UserController {
-    private supabase;
 
     constructor(private readonly userService: UserService) {
     }

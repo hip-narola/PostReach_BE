@@ -14,8 +14,10 @@ import { FacebookSignupAuthGuard } from 'src/shared/common/guards/facebook-signu
 import { LogoutParamDto } from 'src/dtos/params/logout-param.dto';
 import { GoogleSignupGuard } from 'src/shared/common/guards/google-signup/google-signup.guard';
 import { RefreshTokenParamDto } from 'src/dtos/params/refresh-token-param.dto';
+import { SkipThrottle } from '@nestjs/throttler';
 
 @Controller('auth')
+@SkipThrottle()
 export class AuthController {
 
 	constructor(private configService: ConfigService,

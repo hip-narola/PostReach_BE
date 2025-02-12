@@ -1,9 +1,11 @@
 import { Body, Controller, Post } from '@nestjs/common';
 import { ApiBody } from '@nestjs/swagger';
+import { SkipThrottle } from '@nestjs/throttler';
 import { GetSocilInsightsParamDto } from 'src/dtos/params/get-social-insights-param.dto';
 import { SocialMediaInsightsService } from 'src/services/social-media-insights/social-media-insights.service';
 
 @Controller('dashboard-insights')
+@SkipThrottle()
 export class DashboardInsightsController {
 
     constructor(private readonly socialMediaInsightsService: SocialMediaInsightsService) { }

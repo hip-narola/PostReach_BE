@@ -11,7 +11,9 @@ import { UserBusinessDto } from 'src/dtos/params/user-business.dto/user-business
 import { UserBusiness } from 'src/entities/user-business.entity';
 import { UserBusinessService } from 'src/services/user-business/user-business.service';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { SkipThrottle } from '@nestjs/throttler';
 
+@SkipThrottle()
 @Controller('user-business')
 export class UserBusinessController {
 	constructor(private readonly userBusinessService: UserBusinessService) { }
