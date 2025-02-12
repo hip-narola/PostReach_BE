@@ -4,17 +4,17 @@ import { UpdatePostTaskStatusDTO } from 'src/dtos/params/update-post-task-status
 import { PaginatedResponseDto } from 'src/dtos/response/pagination-response.dto';
 import { RejectReasonResponseDTO } from 'src/dtos/response/reject-reason-response.dto';
 import { PostTask } from 'src/entities/post-task.entity';
-import { RejectReason } from 'src/entities/reject-reason.entity';
 import { ApprovalQueueRepository } from 'src/repositories/approval-queue-repository';
-import { RejectReasonRepository } from 'src/repositories/reject-reason-repository';
 import { UnitOfWork } from 'src/unitofwork/unitofwork';
 import { EmailService } from '../email/email.service';
 import { JobSchedulerService } from 'src/scheduler/job-scheduler-service';
 import { POST_TASK_STATUS } from 'src/shared/constants/post-task-status-constants';
 import { NotificationService } from '../notification/notification.service';
 import { NotificationMessage, NotificationType } from 'src/shared/constants/notification-constants';
-import { CheckUserSubscriptionService } from '../check-user-subscription/check-user-subscription.service';
 import { Logger } from '../logger/logger.service';
+import { RejectReasonRepository } from 'src/repositories/reject-reason-repository';
+import moment from 'moment';
+
 @Injectable()
 export class ApprovalQueueService {
     constructor(
@@ -24,60 +24,44 @@ export class ApprovalQueueService {
         private readonly emailService: EmailService,
         private readonly notificationService: NotificationService,
         private readonly logger: Logger,
-        private readonly checkUserSubscriptionService: CheckUserSubscriptionService,
-        private readonly approvalQueueRepository: ApprovalQueueRepository
+        private readonly approvalQueueRepository: ApprovalQueueRepository,
+        private readonly rejectReasonRepository: RejectReasonRepository
 
     ) { }
 
     async getApprovalQueueList(
         paginatedParams: PaginationParamDto,
     ): Promise<PaginatedResponseDto> {
-        const approvalQueueRepository = this.unitOfWork.getRepository(
-            ApprovalQueueRepository,
-            PostTask,
-            false,
-        );
         const data =
-            await approvalQueueRepository.getApprovalQueueList(paginatedParams);
+            await this.approvalQueueRepository.getApprovalQueueList(paginatedParams);
         return data;
     }
 
-    async updateStatus(
-        updateStatusParam: UpdatePostTaskStatusDTO,
-    ): Promise<string> {
+    async updateStatus(updateStatusParam: UpdatePostTaskStatusDTO): Promise<string> {
         try {
-
-            await this.unitOfWork.startTransaction();
-            const approvalQueueRepository = this.unitOfWork.getRepository(
-                ApprovalQueueRepository,
-                PostTask,
-                true,
-            );
             for (const id of updateStatusParam.id) {
-
-
-                // const record = await approvalQueueRepository.findOne(id);
                 const record = await this.approvalQueueRepository.findPosttaskWithUser(id);
-                console.log(record, 'record')
 
                 if (!record) {
                     continue;
                 }
 
-                //if approved true then if block will executed.
                 if (updateStatusParam.isApproved == true) {
-                    const isUserSubscriptionActive = await this.checkUserSubscriptionService.isUserSubscriptionExpire(record.user.id);
-                    if (isUserSubscriptionActive) {
-                        return 'Please subscribe a subscription first!'
+                    const data = await this.approvalQueueRepository.getScheduledPostByPostTaskID(id);
+                    
+                    const publishAt = moment(data.scheduleTime, 'YYYY-MM-DD HH:mm:ss');
+                    
+                    // if (!publishAt.isValid()) {
+                    //     message = 'Invalid schedule time format. Expected format: YYYY-MM-DD HH:mm:ss';
+                    // }
+            
+                    const delay = publishAt.diff(moment());
+                    if (delay <= 0) {
+                        continue;
                     }
-                    //updated the status to scheduled
+                    
                     record.status = POST_TASK_STATUS.SCHEDULED;
-                    await approvalQueueRepository.update(id, record);
-                    // scheduled the post.
-                    const data =
-                        await approvalQueueRepository.getScheduledPostByPostTaskID(
-                            id,
-                        );
+                    await this.approvalQueueRepository.update(id, record);
 
                     await this.schedulePostService.schedulePost(
                         data.id,
@@ -100,51 +84,34 @@ export class ApprovalQueueService {
                 else if (updateStatusParam.isApproved == false) {
                     console.log('post rejected');
                     record.status = POST_TASK_STATUS.REJECTED;
-                    const rejectReasonRepository =
-                        this.unitOfWork.getRepository(
-                            RejectReasonRepository,
-                            RejectReason,
-                            false,
-                        );
-                    const rejectReason = await rejectReasonRepository.findOne(
-                        updateStatusParam.rejectreasonId,
-                    );
+                    
+                    const rejectReasonList = await this.RejectReasonList();
+                    const rejectReason = rejectReasonList.find(x => x.id == updateStatusParam.rejectreasonId);
+                    console.log('rejectReasonList', rejectReasonList);
+                    console.log('rejectReason', rejectReason);
 
-                    if (!rejectReason) {
-                        continue;
-                    }
-
-                    record.RejectReason = rejectReason;
-                    console.log('record rejected', record)
-                    await approvalQueueRepository.update(id, record);
+                    record.RejectReason = (!rejectReason) ? new RejectReasonResponseDTO() : rejectReason;
+                    console.log('record rejected', record);
+                    await this.approvalQueueRepository.update(id, record);
                 }
             }
-            await this.unitOfWork.completeTransaction();
+
             if (updateStatusParam.isApproved == true) {
                 return 'Post(s) approved successfully.';
             } else if (updateStatusParam.isApproved == false) {
                 return 'Post(s) rejected successfully.';
             }
+            
         } catch (error) {
             console.log('removeExpiredScheduledPosts error', error);
-            await this.unitOfWork.rollbackTransaction();
-            this.logger.error(
-                `Error` +
-                error.stack || error.message,
-                'updateStatus'
-            );
-            throw error;
+            this.logger.error(`Error ${error.stack || error.message}`, 'updateStatus');
+
+            return "Not able to update the post status. Please again later.";
         }
     }
 
     RejectReasonList(): Promise<RejectReasonResponseDTO[]> {
-        const rejectReasonRepository = this.unitOfWork.getRepository(
-            RejectReasonRepository,
-            RejectReason,
-            false,
-        );
-        const data = rejectReasonRepository.findAll();
-        return data;
+        return this.rejectReasonRepository.findAll();
     }
 
     // update the status for post execution success or failure.
@@ -173,7 +140,7 @@ export class ApprovalQueueService {
             console.log("updateStatusAfterPostExecution post-queue save notification : user id notificationType content", userId, notificationType, notificationContent);
             await this.notificationService.saveData(userId, notificationType, notificationContent);
 
-            // await this.emailService.sendEmail(record.user.email, 'Post Posted', 'post_success');
+            await this.emailService.sendEmail(record.user.email, 'Post Posted', 'post_success');
 
             await this.unitOfWork.completeTransaction();
         } catch (error) {

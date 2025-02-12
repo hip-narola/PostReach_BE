@@ -899,4 +899,12 @@ export class SubscriptionService {
 			throw error;
 		}
 	}
+
+	async isUserSubscriptionExpire(userId: number): Promise<boolean> {
+        const usersubscription = await this.userSubscriptionRepository.findExpiredSubscriptionByUserId(userId);
+        if (usersubscription) {
+            return true;
+        }
+        return false;
+    }
 }

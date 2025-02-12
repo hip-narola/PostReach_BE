@@ -34,4 +34,7 @@ export class UpdatePostTaskStatusDTO {
 	@IsString()
 	rejectReason?: string;
 
+    @IsOptional()
+    @IsNumber()
+    userId: number;
 }

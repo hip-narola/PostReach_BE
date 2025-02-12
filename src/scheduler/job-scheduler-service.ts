@@ -1,14 +1,14 @@
-import { BadRequestException, forwardRef, Inject, Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import * as moment from 'moment';
 import { REJECT_REASONS } from 'src/shared/constants/reject-reason-constants';
 import { ApprovalQueueService } from 'src/services/approval-queue/approval-queue.service';
-import { CheckUserSubscriptionService } from 'src/services/check-user-subscription/check-user-subscription.service';
 import { UserCreditRepository } from 'src/repositories/user-credit-repository';
 import { UserCredit } from 'src/entities/user_credit.entity';
 import { UnitOfWork } from 'src/unitofwork/unitofwork';
 import { PostTaskRepository } from 'src/repositories/post-task-repository';
+import { UpdatePostTaskStatusDTO } from 'src/dtos/params/update-post-task-status.dto';
 
 @Injectable()
 export class JobSchedulerService {
@@ -21,7 +21,6 @@ export class JobSchedulerService {
         @InjectQueue('subscription-queue') private readonly subscriptionQueue: Queue,
         @Inject(forwardRef(() => ApprovalQueueService)) // Use forwardRef here
         private readonly approvalQueueService: ApprovalQueueService,
-        private readonly checkUserSubscriptionService: CheckUserSubscriptionService,
         private readonly unitOfWork: UnitOfWork,
         private readonly postTaskRepository: PostTaskRepository,
     ) { }
@@ -74,28 +73,9 @@ export class JobSchedulerService {
         userId?: number,
         post_created_at?: Date
     ): Promise<void> {
-        const now = moment();
         const publishAt = moment(scheduleTime, 'YYYY-MM-DD HH:mm:ss');
-
-        // const isUserSubscriptionActive = await this.checkUserSubscriptionService.isUserSubscriptionExpire(userId);
-        // if (isUserSubscriptionActive) {
-        //     throw new BadRequestException(
-        //         'Please purchase a subscription first!',
-        //     );
-        // }
-
-        if (!publishAt.isValid()) {
-            throw new BadRequestException(
-                'Invalid schedule time format. Expected format: YYYY-MM-DD HH:mm:ss',
-            );
-        }
-
-        const delay = publishAt.diff(now);
-        if (delay <= 0) {
-            throw new BadRequestException(
-                'Schedule time must be in the future.',
-            );
-        }
+        const delay = publishAt.diff(moment());
+       
 
         await this.postQueue.add(
             'publish-post',
@@ -145,11 +125,12 @@ export class JobSchedulerService {
             }
             console.log('removeExpiredScheduledPosts: ids', ids);
             if (ids.length > 0) {
-                const postTaskStatusData = {
+                const postTaskStatusData : UpdatePostTaskStatusDTO = {
                     id: ids,
                     isApproved: false,
                     rejectreasonId: 7, // Subscription cancelled or expired
                     rejectReason: REJECT_REASONS[7],
+                    userId: null
                 };
                 console.log('removeExpiredScheduledPosts postTaskStatusData:', postTaskStatusData)
                 await this.approvalQueueService.updateStatus(postTaskStatusData);

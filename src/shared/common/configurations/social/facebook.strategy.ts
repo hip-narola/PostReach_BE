@@ -55,7 +55,7 @@ export class FacebookStrategy extends PassportStrategy(Strategy, 'facebook') {
         true,
       );
       // Get user by facebook id
-      const existingUser = await userRepository.findBySocialMediaId(facebookId);
+      const existingUser = await userRepository.findBySocialMediaId(userDetails.socialMediaId, userDetails.email);
 
       if (existingUser != null) {
         // Get access token from AWS by cognito id
