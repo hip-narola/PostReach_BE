@@ -355,7 +355,7 @@ export class SubscriptionService {
 			// Save all UserCredit instances at once
 			if (userCredits.length > 0) {
 				await userCreditRepository.save(userCredits);
-				if (userSubscription.cycle >= 1) {
+				if (userSubscription.cycle == 1) {
 					await this.generatePostService.generatePostByAIAPI(userCredits);
 				}
 				await this.notificationService.saveData(userSubscription.user.id, NotificationType.SOCIAL_CREDIT_ADDED, `${NotificationMessage[NotificationType.SOCIAL_CREDIT_ADDED]} ${formattedPlatforms}`);
@@ -380,7 +380,7 @@ export class SubscriptionService {
 			console.log('userSubscriptionCreate userCredit', userCredit)
 
 			await userCreditRepository.create(userCredit);
-			if (userSubscription.cycle == 1) {
+			if (userSubscription.cycle >= 1) {
 				{
 					await this.generatePostService.generatePostByAIAPI([userCredit]);
 				}
