@@ -54,13 +54,13 @@ import { SubscriptionService } from './services/subscription/subscription.servic
       isGlobal: true,
     }),
     ThrottlerModule.forRoot([
+      // {
+      //   name: 'twitetrMe',
+      //   ttl: 86400000,
+      //   limit: 24,
+      // },
       {
-        name: 'twitetrMe',
-        ttl: 86400000,
-        limit: 24,
-      },
-      {
-        ttl: 10 , // Time to live in seconds
+        ttl: 10, // Time to live in seconds
         limit: 1000, // Maximum number of requests
       }
     ]),
@@ -91,7 +91,6 @@ import { SubscriptionService } from './services/subscription/subscription.servic
   controllers: [AppController, LinkPageController],
   providers: [
     AppService,
-    ImageUploadService,
     CheckTokenExpiryGuard,
     EmailService,
     Logger,
