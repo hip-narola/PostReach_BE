@@ -120,10 +120,19 @@ export class GeneratePostService {
                 else if (element.social_media.platform == SocialMediaPlatformNames[SocialMediaPlatform.INSTAGRAM])
                     socialPostNumber.instagram_posts_number = Math.round(PostRequestCount);
             }
-
+            // if (userCredit.length == 1 && PostRequestCount < 15 && details.userSubscription.cycle != 0) {
             console.log("generatePostByAIAPI::: socialPostNumber ", socialPostNumber);
+            const currentDate = new Date();
+            const currentDateOnly = currentDate.toISOString().split('T')[0];
 
-            if (userCredit.length == 1 && PostRequestCount < 15 && details.userSubscription.cycle != 0) {
+
+            const startDate = new Date(details.userSubscription.start_Date); // Create a Date object from the start date
+            startDate.setDate(startDate.getDate() + 14); // Add 14 days
+            const checkDate = startDate; // Store the updated date in checkDate
+
+            if (userCredit.length == 1 && details.userSubscription.cycle != 0 && ((details.userSubscription.cycle == 1 && (userCredit[0].social_media.connected_at.toISOString().split('T')[0] > details.userSubscription.start_Date.toISOString().split('T')[0] && checkDate.toISOString().split('T')[0] != currentDateOnly)) || details.userSubscription.cycle > 1 && PostRequestCount < 15)) {
+                console.log('generatePostByAIAPI:::  in block', details.userSubscription, checkDate);
+                // if (userCredit.length == 1 && (&& PostRequestCount < 15) && details.userSubscription.cycle != 0) {
                 const socialMediaIds = details.socialMedia.map((media) => media.id);
 
                 console.log('generatePostByAIAPI::: socialMediaIds', socialMediaIds);
@@ -148,6 +157,7 @@ export class GeneratePostService {
 
             }
             else {
+                console.log('generatePostByAIAPI:::  else block');
                 apiUrl = secretData.APIURL;
 
                 // Bind data from these info

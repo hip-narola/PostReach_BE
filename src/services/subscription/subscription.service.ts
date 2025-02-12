@@ -353,13 +353,13 @@ export class SubscriptionService {
 
 			console.log('userSubscriptionCreate userCredits', userCredits)
 			// Save all UserCredit instances at once
-			await userCreditRepository.save(userCredits);
-			if (userSubscription.cycle == 1) {
-				await this.generatePostService.generatePostByAIAPI(userCredits);
+			if (userCredits.length > 0) {
+				await userCreditRepository.save(userCredits);
+				if (userSubscription.cycle == 1) {
+					await this.generatePostService.generatePostByAIAPI(userCredits);
+				}
+				await this.notificationService.saveData(userSubscription.user.id, NotificationType.SOCIAL_CREDIT_ADDED, `${NotificationMessage[NotificationType.SOCIAL_CREDIT_ADDED]} ${formattedPlatforms}`);
 			}
-
-
-			await this.notificationService.saveData(userSubscription.user.id, NotificationType.SOCIAL_CREDIT_ADDED, `${NotificationMessage[NotificationType.SOCIAL_CREDIT_ADDED]} ${formattedPlatforms}`);
 			//Generate posts
 			// await Promise.all(
 			// 	userPlatforms.map((userPlatform) =>
