@@ -260,21 +260,9 @@ export class UserService {
 	}
 
 
-	async findBySocialMediaId(socialMediaId: string): Promise<User | null> {
+	async findBySocialMediaId(socialMediaId: string, email: string): Promise<User | null> {
 		try {
-
-			await this.unitOfWork.startTransaction();
-
-			const userRepository = this.unitOfWork.getRepository(
-				UserRepository,
-				User,
-				false,
-			);
-			const data = userRepository.findBySocialMediaId(socialMediaId);
-
-			await this.unitOfWork.completeTransaction();
-
-			return data;
+			return this.userRepository.findBySocialMediaId(socialMediaId, email);
 		}
 		catch (error) {
 			this.logger.error(
@@ -282,7 +270,6 @@ export class UserService {
 				error.stack || error.message,
 				'findBySocialMediaId'
 			);
-			await this.unitOfWork.rollbackTransaction();
 
 			throw error;
 		}

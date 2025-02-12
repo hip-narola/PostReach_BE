@@ -17,4 +17,12 @@ export class RejectReasonResponseDTO {
     @IsNotEmpty()
     @IsString()
     reason: string;
+    
+    @ApiProperty({
+        description: 'isDisplay',
+        type: Boolean,
+    })
+    @IsNotEmpty()
+    @IsString()
+    isDisplay: boolean;
 }

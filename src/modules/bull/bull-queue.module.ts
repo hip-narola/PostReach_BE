@@ -15,7 +15,6 @@ import { TwitterService } from 'src/services/twitter/twitter.service';
 import { UserModule } from '../user/user.module';
 import { NotificationModule } from '../notification/notification.module';
 import { SubscriptionService } from 'src/services/subscription/subscription.service';
-import { CheckUserSubscriptionService } from 'src/services/check-user-subscription/check-user-subscription.service';
 import { EmailService } from 'src/services/email/email.service';
 import { AwsSecretsServiceModule } from '../aws-secrets-service/aws-secrets-service.module';
 import { AwsSecretsService } from 'src/services/aws-secrets/aws-secrets.service';
@@ -34,6 +33,8 @@ import { Logger } from 'src/services/logger/logger.service';
 import { ApprovalQueueRepository } from 'src/repositories/approval-queue-repository';
 import { PostTaskRepository } from 'src/repositories/post-task-repository';
 import { PostTask } from 'src/entities/post-task.entity';
+import { RejectReason } from 'src/entities/reject-reason.entity';
+import { RejectReasonRepository } from 'src/repositories/reject-reason-repository';
 
 async function getRedisConfig() {
     const configService = new ConfigService();
@@ -49,12 +50,16 @@ async function getRedisConfig() {
 
 @Module({
     imports: [
-        TypeOrmModule.forFeature([Post, PostTask]),
+        TypeOrmModule.forFeature([Post, PostTask, RejectReason]),
         BullModule.forRootAsync({
             useFactory: async () => {
                 const redisConfig = await getRedisConfig();
                 return {
                     connection: redisConfig,
+                    retryStrategy: (times: number) => { // Example retry strategy
+                        const delay = Math.min(times * 50, 2000); // Exponential backoff
+                        return delay;
+                    }
                 };
             },
         }),
@@ -92,11 +97,11 @@ async function getRedisConfig() {
         TwitterService,
         SubscriptionService,
         EmailService,
-        CheckUserSubscriptionService,
         PostRepository,
         Logger,
         ApprovalQueueRepository,
-        PostTaskRepository
+        PostTaskRepository,
+        RejectReasonRepository
     ],
     exports: [
         BullModule,
@@ -108,7 +113,8 @@ async function getRedisConfig() {
         ApprovalQueueService,
         SubscriptionService,
         ApprovalQueueRepository,
-        PostTaskRepository
+        PostTaskRepository,
+        RejectReasonRepository
     ],
 })
 

@@ -133,17 +133,12 @@ export class UserSubscriptionRepository extends GenericRepository<UserSubscripti
 				user: { id: userId },
 				status: In([UserSubscriptionStatusType.ACTIVE, UserSubscriptionStatusType.TRIAL])
 			},
-			// where:
-			//   [
-			//     { user: { id: userId }, status: UserSubscriptionStatusType.ACTIVE },
-			//     { user: { id: userId }, status: UserSubscriptionStatusType.TRIAL }
-			//   ],
-			// status: UserSubscriptionStatusType.ACTIVE || UserSubscriptionStatusType.TRIAL,
+			
 		});
 		return subscription || null;
 	}
 
-	async findUseExpiredSubscriptionWithoutSubscriptionId(userId): Promise<UserSubscription> {
+	async findExpiredSubscriptionByUserId(userId): Promise<UserSubscription> {
 
 		const subscription = this.repository.findOne({
 			relations: ['subscription', 'user'],
@@ -151,15 +146,7 @@ export class UserSubscriptionRepository extends GenericRepository<UserSubscripti
 				user: { id: userId },
 				status: In([UserSubscriptionStatusType.EXPIRED, UserSubscriptionStatusType.CANCELLED])
 			},
-			// where:
-			//   [
-			//     { user: { id: userId }, status: UserSubscriptionStatusType.ACTIVE },
-			//     { user: { id: userId }, status: UserSubscriptionStatusType.TRIAL }
-			//   ],
-			// status: UserSubscriptionStatusType.ACTIVE || UserSubscriptionStatusType.TRIAL,
 		});
 		return subscription || null;
 	}
-	
 }
-

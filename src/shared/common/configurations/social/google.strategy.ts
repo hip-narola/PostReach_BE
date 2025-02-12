@@ -49,7 +49,7 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
       userDetails.email = emails[0].value;
 
       // Get user by google id
-      const existingUser = await this.userService.findBySocialMediaId(googleId);
+      const existingUser = await this.userService.findBySocialMediaId(userDetails.socialMediaId, userDetails.email);
 
       if (existingUser != null) {
 
@@ -82,7 +82,6 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
 
       done(null, user);
     } catch (error) {
-      console.log("GOOGLE LOGIN ERROR: ", error);
       throw error;
       done(null, { redirect: "" });
     }

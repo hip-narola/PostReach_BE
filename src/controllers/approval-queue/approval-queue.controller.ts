@@ -4,10 +4,15 @@ import { PaginationParamDto } from 'src/dtos/params/pagination-param.dto';
 import { PaginatedResponseDto } from 'src/dtos/response/pagination-response.dto';
 import { ApprovalQueueService } from 'src/services/approval-queue/approval-queue.service';
 import { UpdatePostTaskStatusDTO } from 'src/dtos/params/update-post-task-status.dto';
+import { SubscriptionService } from 'src/services/subscription/subscription.service';
+import { SkipThrottle } from '@nestjs/throttler';
 
 @Controller('approval-queue')
+@SkipThrottle()
 export class ApprovalQueueController {
-    constructor(private readonly approvalQueueService: ApprovalQueueService) { }
+    constructor(private readonly approvalQueueService: ApprovalQueueService,
+        private readonly subscriptionService: SubscriptionService
+    ) { }
 
     @Post('getList')
     @ApiBody({ type: PaginationParamDto })
@@ -33,17 +38,21 @@ export class ApprovalQueueController {
             isApproved: boolean;
             rejectreasonId?: number;
             rejectReason?: string;
+            userId: number;
         },
     ): Promise<any> {
+        if (this.subscriptionService.isUserSubscriptionExpire(UpdatePostTaskStatusDTO.userId)) {
+            return {
+                message: "Please subscribe a subscription first!",
+            };
+        }
+        else {
+            const data = await this.approvalQueueService.updateStatus(UpdatePostTaskStatusDTO);
 
-        const data = await this.approvalQueueService.updateStatus(
-            UpdatePostTaskStatusDTO,
-        );
-
-        return {
-            message: data,
-        };
-
+            return {
+                message: data
+            };
+        }
     }
 
     @Get('RejectReasonList')

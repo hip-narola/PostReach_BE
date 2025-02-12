@@ -31,8 +31,10 @@ import { SubscriptionService } from 'src/services/subscription/subscription.serv
 import { ConfigService } from '@nestjs/config';
 import { LinkedInTokenParamDto } from 'src/dtos/params/linkedin-token-data.dto';
 import { FacebookConnectProfileParamDto } from 'src/dtos/params/facebook-connect-profile-param.dto';
+import { SkipThrottle } from '@nestjs/throttler';
 
 @Controller('link-page')
+@SkipThrottle()
 export class LinkPageController {
     public platformName: string;
     constructor(
@@ -500,7 +502,7 @@ export class LinkPageController {
 
             //save user credit for later connected account
             await this.subscriptionService.findByUserAndPlatformAndSaveCredit(userId, SocialMediaPlatformNames[platform]);
-            return `${SocialMediaPlatformNames[platform]} connected successfully`;
+            return `${SocialMediaPlatformNames[platform]} connected successfully.`;
 
         } catch (error) {
             throw new HttpException(

@@ -36,8 +36,10 @@ export class EmailService {
                 Source: 'hip.narola@gmail.com', // Your verified email address in SES
             });
 
-            const response = await this.sesClient.send(sendEmailCommand);
-            return response;
+            // const response = await this.sesClient.send(sendEmailCommand);
+            // return response;
+
+            return null;
         } catch (error) {
             throw error;
         }
