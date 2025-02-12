@@ -5,15 +5,15 @@ import { NotificationSaveParamDto } from 'src/dtos/params/notification-save-para
 import { ApiBody, ApiQuery } from '@nestjs/swagger';
 import { NotificationUpdateParamDto } from 'src/dtos/params/notification-update-param.dto';
 import { NotificationUpdateQueryDto } from 'src/dtos/params/notification-query-param.dto';
-// import { Throttle } from '@nestjs/throttler';
+import { SkipThrottle } from '@nestjs/throttler';
 
 @Controller('notification')
+@SkipThrottle()
 export class NotificationController {
     constructor(
         private readonly notificationService: NotificationService
     ) { }
 
-    // @Throttle({ default: { limit: 100, ttl: 30 } })
     @Get('getList/:userId/:isRead')
     async getList(@Param('userId') userId: number, @Param('isRead') isRead: boolean): Promise<Notification[]> {
         try {
