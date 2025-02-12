@@ -88,6 +88,7 @@ export class PostTaskRepository extends GenericRepository<PostTask> {
             .select('postTask.social_media_account_id', 'socialMediaAccountId')
             .addSelect('COUNT(postTask.id)', 'postTaskCount') // Here, the alias `postTaskCount` is valid
             .where('postTask.status IN (:...statuses)', { statuses })
+            .andWhere('postTask.scheduled_at > :currentDate', { currentDate: new Date() })
             .andWhere('postTask.social_media_account_id IN (:...social_media_ids)', { social_media_ids })
             .groupBy('postTask.social_media_account_id')
             .orderBy('"postTaskCount"', 'DESC') // Use double quotes around the alias

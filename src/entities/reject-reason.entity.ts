@@ -8,4 +8,7 @@ export class RejectReason {
 
     @Column()
     reason: string;
+
+    @Column({ nullable: true, default: false })
+    isDisplay: boolean;
 }

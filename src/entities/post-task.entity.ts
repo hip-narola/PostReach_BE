@@ -1,4 +1,4 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, CreateDateColumn, OneToMany } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, CreateDateColumn, OneToMany, OneToOne } from 'typeorm';
 import { User } from './user.entity';
 import { SocialMediaAccount } from './social-media-account.entity';
 import { Post } from './post.entity';
@@ -45,14 +45,17 @@ export class PostTask {
     @Column({ nullable: true })
     modified_By: number;
 
+    @Column({ nullable: true, default: null })
+    external_post_id: string;
+
     @CreateDateColumn({ type: 'timestamp', nullable: true })
     modified_date: Date;
 
-    @OneToMany(() => Post, Post => Post.postTask)
-    post: Post[];
+    @OneToOne(() => Post, Post => Post.postTask)
+    post: Post;
 
     @OneToMany(() => PostJobLog, PostJobLog => PostJobLog.postTask)
     PostJobLog: PostJobLog[];
-	postTask: { id: number; };
+    postTask: { id: number; };
 
 }
