@@ -111,7 +111,7 @@ export class ApprovalQueueService {
     }
 
     RejectReasonList(): Promise<RejectReasonResponseDTO[]> {
-        return this.rejectReasonRepository.findAll();
+        return this.rejectReasonRepository.getAllRejectReasons();
     }
 
     // update the status for post execution success or failure.

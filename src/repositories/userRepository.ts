@@ -170,10 +170,6 @@ export class UserRepository extends GenericRepository<User> {
 			])
 			.getOne();
 
-		if (!user) {
-			throw new Error('User not found');
-		}
-
 		// Group answers by question ID
 		const answersByQuestion: Record<number, { id: number; answerText: string[]; question: any }> = {};
 

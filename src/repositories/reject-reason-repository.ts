@@ -8,7 +8,13 @@ import { InjectRepository } from '@nestjs/typeorm';
 export class RejectReasonRepository extends GenericRepository<RejectReason> {
     constructor(
         @InjectRepository(RejectReason)
-        repository: Repository<RejectReason>) { 
-      	super(repository);
+        repository: Repository<RejectReason>) {
+        super(repository);
+    }
+    async getAllRejectReasons(): Promise<RejectReason[]> {
+        return this.repository
+            .createQueryBuilder('reject_reasons')
+            .where('reject_reasons.isDisplay = :isDisplay', { isDisplay: true })
+            .getMany();
     }
 }

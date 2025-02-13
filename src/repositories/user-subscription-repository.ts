@@ -125,7 +125,7 @@ export class UserSubscriptionRepository extends GenericRepository<UserSubscripti
 		return result ? result.cycle : null; // Return the cycle number or null if not found
 	}
 
-	async findUserActiveSubscriptionWithoutSubscriptionId(userId): Promise<UserSubscription> {
+	async findUserActiveSubscriptionWithoutSubscriptionId(userId: number): Promise<UserSubscription> {
 
 		const subscription = this.repository.findOne({
 			relations: ['subscription', 'user'],
@@ -135,10 +135,10 @@ export class UserSubscriptionRepository extends GenericRepository<UserSubscripti
 			},
 			
 		});
-		return subscription || null;
+		return subscription;
 	}
 
-	async findExpiredSubscriptionByUserId(userId): Promise<UserSubscription> {
+	async findExpiredSubscriptionByUserId(userId: number): Promise<UserSubscription> {
 
 		const subscription = this.repository.findOne({
 			relations: ['subscription', 'user'],
@@ -147,6 +147,6 @@ export class UserSubscriptionRepository extends GenericRepository<UserSubscripti
 				status: In([UserSubscriptionStatusType.EXPIRED, UserSubscriptionStatusType.CANCELLED])
 			},
 		});
-		return subscription || null;
+		return subscription;
 	}
 }
