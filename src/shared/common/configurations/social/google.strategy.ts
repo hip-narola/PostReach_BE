@@ -49,7 +49,7 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
       userDetails.email = emails[0].value;
 
       // Get user by google id
-      const existingUser = await this.userService.findBySocialMediaId(userDetails.socialMediaId, userDetails.email);
+      const existingUser = await this.userService.findBySocialMediaId(userDetails.socialMediaId/*, userDetails.email*/);
 
       if (existingUser != null) {
 

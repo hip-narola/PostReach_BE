@@ -29,11 +29,11 @@ export class UserRepository extends GenericRepository<User> {
 			.getMany();
 	}
 
-	async findBySocialMediaId(socialMediaId: string, email: string): Promise<User | null> {
+	async findBySocialMediaId(socialMediaId: string/*, email: string*/): Promise<User | null> {
 		return await this.repository.findOne({
 			where: {
 				socialMediaId: socialMediaId,
-				email: email
+				// email: email
 			},
 		});
 	}

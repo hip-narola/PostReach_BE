@@ -260,9 +260,22 @@ export class UserService {
 	}
 
 
-	async findBySocialMediaId(socialMediaId: string, email: string): Promise<User | null> {
+	async findBySocialMediaId(socialMediaId: string/*, email: string*/): Promise<User | null> {
 		try {
-			return this.userRepository.findBySocialMediaId(socialMediaId, email);
+			// return this.userRepository.findBySocialMediaId(socialMediaId/*, email*/);
+
+			await this.unitOfWork.startTransaction();
+
+			const userRepository = this.unitOfWork.getRepository(
+				UserRepository,
+				User,
+				false,
+			);
+			const data = userRepository.findBySocialMediaId(socialMediaId);
+
+			await this.unitOfWork.completeTransaction();
+
+			return data;
 		}
 		catch (error) {
 			this.logger.error(
