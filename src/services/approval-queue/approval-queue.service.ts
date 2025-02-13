@@ -48,6 +48,8 @@ export class ApprovalQueueService {
 
                 if (updateStatusParam.isApproved == true) {
                     
+                    const data = await this.approvalQueueRepository.getScheduledPostByPostTaskID(id);
+
                     // const publishAt = moment(data.scheduleTime, 'YYYY-MM-DD HH:mm:ss');
                     
                     // if (!publishAt.isValid()) {
@@ -61,8 +63,6 @@ export class ApprovalQueueService {
                     
                     record.status = POST_TASK_STATUS.SCHEDULED;
                     await this.approvalQueueRepository.update(id, record);
-
-                    const data = await this.approvalQueueRepository.getScheduledPostByPostTaskID(id);
 
                     await this.schedulePostService.schedulePost(
                         data.id,
@@ -104,7 +104,7 @@ export class ApprovalQueueService {
             }
             
         } catch (error) {
-            console.log('removeExpiredScheduledPosts error', error);
+            console.log('approve reject updateStatus error', error);
             this.logger.error(`Error ${error.stack || error.message}`, 'updateStatus');
 
             return "Not able to update the post status. Please again later.";
