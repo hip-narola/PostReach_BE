@@ -355,7 +355,7 @@ export class SubscriptionService {
 			// Save all UserCredit instances at once
 			if (userCredits.length > 0) {
 				await userCreditRepository.save(userCredits);
-				if (userSubscription.cycle >= 1) {
+				if (userSubscription.cycle == 1) {
 					await this.generatePostService.generatePostByAIAPI(userCredits);
 				}
 				await this.notificationService.saveData(userSubscription.user.id, NotificationType.SOCIAL_CREDIT_ADDED, `${NotificationMessage[NotificationType.SOCIAL_CREDIT_ADDED]} ${formattedPlatforms}`);
@@ -380,7 +380,7 @@ export class SubscriptionService {
 			console.log('userSubscriptionCreate userCredit', userCredit)
 
 			await userCreditRepository.create(userCredit);
-			if (userSubscription.cycle == 1) {
+			if (userSubscription.cycle >= 1) {
 				{
 					await this.generatePostService.generatePostByAIAPI([userCredit]);
 				}
@@ -429,7 +429,7 @@ export class SubscriptionService {
 		// Get all previous credits and calculate the end date
 		const credits = await this.userCreditRepository.getAllUserCreditsOncreate(userSubscription.user.id);
 		let endDate: Date;
-
+		console.log('get all old credits:::', credits)
 		if (credits.length > 0 && credits[0]?.end_Date) {
 			endDate = new Date(credits[0].end_Date);
 		} else {

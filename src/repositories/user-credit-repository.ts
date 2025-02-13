@@ -138,14 +138,13 @@ export class UserCreditRepository extends GenericRepository<UserCredit> {
         return await this.repository.findOne({
             where: { id: postId },
             relations: ['social_media', 'user', 'subscription', 'PostRetry'],
-            
         });
     }
 
 
     async getAllUserToGeneratePost(): Promise<UserCredit[]> {
-		const currentDate = new Date();
-		const currentDateOnly = currentDate.toISOString().split('T')[0];
+        const currentDate = new Date();
+        const currentDateOnly = currentDate.toISOString().split('T')[0];
 
 		return await this.repository
 			.createQueryBuilder('user_credit')
