@@ -3,10 +3,6 @@ import { GenericRepository } from './generic-repository';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Post } from 'src/entities/post.entity';
-import {
-    SocialMediaPlatform,
-    SocialMediaPlatformNames,
-} from 'src/shared/constants/social-media.constants';
 import { UserSubscriptionStatusType } from 'src/shared/constants/user-subscription-status-constants';
 import { POST_TASK_STATUS } from 'src/shared/constants/post-task-status-constants';
 
@@ -97,11 +93,8 @@ export class PostRepository extends GenericRepository<Post> {
                 ])
                 .getMany();
 
-            console.log("post-insight repo posts", posts);
-
             return posts;
         } catch (error) {
-            console.log("post-insight repo error", error);
         }
     }
 }

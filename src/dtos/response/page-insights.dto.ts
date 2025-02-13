@@ -5,7 +5,7 @@ export class PageInsightsDTO {
   impressions: number;
 
   @IsNumber()
-  engagements: number;
+  engagements: string;
 
   @IsNumber()
   followers: number;

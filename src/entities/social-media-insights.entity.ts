@@ -18,8 +18,8 @@ export class SocialMediaInsight {
 
     // @Column({ type: 'decimal', precision: 20, scale: 10 }) // High precision for pointed values
     // engagements: number; // Floating-point value
-    @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true, default: 0 })
-    engagements: number;
+    @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true, default: '0' })
+    engagements: string;
 
     @CreateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
     created_at: Date;

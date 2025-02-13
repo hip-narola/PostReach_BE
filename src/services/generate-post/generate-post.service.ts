@@ -1,7 +1,6 @@
-import { HttpService } from '@nestjs/axios';
 import { Injectable } from '@nestjs/common';
 import { plainToInstance } from 'class-transformer';
-import { GeneratePostPipelineRequestDTO, Mode, PostTemplateDTO, ReGeneratePostPipelineRequestDTO, SocialPostNumberDTO, UserInfoDTO, UserInfoType } from 'src/dtos/params/generate-post-param.dto';
+import { GeneratePostPipelineRequestDTO, Mode, ReGeneratePostPipelineRequestDTO, SocialPostNumberDTO, UserInfoDTO, UserInfoType } from 'src/dtos/params/generate-post-param.dto';
 import { generatePostResponseDTO } from 'src/dtos/response/generate-post-response.dto';
 import { PostTaskRepository } from 'src/repositories/post-task-repository';
 import { PostRepository } from 'src/repositories/post-repository';
@@ -32,10 +31,7 @@ import { POST_RETRY_COUNT } from 'src/shared/constants/post-retry-count-constant
 @Injectable()
 export class GeneratePostService {
 
-    // TODO : DO NOT USE any ANYWHERE
     constructor(
-        private readonly httpService: HttpService,
-        // private readonly subscriptionService: SubscriptionService,
         private readonly secretService: AwsSecretsService,
         private readonly userRepository: UserRepository,
         private readonly postTaskRepository: PostTaskRepository,
@@ -338,8 +334,8 @@ export class GeneratePostService {
         }
     }
 
-    private async savePostRetry(userId: number, /*userCreditId: string,*/ pipelineId: string, status: string) {
-        console.log(userId, /*userCreditId, */ pipelineId, status, 'savePostRetry');
+    private async savePostRetry(userId: number, pipelineId: string, status: string) {
+        console.log(userId, pipelineId, status, 'savePostRetry');
         try {
             const postRetry = new PostRetry();
             postRetry.id = generateId(IdType.POST_RETRY);

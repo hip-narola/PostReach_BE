@@ -14,7 +14,6 @@ import { Post } from 'src/entities/post.entity';
 import { TWITTER_CONST } from 'src/shared/constants/twitter-constant';
 import { SocialMediaPlatform, SocialMediaPlatformNames } from 'src/shared/constants/social-media.constants';
 import { Throttle } from '@nestjs/throttler';
-import { SocialTokenDataDTO } from 'src/dtos/params/social-token-data-dto';
 import { plainToInstance } from 'class-transformer';
 import { Logger } from '../logger/logger.service';
 
@@ -131,7 +130,7 @@ export class DashboardInsightsService {
         const baseUrl = `https://graph.facebook.com/v15.0/${instagramUserId}/insights`;
         const metrics = {
             impressions: 0,
-            engagements: 0,
+            engagements: '0',
             newFollowers: 0,
         };
 
@@ -161,7 +160,7 @@ export class DashboardInsightsService {
             const engagementsData = engagementsResponse.data.data.find(
                 (metric: any) => metric.name === 'accounts_engaged',
             );
-            metrics.engagements = engagementsData?.values?.[0]?.value || 0;
+            metrics.engagements = parseFloat(engagementsData?.values?.[0]?.value || '0').toFixed(2);
 
             //   Step 3: Fetch New Followers
             const followersResponse = await axios.get(baseUrl, {
@@ -385,7 +384,7 @@ export class DashboardInsightsService {
 
             let totalImpressions = 0;
             let totalNewFollowers = 0;
-            let totalEngagements = 0;
+            let totalEngagements = '0';
 
             for (const org of organizations) {
                 const ExtractOrganizationId = org.organization.match(/urn:li:organization:(\d+)/);
@@ -404,7 +403,7 @@ export class DashboardInsightsService {
                 // Aggregate the results
                 totalImpressions += insightsData[0]?.totalShareStatistics?.impressionCount || 0;
                 totalNewFollowers += followersCount || 0;
-                totalEngagements += insightsData[0]?.totalShareStatistics?.engagement || 0;
+                totalEngagements += parseFloat(insightsData[0]?.totalShareStatistics?.engagement || '0').toFixed(2) || 0;
             }
 
             const resultItem: SocialMediaInsightParamDTO = {
@@ -512,15 +511,14 @@ export class DashboardInsightsService {
 
             let followerCount = 0;
             let totalImpressions = 0;
-            let totalEngagements = 0;
-            
+            let totalEngagements = '0';
             if (allTweet) {
                 followerCount = await this.fetchTwitterfollowersMetrics(accessToken);
                 // Step 2: Fetch Metrics for Each Tweet and Aggregate
                 for (const tweet of allTweet) {
                     const insightsData = await this.fetchTweetMetrics(tweet.external_platform_id, accessToken);
                     totalImpressions += insightsData.impressions || 0;
-                    totalEngagements += insightsData.engagements || 0;
+                    totalEngagements += parseFloat(insightsData.engagements || '0').toFixed(2);
                 }
             }
             // const metrics1 = await this.fetchTweetMetrics(userId, accessToken);

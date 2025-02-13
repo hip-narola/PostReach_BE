@@ -49,7 +49,7 @@ export class SocialMediaInsightsService {
             const socialMediaAccountRepository = this.unitOfWork.getRepository(SocialMediaAccountRepository, SocialMediaAccount, false);
             const socialMediaAccount = await socialMediaAccountRepository.findOne(updateStudentDto.social_media_account_id);
             record.socialMediaAccount = socialMediaAccount;
-            record.engagements = updateStudentDto.engagements;
+            record.engagements = parseFloat(updateStudentDto.engagements || '0').toFixed(2);
             record.impressions = updateStudentDto.impressions;
             record.newFollowers = updateStudentDto.newFollowers;
             record.updated_at = new Date();
@@ -83,8 +83,6 @@ export class SocialMediaInsightsService {
 
         const socialInsightsRepository = this.unitOfWork.getRepository(SocialMediaInsightsRepository, SocialMediaInsight, false);
         const socialMediaInsightsData = await socialInsightsRepository.getSocialinsightsList(GetSocilInsightsParamDto);
-        
-        console.log("platform :", GetSocilInsightsParamDto.platform , platformName);
 
         const totalPostList = await this.dashboardInsightsService.getTotalPostList(GetSocilInsightsParamDto.userId, platformName, []);
         const approvedPostList = await this.dashboardInsightsService.getTotalPostList(GetSocilInsightsParamDto.userId, platformName, [POST_TASK_STATUS.EXECUTE_SUCCESS, POST_TASK_STATUS.SCHEDULED]);

@@ -322,7 +322,7 @@ export class SubscriptionService {
 
 		if (!socialMediaAccount) {
 			//expire old credit
-			await userCreditRepository.updateUserCreditsToExpired(user.id);
+			await this.userCreditRepository.updateUserCreditsToExpired(user.id);
 			const socialMediaAccountRepository = this.unitOfWork.getRepository(
 				SocialMediaAccountRepository,
 				SocialMediaAccount,
@@ -351,7 +351,7 @@ export class SubscriptionService {
 				? platforms.slice(0, -1).join(', ') + ' and ' + platforms[platforms.length - 1]
 				: platforms[0]; // If there's only one platform, just return it
 
-			console.log('userSubscriptionCreate userCredits', userCredits)
+				console.log('userSubscriptionCreate userCredits', userCredits)
 			// Save all UserCredit instances at once
 			if (userCredits.length > 0) {
 				await userCreditRepository.save(userCredits);

@@ -37,7 +37,7 @@ export class AuthController {
 
 		const appUrl = this.configService.get<string>('APP_URL_FRONTEND');
 		const error = req.query.error;
-		console.log("GOOGLE LOGIN (google/callback) ERROR: ",error);
+
 		if (error) {
 			if (error === 'access_denied') {
 				const isSuccess = false;
@@ -61,7 +61,6 @@ export class AuthController {
 			return;
 		}
 		const redirectUrl = `${appUrl}/auth/signin?` +
-			`userId=${encodeURIComponent(req.user.userId)}&` +
 			`firstName=${encodeURIComponent(req.user.firstName)}&` +
 			`lastName=${encodeURIComponent(req.user.lastName)}&` +
 			`email=${encodeURIComponent(req.user.email)}&` +
@@ -97,6 +96,7 @@ export class AuthController {
 			return;
 		}
 		const redirectUrl = `${appUrl}/auth/signin?` +
+			`userId=${encodeURIComponent(req.user.userId)}&` +
 			`firstName=${encodeURIComponent(req.user.firstName)}&` +
 			`lastName=${encodeURIComponent(req.user.lastName)}&` +
 			`email=${encodeURIComponent(req.user.email)}&` +
@@ -140,6 +140,15 @@ export class AuthController {
 			GlobalConfig.secrets = { userId: data.userId.toString() };
 
 			//this.setCookie(res, data.accessToken);
+
+			if (signInDto.rememberMe === true) {
+				res.cookie('refreshToken', data.refreshToken, {
+					httpOnly: true,
+					secure: true,
+					sameSite: 'none',
+					domain: this.configService.get('COOKIE_DOMAIN')
+				});
+			}
 
 			return res.status(HttpStatus.OK).json({
 				StatusCode: 200,
@@ -294,14 +303,34 @@ export class AuthController {
 	@Post('refresh-token')
 	@ApiBody({ type: RefreshTokenParamDto })
 	async refreshToken(@Body('refreshToken') refreshToken: string, @Res() res: Response) {
-		const details = await this.authService.refreshToken(refreshToken);
-		//this.setCookie(res, details.accessToken);
-		return res.json({
-			StatusCode: 200,
-			Message: 'Access token refreshed successfully !',
-			IsSuccess: true,
-			Data: details,
-		});
-	}
+		try {
+			const details = await this.authService.refreshToken(refreshToken);
+			//this.setCookie(res, details.accessToken);
+			return res.json({
+				StatusCode: 200,
+				Message: 'Access token refreshed successfully !',
+				IsSuccess: true,
+				Data: details,
+			});
+		}
+		catch (error) {
+			if (error.name == "NotAuthorizedException") {
+				return res.json({
+					StatusCode: HttpStatus.UNAUTHORIZED,
+					Message: "Your session expired .Please Log in again",
+					IsSuccess: false,
+					Data: null,
+				});
+			}
+			else {
+				return res.json({
+					StatusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+					Message: "Internal server error. Please try again later.",
+					IsSuccess: false,
+					Data: null,
+				});
+			}
 
+		}
+	}
 }

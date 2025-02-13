@@ -147,20 +147,16 @@ export class UserCreditRepository extends GenericRepository<UserCredit> {
 		const currentDate = new Date();
 		const currentDateOnly = currentDate.toISOString().split('T')[0];
 
-		const data1 = await this.repository
+		return await this.repository
 			.createQueryBuilder('user_credit')
 			.leftJoinAndSelect('user_credit.user', 'user')
 			.leftJoin('user.userSubscriptions', 'user_subscription')
 			.andWhere('user_subscription.status = :status', { status: UserSubscriptionStatusType.ACTIVE })
 			.andWhere('user_credit.status = :status', { status: UserCreditStatusType.ACTIVE })
+            .andWhere('user_credit.current_credit_amount > :current_credit_amount', { current_credit_amount: 0 })
 			.andWhere('user_subscription.cycle >= :cycle', { cycle: 1 })
 			.andWhere("DATE(user_subscription.start_Date) + INTERVAL '14 days' = :currentDateOnly", { currentDateOnly: currentDateOnly })
 			.getMany();
-			console.log("getAllUserToGeneratePost: ", data1, 'data1');
-
-
-
-		return data1;
 	}
 
     async getAllUserCreditsOncreate(userId: number): Promise<UserCredit[]> {

@@ -26,7 +26,6 @@ export class NotificationService {
 
     async saveData(userId: number, type: string, content: string): Promise<void> {
         try {
-            console.log("saveData notification : userId ", userId, type, content);
             // await this.unitOfWork.startTransaction();
             const notificationRepo = this.unitOfWork.getRepository(NotificationRepository, Notification, true);
 
@@ -37,14 +36,12 @@ export class NotificationService {
             notification.is_read = false;
             notification.created_at = new Date();
             notification.modified_at = new Date();
-            console.log("saveData notification : notification ", notification);
             await notificationRepo.create(notification);
 
             // await this.unitOfWork.completeTransaction();
             // return notification;
         }
         catch (error) {
-            console.log("saveData notification : error ", error);
 
             // await this.unitOfWork.rollbackTransaction();
             throw new Error(`error while creating notification: ${error}`);

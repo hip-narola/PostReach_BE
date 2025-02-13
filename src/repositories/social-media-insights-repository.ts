@@ -73,7 +73,7 @@ export class SocialMediaInsightsRepository extends GenericRepository<SocialMedia
 
         let totalImpressions = 0;
         let totalFollowers = 0;
-        let totalEngagements = 0;
+        let totalEngagements = '0';
 
         socialInsights.forEach(insight => {
             const date = insight.created_at.toISOString().split('T')[0]; // Get the date only
@@ -87,11 +87,11 @@ export class SocialMediaInsightsRepository extends GenericRepository<SocialMedia
 
             impressionsData[dayOfWeek] += insight.impressions;
             followersData[dayOfWeek] += insight.newFollowers;
-            engagementsData[dayOfWeek] += insight.engagements;
+            engagementsData[dayOfWeek] = (parseFloat(engagementsData[dayOfWeek] || '0') + parseFloat(insight.engagements)).toFixed(2);
 
             totalImpressions += insight.impressions;
             totalFollowers += insight.newFollowers;
-            totalEngagements += insight.engagements;
+            totalEngagements = (parseFloat(totalEngagements || '0') + parseFloat(insight.engagements || '0')).toFixed(2);
         });
 
         // Current period condition
@@ -181,7 +181,7 @@ export class SocialMediaInsightsRepository extends GenericRepository<SocialMedia
 
         return result;
     }
-    
+
     async userAccountInsight(socia_media_account_id: number): Promise<SocialMediaInsight> {
         const currentDate = new Date().toISOString().split('T')[0]; // Format as 'YYYY-MM-DD'
 

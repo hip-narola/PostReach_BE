@@ -11,8 +11,8 @@ export class SocialMediaInsightParamDTO {
     @Column()
     newFollowers: number;
 
-    @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true, default: () => 0})
-    engagements: number;  // Ensuring decimal storage with 2 places
+    @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true, default: () => '0'})
+    engagements: string;  // Ensuring decimal storage with 2 places
 
     @Column()
     social_media_account_id: number;

@@ -15,8 +15,6 @@ export class PostTaskRepository extends GenericRepository<PostTask> {
     }
 
     async fetchPostsofUser(user_id: number): Promise<PostTask[]> {
-        const currentDate = new Date();
-        const currentDateOnly = currentDate.toISOString().split('T')[0];
         return await this.repository
             .createQueryBuilder('postTask')
             .leftJoinAndSelect('postTask.post', 'post')
@@ -29,9 +27,6 @@ export class PostTaskRepository extends GenericRepository<PostTask> {
             .andWhere('postTask.status = :status', {
                 status: POST_TASK_STATUS.SCHEDULED,
             })
-            // .andWhere('postTask.created_at = :created_at', {
-            //     created_at: currentDateOnly,
-            // })
             .getMany();
     }
 
@@ -112,7 +107,6 @@ export class PostTaskRepository extends GenericRepository<PostTask> {
             .andWhere('postTask.social_media_account_id = :topSocialMediaAccountId', { topSocialMediaAccountId })
             .getMany();
 
-        // console.log('new posts', posts);
         return posts;
     }
 

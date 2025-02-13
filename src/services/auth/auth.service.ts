@@ -13,7 +13,7 @@ import {
   SignUpCommand,
   AuthFlowType
 } from '@aws-sdk/client-cognito-identity-provider';
-import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import {
   AuthenticationDetails,
@@ -22,7 +22,6 @@ import {
 } from 'amazon-cognito-identity-js';
 import * as crypto from 'crypto';
 import { AWS_SECRET } from 'src/shared/constants/aws-secret-name-constants';
-import { promisify } from 'util';
 import { AwsSecretsService } from '../aws-secrets/aws-secrets.service';
 import { UserService } from '../user/user.service';
 import axios from 'axios';
@@ -99,57 +98,57 @@ export class AuthService {
       Username: email.toLowerCase(),
       Password: password,
     });
-  
+
     const cognitoUser = new CognitoUser({
       Username: email.toLowerCase(),
       Pool: this.userPool,
     });
-  
+
     const userDetails = await this.userService.findUserByEmail(email.toLowerCase());
     if (!userDetails) {
       const error = new Error('User not found.');
       error.name = 'UserNotFoundException';
       throw error;
     }
-  /*
-    const authenticateUserAsync = promisify(cognitoUser.authenticateUser.bind(cognitoUser));
-  
-    try {
-      const result = await authenticateUserAsync(authenticationDetails);
-      const expiresIn = rememberMe ? 60 * 60 * 24 * 7 : 60 * 60; // 7 days for "Remember Me", 1 hour otherwise
-      
-      return {
-        idToken: result.getIdToken().getJwtToken(),
-        accessToken: result.getAccessToken().getJwtToken(),
-        refreshToken: result.getRefreshToken().getToken(),
-        expiresIn,
-        rememberMe,
-        userId: userDetails.id,
-        userName: userDetails.name,
-      };
-    } catch (err) {
-      throw err;
-    }*/
+    /*
+      const authenticateUserAsync = promisify(cognitoUser.authenticateUser.bind(cognitoUser));
+    
+      try {
+        const result = await authenticateUserAsync(authenticationDetails);
+        const expiresIn = rememberMe ? 60 * 60 * 24 * 7 : 60 * 60; // 7 days for "Remember Me", 1 hour otherwise
+        
+        return {
+          idToken: result.getIdToken().getJwtToken(),
+          accessToken: result.getAccessToken().getJwtToken(),
+          refreshToken: result.getRefreshToken().getToken(),
+          expiresIn,
+          rememberMe,
+          userId: userDetails.id,
+          userName: userDetails.name,
+        };
+      } catch (err) {
+        throw err;
+      }*/
 
-      return new Promise((resolve, reject) => {
-        cognitoUser.authenticateUser(authenticationDetails, {
-          onSuccess: (result) => {
-            const expiresIn = rememberMe ? 60 * 60 * 24 * 7 : 60 * 60; // 7 days for "Remember Me", 1 hour otherwise
-            resolve({
-              idToken: result.getIdToken().getJwtToken(),
-              accessToken: result.getAccessToken().getJwtToken(),
-              refreshToken: result.getRefreshToken().getToken(),
-              expiresIn, // Send expiration time along with the tokens
-              rememberMe,
-              userId: userDetails.id,
-              userName: userDetails.name,
-            });
-          },
-          onFailure: (err) => {
-            reject(err);
-          },
-        });
+    return new Promise((resolve, reject) => {
+      cognitoUser.authenticateUser(authenticationDetails, {
+        onSuccess: (result) => {
+          const expiresIn = rememberMe ? 60 * 60 * 24 * 7 : 60 * 60; // 7 days for "Remember Me", 1 hour otherwise
+          resolve({
+            idToken: result.getIdToken().getJwtToken(),
+            accessToken: result.getAccessToken().getJwtToken(),
+            refreshToken: result.getRefreshToken().getToken(),
+            expiresIn, // Send expiration time along with the tokens
+            rememberMe,
+            userId: userDetails.id,
+            userName: userDetails.name,
+          });
+        },
+        onFailure: (err) => {
+          reject(err);
+        },
       });
+    });
   }
   // AWS Cognito Confirm Sign-Up
   async confirmSignUp(
@@ -270,14 +269,13 @@ export class AuthService {
     try {
       const command = new InitiateAuthCommand(params);
       const response = await this.cognitoClient.send(command);
-
       return {
         accessToken: response.AuthenticationResult?.AccessToken,
         idToken: response.AuthenticationResult?.IdToken,
         expiresIn: response.AuthenticationResult?.ExpiresIn,
       };
     } catch (error) {
-      throw new UnauthorizedException('Invalid refresh token');
+      throw error;
     }
   }
 
