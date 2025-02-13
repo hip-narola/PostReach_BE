@@ -322,7 +322,7 @@ export class SubscriptionService {
 
 		if (!socialMediaAccount) {
 			//expire old credit
-			await userCreditRepository.updateUserCreditsToExpired(user.id);
+			await this.userCreditRepository.updateUserCreditsToExpired(user.id);
 			const socialMediaAccountRepository = this.unitOfWork.getRepository(
 				SocialMediaAccountRepository,
 				SocialMediaAccount,
@@ -429,7 +429,7 @@ export class SubscriptionService {
 		// Get all previous credits and calculate the end date
 		const credits = await this.userCreditRepository.getAllUserCreditsOncreate(userSubscription.user.id);
 		let endDate: Date;
-
+		console.log('get all old credits:::', credits)
 		if (credits.length > 0 && credits[0]?.end_Date) {
 			endDate = new Date(credits[0].end_Date);
 		} else {
