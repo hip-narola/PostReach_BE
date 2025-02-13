@@ -41,18 +41,18 @@ export class ApprovalQueueController {
             userId: number;
         },
     ): Promise<any> {
-        if (this.subscriptionService.isUserSubscriptionExpire(UpdatePostTaskStatusDTO.userId)) {
-            return {
-                message: "Please subscribe a subscription first!",
-            };
-        }
-        else {
+        // if (this.subscriptionService.isUserSubscriptionExpire(UpdatePostTaskStatusDTO.userId)) {
+        //     return {
+        //         message: "Please subscribe a subscription first!",
+        //     };
+        // }
+        // else {
             const data = await this.approvalQueueService.updateStatus(UpdatePostTaskStatusDTO);
 
             return {
                 message: data
             };
-        }
+        // }
     }
 
     @Get('RejectReasonList')
