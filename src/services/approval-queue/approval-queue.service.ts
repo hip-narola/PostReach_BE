@@ -47,21 +47,22 @@ export class ApprovalQueueService {
                 }
 
                 if (updateStatusParam.isApproved == true) {
-                    const data = await this.approvalQueueRepository.getScheduledPostByPostTaskID(id);
                     
-                    const publishAt = moment(data.scheduleTime, 'YYYY-MM-DD HH:mm:ss');
+                    // const publishAt = moment(data.scheduleTime, 'YYYY-MM-DD HH:mm:ss');
                     
                     // if (!publishAt.isValid()) {
                     //     message = 'Invalid schedule time format. Expected format: YYYY-MM-DD HH:mm:ss';
                     // }
             
-                    const delay = publishAt.diff(moment());
-                    if (delay <= 0) {
-                        continue;
-                    }
+                    // const delay = publishAt.diff(moment());
+                    // if (delay <= 0) {
+                    //     continue;
+                    // }
                     
                     record.status = POST_TASK_STATUS.SCHEDULED;
                     await this.approvalQueueRepository.update(id, record);
+
+                    const data = await this.approvalQueueRepository.getScheduledPostByPostTaskID(id);
 
                     await this.schedulePostService.schedulePost(
                         data.id,
