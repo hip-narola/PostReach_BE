@@ -120,7 +120,7 @@ export class ApprovalQueueRepository extends GenericRepository<PostTask> {
                 .leftJoin('p.assets', 'a', 'a.type = :type', { type: ASSET_TYPE.IMAGE })
                 .leftJoin('pt.socialMediaAccount', 'sm')
                 .leftJoin('pt.user', 'ur')
-                .where('pt.status = :status', { status: POST_TASK_STATUS.SCHEDULED })
+                .where('pt.status = :status', { status: POST_TASK_STATUS.PENDING })
                 .andWhere('pt.id = :id', { id })
                 .orderBy('pt.scheduled_at', 'DESC')
                 .getRawOne();
