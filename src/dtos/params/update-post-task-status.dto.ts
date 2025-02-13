@@ -34,6 +34,11 @@ export class UpdatePostTaskStatusDTO {
 	@IsString()
 	rejectReason?: string;
 
+    @ApiProperty({
+        description: 'userId',
+        type: Number,
+    })
+    
     @IsOptional()
     @IsNumber()
     userId: number;

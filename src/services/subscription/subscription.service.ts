@@ -903,8 +903,8 @@ export class SubscriptionService {
 	async isUserSubscriptionExpire(userId: number): Promise<boolean> {
         const usersubscription = await this.userSubscriptionRepository.findUserActiveSubscriptionWithoutSubscriptionId(userId);
         if (usersubscription) {
-            return true;
+            return false;
         }
-        return false;
+        return true;
     }
 }
