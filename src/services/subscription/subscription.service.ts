@@ -905,9 +905,9 @@ export class SubscriptionService {
 		console.log("isUserSubscriptionExpire usersubscription ::: ", usersubscription)
         if (usersubscription == null) {
 			console.log("Return false")
-            return false;
+            return true;
         }
 		console.log("Return true")
-        return true;
+        return false;
     }
 }
