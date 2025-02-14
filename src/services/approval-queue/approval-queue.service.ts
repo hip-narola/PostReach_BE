@@ -50,14 +50,9 @@ export class ApprovalQueueService {
                     
                     const data = await this.approvalQueueRepository.getScheduledPostByPostTaskID(id);
                     if (data != null) {
-                        console.log("updateStatus data.scheduled_at :::", data.scheduled_at);
 
                         const publishAt = moment(data.scheduled_at);
-                        console.log("updateStatus publishAt :::", publishAt);
-                
                         const delay = publishAt.diff(moment());
-
-                        console.log("updateStatus delay :::", delay);
                         if (delay <= 0) {
                             continue;
                         }
@@ -85,16 +80,12 @@ export class ApprovalQueueService {
                 }
                 // if approved false then else if block executed.
                 else if (updateStatusParam.isApproved == false) {
-                    console.log('post rejected');
                     record.status = POST_TASK_STATUS.REJECTED;
                     
                     const rejectReasonList = await this.RejectReasonList();
                     const rejectReason = rejectReasonList.find(x => x.id == updateStatusParam.rejectreasonId);
-                    console.log('rejectReasonList', rejectReasonList);
-                    console.log('rejectReason', rejectReason);
 
                     record.RejectReason = (!rejectReason) ? new RejectReasonResponseDTO() : rejectReason;
-                    console.log('record rejected', record);
                     await this.approvalQueueRepository.update(id, record);
                 }
             }
