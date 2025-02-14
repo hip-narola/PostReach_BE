@@ -50,9 +50,9 @@ export class ApprovalQueueService {
                     
                     const data = await this.approvalQueueRepository.getScheduledPostByPostTaskID(id);
                     if (data != null) {
-                        console.log("updateStatus data.scheduleTime :::", data.scheduleTime);
-                        
-                        const publishAt = moment(data.scheduleTime, 'YYYY-MM-DD HH:mm:ss');
+                        console.log("updateStatus data.scheduled_at :::", data.scheduled_at);
+
+                        const publishAt = moment(data.scheduled_at, 'YYYY-MM-DD HH:mm:ss');
                         console.log("updateStatus publishAt :::", publishAt);
                 
                         const delay = publishAt.diff(moment());

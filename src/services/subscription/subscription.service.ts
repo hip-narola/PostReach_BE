@@ -902,12 +902,9 @@ export class SubscriptionService {
 
 	async isUserSubscriptionExpire(userId: number): Promise<boolean> {
         const usersubscription = await this.userSubscriptionRepository.findUserActiveSubscriptionWithoutSubscriptionId(userId);
-		console.log("isUserSubscriptionExpire usersubscription ::: ", usersubscription)
         if (usersubscription == null) {
-			console.log("Return false")
             return true;
         }
-		console.log("Return true")
         return false;
     }
 }

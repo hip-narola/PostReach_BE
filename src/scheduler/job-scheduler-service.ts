@@ -75,7 +75,6 @@ export class JobSchedulerService {
     ): Promise<void> {
         const publishAt = moment(scheduleTime, 'YYYY-MM-DD HH:mm:ss');
         const delay = publishAt.diff(moment());
-       
 
         await this.postQueue.add(
             'publish-post',

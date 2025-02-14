@@ -41,7 +41,6 @@ export class ApprovalQueueController {
             userId: number;
         },
     ): Promise<any> {
-        console.log("this.subscriptionService.isUserSubscriptionExpire(UpdatePostTaskStatusDTO.userId)", await this.subscriptionService.isUserSubscriptionExpire(UpdatePostTaskStatusDTO.userId))
         if (await this.subscriptionService.isUserSubscriptionExpire(UpdatePostTaskStatusDTO.userId)) {
             return {
                 message: "Please subscribe a subscription first!",
