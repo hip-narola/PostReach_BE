@@ -44,21 +44,16 @@ export class GeneratePostService {
 
     async generatePostByAIAPI(userCredit: UserCredit[]): Promise<void> {
         try {
-            console.log('generatePostByAIAPI:::  userCredit', userCredit)
             const details = await this.userRepository.findUserAnswersWithQuestionsAndSocialMedia(userCredit[0].user.id);
-            console.log('generatePostByAIAPI::: details', details)
 
             //generate post only for left days of subscription
             const daysDifference = (Math.floor(Math.abs(new Date(details.userSubscription.end_Date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))) + 1;
-
-            console.log('generatePostByAIAPI::: daysDifference', daysDifference);
 
             let PostRequestCount: number;
             const today = new Date();
             const subscriptionStart = new Date(details.userSubscription.start_Date);
             const subscriptionValidDate = new Date(subscriptionStart);
             subscriptionValidDate.setDate(subscriptionValidDate.getDate() + 14);
-            console.log('generatePostByAIAPI::: today: ', today, 'subscriptionStart: ', subscriptionStart, 'subscriptionValidDate :', subscriptionValidDate);
 
             const secretData = await this.secretService.getSecret(AWS_SECRET.AWSSECRETNAME);
 
@@ -116,8 +111,7 @@ export class GeneratePostService {
                 else if (element.social_media.platform == SocialMediaPlatformNames[SocialMediaPlatform.INSTAGRAM])
                     socialPostNumber.instagram_posts_number = Math.round(PostRequestCount);
             }
-            // if (userCredit.length == 1 && PostRequestCount < 15 && details.userSubscription.cycle != 0) {
-            console.log("generatePostByAIAPI::: socialPostNumber ", socialPostNumber);
+            
             const currentDate = new Date();
             const currentDateOnly = currentDate.toISOString().split('T')[0];
 
@@ -126,24 +120,19 @@ export class GeneratePostService {
             const checkDate = startDate; // Store the updated date in checkDate
 
             if (userCredit.length == 1 && details.userSubscription.cycle != 0 && ((details.userSubscription.cycle == 1 && (userCredit[0].social_media.connected_at.toISOString().split('T')[0] > details.userSubscription.start_Date.toISOString().split('T')[0] && checkDate.toISOString().split('T')[0] != currentDateOnly)) || details.userSubscription.cycle > 1 && PostRequestCount < 15)) {
-                console.log('generatePostByAIAPI:::  in block', details.userSubscription, checkDate);
+
                 // if (userCredit.length == 1 && (&& PostRequestCount < 15) && details.userSubscription.cycle != 0) {
                 const socialMediaIds = details.socialMedia.map((media) => media.id);
-
-                console.log('generatePostByAIAPI::: socialMediaIds', socialMediaIds);
-
                 const posts = await this.postTaskRepository.fetchPostTaskOfSocialMedia(socialMediaIds);
-                // console.log('generatePostByAIAPI:: posts', posts)
+            
                 let postTogenerate: PostTask[];
                 if (posts.length >= PostRequestCount) {
-                    console.log('generatePostByAIAPI::: posts.length in', posts.length, PostRequestCount)
                     postTogenerate = posts.slice(0, PostRequestCount);
                 }
                 else {
-                    console.log('generatePostByAIAPI::: posts.length else', posts.length, PostRequestCount)
                     postTogenerate = posts;
                 }
-                console.log('generatePostByAIAPI::: postTogenerate', postTogenerate)
+
                 const postsForPlatform = postTogenerate.map(postTask => ({
                     post_id: postTask.external_post_id,
                     platform: userCredit[0].social_media.platform,  // Set the platform dynamically
@@ -152,7 +141,6 @@ export class GeneratePostService {
                     schedule_end_date: userCredit[0]?.end_Date ? userCredit[0].end_Date.toISOString().split('T')[0] : ''
                 }));
 
-                console.log('generatePostByAIAPI::: postsForPlatform', postsForPlatform)
                 apiUrl = secretData.REGENERATE_AI_API;
 
                 generatePostRequest = {
@@ -162,7 +150,7 @@ export class GeneratePostService {
 
             }
             else {
-                console.log('generatePostByAIAPI:::  else block');
+
                 apiUrl = secretData.APIURL;
 
                 // Bind data from these info
@@ -185,7 +173,6 @@ export class GeneratePostService {
                 }
             }
 
-            console.log('generatePostByAIAPI::: generatePostRequest', generatePostRequest)
             const response = await axios.post(apiUrl, generatePostRequest, {
                 headers: {
                     Authorization: `Bearer ${token}`,
@@ -195,20 +182,16 @@ export class GeneratePostService {
 
             if (response != undefined) {
                 const responseData = plainToInstance(generatePostResponseDTO, response.data);
-                console.log("generatePostByAIAPI::: responseData : ", response.data);
 
                 if (responseData.status == POST_RESPONSE.COMPLETED && responseData.posts.length > 0) {
-                    console.log("generatePostByAIAPI::: inside POST response completed");
                     await this.savePostDetails(userCredit, responseData)
                 }
                 else if ((responseData.status == POST_RESPONSE.PROCESSING || responseData.status == POST_RESPONSE.FAILED) || ((responseData.status == POST_RESPONSE.COMPLETED || responseData.status == POST_RESPONSE.SUCCESS) && responseData.posts.length == 0)) {
-                    console.log("generatePostByAIAPI::: inside POST response processing");
                     await this.savePostRetry(userCredit[0].user.id, responseData.result_id, responseData.status)
                 }
             }
         }
         catch (error) {
-            console.log(`error in generatePostByAIAPI: ${error}`);
             throw error;
         }
     }
@@ -219,14 +202,10 @@ export class GeneratePostService {
         // Loop for posts
         try {
 
-            console.log('savePostDetails::: userCredit', userCredit);
             const user = userCredit[0].user;
             if (generatePostData.posts && generatePostData.posts.length > 0) {
                 for (const post of generatePostData.posts) {
-                    console.log("savePostDetails::: post ", post.id);
-
                     const sm = userCredit.find(x => x.social_media.platform == post.platform);
-                    console.log("savePostDetails:::  sm", sm);
 
                     if (sm) {
 
@@ -241,14 +220,11 @@ export class GeneratePostService {
                         postTask.modified_date = null;
                         postTask.socialMediaAccount = sm.social_media;
                         postTask.external_post_id = post.id;
+
                         await this.postTaskRepository.save([postTask]);
-
-                        console.log("savePostDetails::: post task saved: ", postTask);
-
                         // Create post task | End
 
                         // Create post || Started
-                        console.log("savePostDetails::: post saved started: ");
                         const createPost = new Post();
                         createPost.postTask = postTask;
                         createPost.content = post.text;
@@ -260,16 +236,10 @@ export class GeneratePostService {
                         createPost.no_of_views = 0;
                         createPost.modified_date = null;
 
-                        console.log("savePostDetails::: post : ", createPost);
-
                         await this.postRepository.save([createPost]);
-                        console.log("savePostDetails::: post save finish", createPost);
-
                         // Create post || End
 
                         // Create asset || Started
-
-                        console.log("savePostDetails::: asset save started post.image_url : ", post.image_url);
                         if (post.image_url != "") {
                             const createAsset = new Asset();
                             createAsset.url = post.image_url;
@@ -277,34 +247,19 @@ export class GeneratePostService {
                             createAsset.created_By = user.id;
                             createAsset.created_at = new Date(post.created_at);
                             createAsset.modified_date = null;
-                            // TODO:
-                            // Check if update date is inserting as null or not. Should insert as null
                             createAsset.post = createPost;
                             await this.assetRepository.save([createAsset]);
-                            console.log("savePostDetails::: asset save finish createAsset:  ", createAsset)
+            
                         }
                         // Create asset || End
-                        console.log("savePostDetails::: after image if");
-                    }
-
-                    console.log("savePostDetails::: sm end")
+                    }    
                 }
-                console.log("savePostDetails::: userCredit.length : ", userCredit.length);
+
                 for (let i = 0; i < userCredit.length; i++) {
 
                     const element = userCredit[i];
-                    console.log(`savePostDetails::: element: ${i}`, element);
-                    console.log("savePostDetails::: element.social_media_id in loop ", element.social_media_id)
-
                     element.social_media = await this.socialMediaAccountRepository.findOne(element.social_media_id);
-                    console.log("savePostDetails::: element.social_media ", element.social_media)
-
                     const userCreditEntity = await this.userCreditRepository.getUserCreditWithSocialMedia(user.id, element.social_media_id);
-
-                    console.log("savePostDetails:::", userCreditEntity, 'userCreditEntity in loop')
-
-                    console.log('savePostDetails::: before credit', userCreditEntity.current_credit_amount)
-                    console.log('savePostDetails::: element.social_media.platform', element.social_media.platform)
 
                     let count = 0;
                     if (element.social_media.platform == SocialMediaPlatformNames[SocialMediaPlatform.FACEBOOK]) {
@@ -323,19 +278,17 @@ export class GeneratePostService {
 
                     userCreditEntity.current_credit_amount = userCreditEntity.current_credit_amount - count;
                     userCreditEntity.last_trigger_date = new Date();
-                    console.log('savePostDetails::: after credit', userCreditEntity.current_credit_amount)
+    
                     await this.userCreditRepository.update(userCreditEntity.id, userCreditEntity);
                 }
             }
         }
         catch (error) {
-            console.log(`savePostDetails::: error in savePostDetails: ${error}`)
             throw error;
         }
     }
 
     private async savePostRetry(userId: number, pipelineId: string, status: string) {
-        console.log(userId, pipelineId, status, 'savePostRetry');
         try {
             const postRetry = new PostRetry();
             postRetry.id = generateId(IdType.POST_RETRY);
@@ -350,28 +303,21 @@ export class GeneratePostService {
             this.scheduleRetry(postRetry); // Call retry scheduling function
         }
         catch (error) {
-            console.log(`error in savePostRetry: ${error}`)
         }
     }
 
     private async scheduleRetry(post: PostRetry) {
         if (post.retry_count <= 0) {
-            console.log(`Retries exhausted for post ID ${post.id}`);
             return; // Stop retrying when retry count reaches 0
         }
-
-        console.log(`Scheduling retry for post ID ${post.id} in ${POST_RETRY_COUNT[post.retry_count]} ms DATE: ${new Date()}`);
+        
         setTimeout(() => {
             this.reGeneratePost(post); // Ensuring full function execution
         }, POST_RETRY_COUNT[post.retry_count]);
-        // setTimeout(() => {
-        //     this.reGeneratePost(post);
-        // }, POST_RETRY_COUNT[post.retry_count]);
     }
 
     private async reGeneratePost(post: PostRetry) {
         try {
-            console.log(`Retrying post ID: ${post.id}`);
 
             const secretData = await this.secretService.getSecret(AWS_SECRET.AWSSECRETNAME);
             const apiUrl = secretData.GETAPIURL;
@@ -388,37 +334,28 @@ export class GeneratePostService {
             });
 
             const newResponse = plainToInstance(generatePostResponseDTO, response.data);
-            console.log('Retry API Response:', response.data);
 
             if (newResponse.status === POST_RESPONSE.SUCCESS) {
 
                 const userCredit = await this.userCreditRepository.getAllUserCredits(post.user_id);
-                console.log('reGeneratePost userCredit : ', userCredit);
 
                 try {
                     await this.savePostDetails(userCredit, newResponse);
                 }
                 catch (error) {
-                    console.log(error, 'errorin save')
+    
                 }
                 post.status = POST_RESPONSE.COMPLETED;
-                console.log('updated post1')
 
                 await this.postRetryRepository.update(post.id, post);
-                console.log('Post', post)
-
-
-                console.log(`Post ID ${post.id} marked as COMPLETED`);
             } else if (newResponse.status === POST_RESPONSE.PROCESSING || newResponse.status === POST_RESPONSE.FAILED) {
 
                 post.retry_count -= 1; // Decrement retry count
                 await this.postRetryRepository.update(post.id, post);
 
-                console.log(`Post ID ${post.id} count minus: ${post.retry_count}`);
                 await this.scheduleRetry(post); // Retry again if count is not zero
             }
         } catch (error) {
-            console.log('Error in reGeneratePost:', error);
         }
     }
 }
