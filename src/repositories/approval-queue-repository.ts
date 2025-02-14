@@ -125,37 +125,37 @@ export class ApprovalQueueRepository extends GenericRepository<PostTask> {
                 .orderBy('pt.scheduled_at', 'DESC')
                 .getRawOne();
 
-            if (!queryResult) {
-                throw new Error(`No scheduled post found with id: ${id}`);
+            if (queryResult) {
+                const data = {
+                    id: queryResult.post_task_id,
+                    postId: queryResult.post_id,
+                    image: queryResult.image,
+                    social_media_user_id: queryResult.social_media_user_id ?? null,
+                    userId: queryResult.user_id,
+                    token_type: queryResult.token_type ?? null,
+                    content: queryResult.captions,
+                    hashtags: queryResult.hashtags
+                        ? queryResult.hashtags.split(',')
+                        : [],
+                    channel: queryResult.channel,
+                    scheduled_at: queryResult.schedule_date,
+                    accessToken: queryResult.accesstoken,
+                    instagramId: queryResult.instagramid,
+                    pageId: queryResult.pageid,
+                    user: queryResult.user,
+                    post_created_at: queryResult.post_created_at,
+                    profileImage: queryResult.profileimage,
+                    analytics: [
+                        { comments: queryResult.no_of_comments },
+                        { likes: queryResult.no_of_likes },
+                        { views: queryResult.no_of_views },
+                    ],
+
+                };
+                
+                return data;
             }
-
-            const data = {
-                id: queryResult.post_task_id,
-                postId: queryResult.post_id,
-                image: queryResult.image,
-                social_media_user_id: queryResult.social_media_user_id ?? null,
-                userId: queryResult.user_id,
-                token_type: queryResult.token_type ?? null,
-                content: queryResult.captions,
-                hashtags: queryResult.hashtags
-                    ? queryResult.hashtags.split(',')
-                    : [],
-                channel: queryResult.channel,
-                scheduled_at: queryResult.schedule_date,
-                accessToken: queryResult.accesstoken,
-                instagramId: queryResult.instagramid,
-                pageId: queryResult.pageid,
-                user: queryResult.user,
-                post_created_at: queryResult.post_created_at,
-                profileImage: queryResult.profileimage,
-                analytics: [
-                    { comments: queryResult.no_of_comments },
-                    { likes: queryResult.no_of_likes },
-                    { views: queryResult.no_of_views },
-                ],
-
-            };
-            return data;
+            return null;
         } catch (error) {
             throw error;
         }

@@ -49,37 +49,37 @@ export class ApprovalQueueService {
                 if (updateStatusParam.isApproved == true) {
                     
                     const data = await this.approvalQueueRepository.getScheduledPostByPostTaskID(id);
+                    if (data != null) {
+                        console.log("updateStatus data.scheduleTime :::", data.scheduleTime);
+                        
+                        const publishAt = moment(data.scheduleTime, 'YYYY-MM-DD HH:mm:ss');
+                        console.log("updateStatus publishAt :::", publishAt);
+                
+                        const delay = publishAt.diff(moment());
+                        if (delay <= 0) {
+                            continue;
+                        }
+                        
+                        record.status = POST_TASK_STATUS.SCHEDULED;
+                        await this.approvalQueueRepository.update(id, record);
 
-                    // const publishAt = moment(data.scheduleTime, 'YYYY-MM-DD HH:mm:ss');
-                    
-                    // if (!publishAt.isValid()) {
-                    //     message = 'Invalid schedule time format. Expected format: YYYY-MM-DD HH:mm:ss';
-                    // }
-            
-                    // const delay = publishAt.diff(moment());
-                    // if (delay <= 0) {
-                    //     continue;
-                    // }
-                    
-                    record.status = POST_TASK_STATUS.SCHEDULED;
-                    await this.approvalQueueRepository.update(id, record);
-
-                    await this.schedulePostService.schedulePost(
-                        data.id,
-                        data.channel,
-                        data.postId,
-                        data.accessToken,
-                        data.content,
-                        data.scheduled_at,
-                        data.hashtags,
-                        data.image,
-                        data.pageId,
-                        data.social_media_user_id,
-                        data.token_type,
-                        data.instagramId,
-                        data.userId,
-                        data.post_created_at
-                    );
+                        await this.schedulePostService.schedulePost(
+                            data.id,
+                            data.channel,
+                            data.postId,
+                            data.accessToken,
+                            data.content,
+                            data.scheduled_at,
+                            data.hashtags,
+                            data.image,
+                            data.pageId,
+                            data.social_media_user_id,
+                            data.token_type,
+                            data.instagramId,
+                            data.userId,
+                            data.post_created_at
+                        );
+                    }
                 }
                 // if approved false then else if block executed.
                 else if (updateStatusParam.isApproved == false) {
