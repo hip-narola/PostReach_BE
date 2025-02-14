@@ -52,10 +52,12 @@ export class ApprovalQueueService {
                     if (data != null) {
                         console.log("updateStatus data.scheduled_at :::", data.scheduled_at);
 
-                        const publishAt = moment(data.scheduled_at, 'YYYY-MM-DD HH:mm:ss');
+                        const publishAt = moment(data.scheduled_at);
                         console.log("updateStatus publishAt :::", publishAt);
                 
                         const delay = publishAt.diff(moment());
+
+                        console.log("updateStatus delay :::", delay);
                         if (delay <= 0) {
                             continue;
                         }
