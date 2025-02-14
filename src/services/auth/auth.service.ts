@@ -25,6 +25,8 @@ import { AWS_SECRET } from 'src/shared/constants/aws-secret-name-constants';
 import { AwsSecretsService } from '../aws-secrets/aws-secrets.service';
 import { UserService } from '../user/user.service';
 import axios from 'axios';
+import { NotificationMessage, NotificationType } from 'src/shared/constants/notification-constants';
+import { NotificationService } from '../notification/notification.service';
 
 @Injectable()
 export class AuthService {
@@ -43,6 +45,7 @@ export class AuthService {
     private configService: ConfigService,
     private readonly userService: UserService,
     private readonly secretService: AwsSecretsService,
+    private readonly notificationService: NotificationService,
   ) {
     this.identityClient = new CognitoIdentityClient({
       region: this.configService.get<string>('REGION'),
@@ -162,7 +165,8 @@ export class AuthService {
       ConfirmationCode: confirmationCode.trim(),
     });
     await this.cognitoClient.send(command);
-    const signInResult = this.signIn(email, password, false);
+    const signInResult = await this.signIn(email, password, false);
+    await this.notificationService.saveData(signInResult.userId, NotificationType.SIGNUP_DONE, NotificationMessage[NotificationType.SIGNUP_DONE]);
     return signInResult;
   }
 

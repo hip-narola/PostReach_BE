@@ -3,7 +3,6 @@ import { PaginationParamDto } from 'src/dtos/params/pagination-param.dto';
 import { UpdatePostTaskStatusDTO } from 'src/dtos/params/update-post-task-status.dto';
 import { PaginatedResponseDto } from 'src/dtos/response/pagination-response.dto';
 import { RejectReasonResponseDTO } from 'src/dtos/response/reject-reason-response.dto';
-import { PostTask } from 'src/entities/post-task.entity';
 import { ApprovalQueueRepository } from 'src/repositories/approval-queue-repository';
 import { UnitOfWork } from 'src/unitofwork/unitofwork';
 import { EmailService } from '../email/email.service';
@@ -81,7 +80,6 @@ export class ApprovalQueueService {
                 // if approved false then else if block executed.
                 else if (updateStatusParam.isApproved == false) {
                     record.status = POST_TASK_STATUS.REJECTED;
-                    
                     const rejectReasonList = await this.RejectReasonList();
                     const rejectReason = rejectReasonList.find(x => x.id == updateStatusParam.rejectreasonId);
 
@@ -95,7 +93,6 @@ export class ApprovalQueueService {
             } else if (updateStatusParam.isApproved == false) {
                 return 'Post(s) rejected successfully.';
             }
-            
         } catch (error) {
             console.log('approve reject updateStatus error', error);
             this.logger.error(`Error ${error.stack || error.message}`, 'updateStatus');
@@ -111,35 +108,22 @@ export class ApprovalQueueService {
     // update the status for post execution success or failure.
     async updateStatusAfterPostExecution(id: number, status: string, userId: number) {
         try {
-            await this.unitOfWork.startTransaction();
-            const approvalQueueRepository = this.unitOfWork.getRepository(
-                ApprovalQueueRepository,
-                PostTask,
-                true,
-            );
 
-            console.log("updateStatusAfterPostExecution id: ", id)
-            const record = await approvalQueueRepository.findOne(id);
+            const record = await this.approvalQueueRepository.findPosttaskWithUser(id);
             record.status = status;
 
-            console.log("updateStatusAfterPostExecution update staus id record: ", id, record);
+            await this.approvalQueueRepository.update(id, record);
 
-            await approvalQueueRepository.update(id, record);
-
-            console.log("updateStatusAfterPostExecution post-queue save notification");
             // Add notification
             const notificationType = status == POST_TASK_STATUS.FAIL ? POST_TASK_STATUS.FAIL : POST_TASK_STATUS.EXECUTE_SUCCESS;
             const notificationContent = status == POST_TASK_STATUS.FAIL ? NotificationMessage[NotificationType.POST_FAILED] : NotificationMessage[NotificationType.POST_PUBLISHED];
 
-            console.log("updateStatusAfterPostExecution post-queue save notification : user id notificationType content", userId, notificationType, notificationContent);
             await this.notificationService.saveData(userId, notificationType, notificationContent);
 
             await this.emailService.sendEmail(record.user.email, 'Post Posted', 'post_success');
 
-            await this.unitOfWork.completeTransaction();
         } catch (error) {
-            console.log("updateStatusAfterPostExecution error:: ", error);
-            await this.unitOfWork.rollbackTransaction();
+          
             this.logger.error(
                 `Error` +
                 error.stack || error.message,

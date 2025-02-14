@@ -14,9 +14,10 @@ import { AwsSecretsService } from 'src/services/aws-secrets/aws-secrets.service'
 import { FacebookStrategyProvider } from 'src/shared/common/configurations/social/facebook.strategy.provider';
 import { Logger } from 'src/services/logger/logger.service';
 import { GoogleStrategyProvider } from 'src/shared/common/configurations/social/google.strategy.provider';
+import { NotificationModule } from '../notification/notification.module';
 
 @Module({
-  imports: [PassportModule,ConfigModule,UserModule,FacebookModule],
+  imports: [PassportModule, ConfigModule, UserModule, FacebookModule, NotificationModule],
   providers: [AuthService, GoogleStrategyProvider, Logger, EmailService, JwtStrategy, JwtAuthGuard, FacebookStrategyProvider, CognitoIdentityService, UnitOfWork, AwsSecretsService],
   controllers: [AuthController],
   exports: [AuthService, JwtAuthGuard, JwtStrategy, CognitoIdentityService],

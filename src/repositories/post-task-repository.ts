@@ -105,6 +105,7 @@ export class PostTaskRepository extends GenericRepository<PostTask> {
             .leftJoinAndSelect('socialMediaAccount.user', 'user')
             .where('postTask.status IN (:...statuses)', { statuses })
             .andWhere('postTask.social_media_account_id = :topSocialMediaAccountId', { topSocialMediaAccountId })
+            .orderBy('postTask.scheduled_at', 'DESC') // Use double quotes around the alias
             .getMany();
 
         return posts;

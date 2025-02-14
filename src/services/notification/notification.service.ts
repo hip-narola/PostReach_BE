@@ -2,12 +2,14 @@ import { Injectable } from '@nestjs/common';
 import { NotificationRepository } from 'src/repositories/notification-repository';
 import { UnitOfWork } from 'src/unitofwork/unitofwork';
 import { Notification } from 'src/entities/notification.entity';
+import { Logger } from 'src/services/logger/logger.service';
 
 @Injectable()
 export class NotificationService {
     constructor(
         private readonly notificationRepository: NotificationRepository,
         private readonly unitOfWork: UnitOfWork,
+        private readonly logger: Logger,
     ) { }
 
     async getData(userId: number, isRead: boolean): Promise<Notification[]> {
@@ -20,14 +22,14 @@ export class NotificationService {
             return await notificationRepo.findIsRead(userId, isRead);
         }
         catch (error) {
-            throw new Error(`Failed to list notifications `);
+            throw new Error(`Failed to list notifications: ${error}`);
         }
     }
 
     async saveData(userId: number, type: string, content: string): Promise<void> {
         try {
             // await this.unitOfWork.startTransaction();
-            const notificationRepo = this.unitOfWork.getRepository(NotificationRepository, Notification, true);
+            // const notificationRepo = this.unitOfWork.getRepository(NotificationRepository, Notification, true);
 
             const notification = new Notification();
             notification.user_id = userId;
@@ -36,13 +38,17 @@ export class NotificationService {
             notification.is_read = false;
             notification.created_at = new Date();
             notification.modified_at = new Date();
-            await notificationRepo.create(notification);
+            await this.notificationRepository.create(notification);
 
             // await this.unitOfWork.completeTransaction();
             // return notification;
         }
         catch (error) {
-
+            this.logger.error(
+				`Error` +
+				error.stack || error.message,
+				'postToTwitter'
+			);
             // await this.unitOfWork.rollbackTransaction();
             throw new Error(`error while creating notification: ${error}`);
         }

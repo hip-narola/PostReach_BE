@@ -117,9 +117,6 @@ export class LinkedinService {
 	@Throttle({ default: { limit: 100, ttl: 86400000 } })
 	// async getUserPages(userId: number, platform: number): Promise<LinkedInUserPagesDto[]> {
 	async getUserPages(token: string): Promise<LinkedInUserPagesDto[]> {
-
-		// const userSocialAccount = await this.socialMediaAccountService.findSocialAccountOfUserForLinkedIn(userId, SocialMediaPlatformNames[SocialMediaPlatform.LINKEDIN]);
-
 		const url = `${LINKEDIN_CONST.ENDPOINT}/organizationAcls?q=roleAssignee`;
 		try {
 			const response = await axios.get(url, {
@@ -175,7 +172,7 @@ export class LinkedinService {
 			return formattedResponse;
 
 		} catch (error) {
-			throw new Error(`Failed to fetch user pages., ${error.response?.data || error.message}`);
+			throw new Error(`Linkedin page error:: ${error.response?.data?.message || error.status}`);
 		}
 	}
 
@@ -392,6 +389,8 @@ export class LinkedinService {
 				tokenDataDTO.token_type = LINKEDIN_CONST.LINKEDINID;
 				tokenDataDTO.platform = SocialMediaPlatformNames[SocialMediaPlatform.LINKEDIN];
 				tokenDataDTO.user_id = userId;
+				tokenDataDTO.connected_at = new Date();
+				userSocialAccount.updated_at = new Date();
 				const data = plainToInstance(SocialMediaAccount, tokenDataDTO);
 				await socialMediaAccountRepo.create(data);
 				// await this.socialMediaAccountService.storeTokenDetails(userId, tokenDataDTO, SocialMediaPlatformNames[SocialMediaPlatform.LINKEDIN]);
@@ -407,9 +406,9 @@ export class LinkedinService {
 				userSocialAccount.token_type = Ispage ? LINKEDIN_CONST.PAGE_ACCESS_TOKEN : LINKEDIN_CONST.LINKEDINID
 				userSocialAccount.user_profile = logoUrl;
 				userSocialAccount.page_id = Ispage ? pageId : null;
-				userSocialAccount.connected_at =  new Date();
+				userSocialAccount.connected_at = new Date();
 				userSocialAccount.created_at = new Date();
-                userSocialAccount.updated_at = new Date();
+				userSocialAccount.updated_at = null;
 				await socialMediaAccountRepo.update(userSocialAccount.id, userSocialAccount);
 			}
 			await this.unitOfWork.completeTransaction();

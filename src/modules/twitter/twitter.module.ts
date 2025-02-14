@@ -13,18 +13,20 @@ import { NotificationModule } from '../notification/notification.module';
 import { AwsSecretsServiceModule } from '../aws-secrets-service/aws-secrets-service.module';
 import { CacheModule } from '../cache/cache-module';
 import { Logger } from 'src/services/logger/logger.service';
+import { Post } from 'src/entities/post.entity';
+import { PostRepository } from 'src/repositories/post-repository';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User, UserRepository]),
+    TypeOrmModule.forFeature([User, UserRepository, Post]),
     SocialMediaAccountModule,
     UnitOfWorkModule,
     QuestionnaireModule,
     NotificationModule,
     AwsSecretsServiceModule,
-    CacheModule
+    CacheModule,
   ],
-  providers: [TwitterService, UserService, ImageUploadService, Logger
+  providers: [TwitterService, UserService, ImageUploadService, Logger, PostRepository
   ],
   exports: [UserService],
 })

@@ -55,6 +55,12 @@ export class GeneratePostService {
             const subscriptionValidDate = new Date(subscriptionStart);
             subscriptionValidDate.setDate(subscriptionValidDate.getDate() + 14);
 
+            const currentDateOnly = today.toISOString().split('T')[0];
+
+            const startDate = new Date(details.userSubscription.start_Date); // Create a Date object from the start date
+            startDate.setDate(startDate.getDate() + 14); // Add 14 days
+            const checkDate = subscriptionValidDate; // Store the updated date in checkDate
+
             const secretData = await this.secretService.getSecret(AWS_SECRET.AWSSECRETNAME);
 
             const token = secretData.TOKEN;
@@ -68,13 +74,19 @@ export class GeneratePostService {
 
             let generatePostRequest: ReGeneratePostPipelineRequestDTO | GeneratePostPipelineRequestDTO;
 
+
             for (let i = 0; i < userCredit.length; i++) {
                 const element = userCredit[i];
                 PostRequestCount = 0;
 
                 element.social_media = await this.socialMediaAccountRepository.findOne(element.social_media_id);
                 if (details.userSubscription.cycle == 0) {
-                    PostRequestCount = element.current_credit_amount;
+                    if (new Date(details.userSubscription.start_Date).toISOString().split('T')[0] < currentDateOnly) {
+                        PostRequestCount = daysDifference;
+                    }
+                    else {
+                        PostRequestCount = element.current_credit_amount;
+                    }
                 }
                 else if (details.userSubscription.cycle == 1) {
 
@@ -111,20 +123,12 @@ export class GeneratePostService {
                 else if (element.social_media.platform == SocialMediaPlatformNames[SocialMediaPlatform.INSTAGRAM])
                     socialPostNumber.instagram_posts_number = Math.round(PostRequestCount);
             }
-            
-            const currentDate = new Date();
-            const currentDateOnly = currentDate.toISOString().split('T')[0];
 
-            const startDate = new Date(details.userSubscription.start_Date); // Create a Date object from the start date
-            startDate.setDate(startDate.getDate() + 14); // Add 14 days
-            const checkDate = startDate; // Store the updated date in checkDate
 
-            if (userCredit.length == 1 && details.userSubscription.cycle != 0 && ((details.userSubscription.cycle == 1 && (userCredit[0].social_media.connected_at.toISOString().split('T')[0] > details.userSubscription.start_Date.toISOString().split('T')[0] && checkDate.toISOString().split('T')[0] != currentDateOnly)) || details.userSubscription.cycle > 1 && PostRequestCount < 15)) {
 
-                // if (userCredit.length == 1 && (&& PostRequestCount < 15) && details.userSubscription.cycle != 0) {
+            if (userCredit.length == 1 && ((details.userSubscription.cycle == 1 && (userCredit[0].social_media.connected_at.toISOString().split('T')[0] > details.userSubscription.start_Date.toISOString().split('T')[0] && checkDate.toISOString().split('T')[0] != currentDateOnly)) || details.userSubscription.cycle > 1 && PostRequestCount < 15) || (details.userSubscription.cycle == 0 && currentDateOnly < new Date(details.userSubscription.start_Date).toISOString().split('T')[0])) {
                 const socialMediaIds = details.socialMedia.map((media) => media.id);
                 const posts = await this.postTaskRepository.fetchPostTaskOfSocialMedia(socialMediaIds);
-            
                 let postTogenerate: PostTask[];
                 if (posts.length >= PostRequestCount) {
                     postTogenerate = posts.slice(0, PostRequestCount);
@@ -150,7 +154,6 @@ export class GeneratePostService {
 
             }
             else {
-
                 apiUrl = secretData.APIURL;
 
                 // Bind data from these info

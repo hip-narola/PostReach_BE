@@ -34,10 +34,11 @@ export class TwitterService {
 
 	constructor(
 		private readonly socialMediaAccountService: SocialMediaAccountService,
+		private readonly socialMediaAccountRepository: SocialMediaAccountRepository,
 		private readonly unitOfWork: UnitOfWork,
 		private readonly secretService: AwsSecretsService,
 		private cacheSerive: CacheService,
-
+		private postRepository: PostRepository,
 		private readonly logger: Logger
 
 	) {
@@ -380,7 +381,6 @@ export class TwitterService {
 				// var mediaId = '1871537014492835840';
 
 			}
-
 			const url = `${TWITTER_CONST.ENDPOINT}/tweets`;
 			const headers = {
 				Authorization: `Bearer ${accessToken}`, // Use Bearer token for v2
@@ -408,19 +408,16 @@ export class TwitterService {
 
 			const response = await axios.post(url, requestBody, { headers });
 
-			// Start a transaction to update the database
-			await this.unitOfWork.startTransaction();
 
-			const socialMediaInsightsRepo = this.unitOfWork.getRepository(PostRepository, Post, true);
-			const record = await socialMediaInsightsRepo.findOne(postId);
+			// const socialMediaInsightsRepo = this.unitOfWork.getRepository(PostRepository, Post, true);
+			const record = await this.postRepository.findOne(postId);
 
 			if (!record) {
 				throw new Error(`Post with ID ${postId} not found.`);
 			}
 
 			record.external_platform_id = response.data.data.id || response.data.id;;
-			await socialMediaInsightsRepo.update(postId, record);
-			await this.unitOfWork.completeTransaction();
+			await this.postRepository.update(postId, record);
 
 			return response.data;
 		} catch (error: any) {
@@ -430,9 +427,8 @@ export class TwitterService {
 				'postToTwitter'
 			);
 			// Ensure rollback only happens if a transaction was started
-			await this.unitOfWork.rollbackTransaction();
 			const errorMessage = error.response?.data || error.message || 'An unexpected error occurred.';
-			throw new Error(`Failed to post tweet: ${errorMessage}`);
+			throw new Error(`Failed to post tweet: ${error}`);
 		}
 	}
 
@@ -512,20 +508,12 @@ export class TwitterService {
 		params.append('client_id', clientId);
 
 		try {
-			// Start the transaction
-			await this.unitOfWork.startTransaction();
-
 			const response = await axios.post(tokenUrl, params, {
 				headers: {
 					'Content-Type': 'application/x-www-form-urlencoded',
 				},
 			});
 
-			const socialMediaAccountRepository = this.unitOfWork.getRepository(
-				SocialMediaAccountRepository,
-				SocialMediaAccount,
-				true
-			);
 			if (response.status === 200 && response.data) {
 				const { access_token, token_type, expires_in, refresh_token, scope } = response.data;
 				// Update the SocialMediaAccount entity with new token details
@@ -535,30 +523,14 @@ export class TwitterService {
 				twitterAccount.refresh_token = refresh_token;
 				twitterAccount.scope = scope;
 
-				// Persist changes to the repository
-				await socialMediaAccountRepository.update(twitterAccount.id, twitterAccount);
-			} else {
-				throw new Error('Failed to refresh token: Unexpected response from server.');
+				await this.socialMediaAccountRepository.update(twitterAccount.id, twitterAccount);
 			}
-
-			// Complete the transaction after the update
-			await this.unitOfWork.completeTransaction();
 		} catch (error) {
-			console.log("Twitter refresh token ERROR : ", error);
 			this.logger.error(
 				`Error` +
 				error.stack || error.message,
 				'refreshToken'
 			);
-			const errorDetails = error.response?.data || error.message;
-			// Rollback the transaction in case of an error
-			if (this.unitOfWork['queryRunner']) {  // Access queryRunner privately for rollback
-				try {
-					await this.unitOfWork.rollbackTransaction();
-				} catch (rollbackError) {
-				}
-			} else {
-			}
 		}
 	}
 }

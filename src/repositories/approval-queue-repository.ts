@@ -17,9 +17,7 @@ export class ApprovalQueueRepository extends GenericRepository<PostTask> {
         super(repository);
     }
 
-    async getApprovalQueueList(
-        paginatedParams: PaginationParamDto,
-    ): Promise<PaginatedResponseDto> {
+    async getApprovalQueueList(paginatedParams: PaginationParamDto): Promise<PaginatedResponseDto> {
         try {
             const postTasks = await this.repository
                 .createQueryBuilder('pt')
@@ -43,22 +41,17 @@ export class ApprovalQueueRepository extends GenericRepository<PostTask> {
                 .leftJoin('pt.user', 'ur')
                 .where('pt.status = :status', { status: POST_TASK_STATUS.PENDING })
                 .andWhere('pt.user_id = :userid', { userid: paginatedParams.userId })
-                .andWhere('pt.scheduled_at > :now', { now: new Date() })
-                .addSelect('pt.scheduled_at::text AS scheduled_at')
+                .andWhere('pt.scheduled_at > :now', { now: new Date().toISOString() })
                 .orderBy('pt.scheduled_at', 'ASC')
                 .getRawMany();
-
             const data = postTasks.map(queryResult => ({
                 id: queryResult.post_task_id,
                 postId: queryResult.post_id,
                 image: queryResult.image,
                 content: queryResult.captions,
-                hashtags: queryResult.hashtags
-                    ? queryResult.hashtags.split(',')
-                    : [],
+                hashtags: queryResult.hashtags ? queryResult.hashtags.split(',') : [],
                 channel: Object.keys(SocialMediaPlatformNames).find(
-                    (key) =>
-                        SocialMediaPlatformNames[key] == queryResult.channel,
+                    (key) => SocialMediaPlatformNames[key] == queryResult.channel,
                 ),
                 scheduled_at: queryResult.scheduled_at,
                 user: queryResult.user,
@@ -70,16 +63,10 @@ export class ApprovalQueueRepository extends GenericRepository<PostTask> {
                 ],
             }));
             const totalCount = postTasks.length;
-            const offset =
-                (paginatedParams.pageNumber - 1) * paginatedParams.limit;
-            const paginatedTasks = data.slice(
-                offset,
-                offset + paginatedParams.limit,
-            );
-            const totalPages =
-                paginatedParams.limit > 0
-                    ? Math.ceil(totalCount / paginatedParams.limit)
-                    : 0;
+            const offset = (paginatedParams.pageNumber - 1) * paginatedParams.limit;
+            const paginatedTasks = data.slice(offset, offset + paginatedParams.limit);
+            const totalPages = paginatedParams.limit > 0 ? Math.ceil(totalCount / paginatedParams.limit) : 0;
+    
             return new PaginatedResponseDto(
                 paginatedTasks,
                 totalCount,
@@ -90,7 +77,7 @@ export class ApprovalQueueRepository extends GenericRepository<PostTask> {
             throw error;
         }
     }
-
+    
     async getScheduledPostByPostTaskID(id: number): Promise<any> {
         try {
             const queryResult = await this.repository

@@ -98,11 +98,9 @@ export class SubscriptionService {
 	}
 
 	async GeneratePostSubscriptionWiseOnFirstCycle(): Promise<void> {
-		console.log("GeneratePostSubscriptionWiseOnFirstCycle::: started")
 		try {
 			// Get all active user subscriptions for the first cycle
 			const userCreditDetails = await this.userCreditRepository.getAllUserToGeneratePost();
-			console.log("GeneratePostSubscriptionWiseOnFirstCycle::: userCreditDetails: ", userCreditDetails);
 
 			if (userCreditDetails && userCreditDetails.length > 0) {
 
@@ -114,7 +112,6 @@ export class SubscriptionService {
 					userCredit.end_Date = new Date(userCredit.start_Date);
 					userCredit.end_Date.setMonth(userCredit.end_Date.getMonth() + 1);
 
-					console.log(userCredit, 'new userCredit')
 					await this.userCreditRepository.update(userCredit.id, userCredit);
 				}
 
@@ -124,7 +121,6 @@ export class SubscriptionService {
 
 
 		} catch (error) {
-			console.log("GeneratePostSubscriptionWiseOnFirstCycle::: error: ", error);
 			throw error;
 		}
 	}
@@ -263,7 +259,6 @@ export class SubscriptionService {
 			await this.unitOfWork.rollbackTransaction();
 			throw error;
 		}
-
 	}
 
 	//create user credit instance
@@ -273,7 +268,6 @@ export class SubscriptionService {
 		userSubscription: UserSubscription,
 		socialMediaAccountId?: number
 	): Promise<UserCredit> {
-		console.log('new user trial credit:: subscription', userSubscription)
 		const userCredit = new UserCredit();
 		userCredit.id = generateId(IdType.USER_SUBSCRIPTION_CREDIT);
 		userCredit.user = user;
@@ -302,7 +296,6 @@ export class SubscriptionService {
 		// userCredit.end_Date = userSubscription.end_Date;
 		userCredit.status = UserCreditStatusType.ACTIVE;
 		userCredit.cancel_Date = null;
-		console.log('new user trial credit', userCredit)
 		return userCredit;
 	}
 
@@ -351,11 +344,10 @@ export class SubscriptionService {
 				? platforms.slice(0, -1).join(', ') + ' and ' + platforms[platforms.length - 1]
 				: platforms[0]; // If there's only one platform, just return it
 
-				console.log('userSubscriptionCreate userCredits', userCredits)
 			// Save all UserCredit instances at once
 			if (userCredits.length > 0) {
 				await userCreditRepository.save(userCredits);
-				if (userSubscription.cycle >= 1) {
+				if (userSubscription.cycle == 1) {
 					await this.generatePostService.generatePostByAIAPI(userCredits);
 				}
 				await this.notificationService.saveData(userSubscription.user.id, NotificationType.SOCIAL_CREDIT_ADDED, `${NotificationMessage[NotificationType.SOCIAL_CREDIT_ADDED]} ${formattedPlatforms}`);
@@ -377,7 +369,6 @@ export class SubscriptionService {
 				socialMediaAccount
 			);
 			// this.GenerateUserPostSubscriptionWise(user, subscription, userSubscription, socialMediaAccountId);
-			console.log('userSubscriptionCreate userCredit', userCredit)
 
 			await userCreditRepository.create(userCredit);
 			if (userSubscription.cycle >= 1) {
@@ -429,7 +420,7 @@ export class SubscriptionService {
 		// Get all previous credits and calculate the end date
 		const credits = await this.userCreditRepository.getAllUserCreditsOncreate(userSubscription.user.id);
 		let endDate: Date;
-		console.log('get all old credits:::', credits)
+
 		if (credits.length > 0 && credits[0]?.end_Date) {
 			endDate = new Date(credits[0].end_Date);
 		} else {
@@ -444,7 +435,6 @@ export class SubscriptionService {
 		userCredit.social_media_id = socialMediaAccount.id;
 		userCredit.status = UserCreditStatusType.ACTIVE;
 
-		console.log('new userCredit', userCredit);
 		return userCredit;
 	}
 
@@ -497,9 +487,7 @@ export class SubscriptionService {
 			const stripeSubscription = await this.stripe.subscriptions.create({
 				customer: user.stripeCustomerId,
 				items: [{ price: subscription.stripePriceId }], // Replace with your trial price ID
-				// items: [{ price: 'price_1QaH70DeQp3ZMZcw42IeHkSt' }], // Replace with your trial price ID
-				// trial_period_days: 3,
-				trial_period_days: 7,
+				trial_period_days: 6,
 				payment_behavior: 'default_incomplete', // Ensure the subscription waits for payment completion
 				expand: ['latest_invoice.payment_intent'], // Optional: Include payment intent details
 			});
@@ -610,8 +598,9 @@ export class SubscriptionService {
 			);
 
 			await this.userSubscriptionRepository.create(userSubscriptionCreate);
+			
+			await this.notificationService.saveData(user.id, NotificationType.SUBSCRIPTION_STARTED, NotificationMessage[NotificationType.SUBSCRIPTION_STARTED]);
 
-			console.log('userSubscriptionCreate', userSubscriptionCreate)
 			await this.createUserCredit(
 				user,
 				subscription,
@@ -624,8 +613,6 @@ export class SubscriptionService {
 			throw error;
 		}
 	}
-
-
 
 	async generateCustomerPortalLink(
 		userId: number,
@@ -683,7 +670,6 @@ export class SubscriptionService {
 				const html = await this.emailService.loadTemplateWithData(EMAIL_SEND_FILE[EMAIL_SEND.TRIAL_EXPIRING_SOON], emailData);
 
 				await this.emailService.sendEmail(user.email, EMAIL_SEND.TRIAL_EXPIRING_SOON, html);
-				console.log(customerPortalLink.url, 'customerPortalLinkURL')
 				break;
 
 			case 'customer.subscription.updated': // Handle subscription updates
@@ -721,7 +707,6 @@ export class SubscriptionService {
 					try {
 						existingUser = await userRepository.findByField('stripeCustomerId', customerId);
 					} catch (findUserError) {
-						console.error('Error fetching user by Stripe customer ID:', findUserError);
 						throw new Error('Failed to retrieve user.'); // Re-throw to propagate the error
 					}
 					// const existingUser = await userRepository.findByField('stripeCustomerId', customerId);
@@ -769,7 +754,6 @@ export class SubscriptionService {
 					// invoicePaid.total != 0 && 
 
 				} catch (error) {
-					console.log(error, 'errro in stripe');
 					throw error;
 				}
 				break;
@@ -798,10 +782,8 @@ export class SubscriptionService {
 			const userSubscriptions = await userSubscriptionRepository.getAllExpiringSubscription();
 			// const expiredUserIds: number[] = []; // Array to store user IDs
 			const expiredSubscriptions: { userId: number; endDate: Date; subscription: any, cycle: number }[] = []; // Array to store user details
-			console.log('expiredSubscriptions: userSubscriptionsall', userSubscriptions)
 			//expire subscription of users
 			for (const userSubscription of userSubscriptions) {
-				console.log('checkAndExpireSubscriptions: userSubscription', userSubscription)
 				userSubscription.status = UserSubscriptionStatusType.EXPIRED;
 				await userSubscriptionRepository.update(
 					userSubscription.id,
@@ -820,10 +802,8 @@ export class SubscriptionService {
 					subscription: userSubscription.id,
 					cycle: userSubscription.cycle
 				});
-				console.log('in expiredSubscriptions loop', expiredSubscriptions);
 			}
 			await this.unitOfWork.completeTransaction();
-			console.log(' checkAndExpireSubscriptions: expiredSubscriptions', expiredSubscriptions)
 			return expiredSubscriptions;
 		} catch (error) {
 			await this.unitOfWork.rollbackTransaction();

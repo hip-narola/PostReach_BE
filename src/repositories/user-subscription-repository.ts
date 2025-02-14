@@ -133,9 +133,8 @@ export class UserSubscriptionRepository extends GenericRepository<UserSubscripti
 				user: { id: userId },
 				status: In([UserSubscriptionStatusType.ACTIVE, UserSubscriptionStatusType.TRIAL])
 			},
-			
 		});
-		return subscription;
+		return subscription || null;
 	}
 
 	async findExpiredSubscriptionByUserId(userId: number): Promise<UserSubscription> {
