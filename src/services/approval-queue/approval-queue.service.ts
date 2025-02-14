@@ -13,7 +13,7 @@ import { NotificationService } from '../notification/notification.service';
 import { NotificationMessage, NotificationType } from 'src/shared/constants/notification-constants';
 import { Logger } from '../logger/logger.service';
 import { RejectReasonRepository } from 'src/repositories/reject-reason-repository';
-import moment from 'moment';
+import * as moment from 'moment';
 
 @Injectable()
 export class ApprovalQueueService {
