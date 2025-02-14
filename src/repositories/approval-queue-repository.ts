@@ -28,7 +28,7 @@ export class ApprovalQueueRepository extends GenericRepository<PostTask> {
                     'p.content AS captions',
                     'p.hashtags AS hashtags',
                     'sm.platform AS channel',
-                    'pt.scheduled_at AS schedule_date',
+                    'pt.scheduled_at::text AS scheduled_at',
                     'sm.user_name AS user',
                     'sm.user_profile AS profileimage',
                     'p.no_of_likes AS no_of_likes',
