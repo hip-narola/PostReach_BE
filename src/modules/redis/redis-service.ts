@@ -23,10 +23,10 @@ export class RedisService implements OnApplicationShutdown, OnModuleInit {
         const secretData = await this.secretService.getSecret(AWS_SECRET.AWSSECRETNAME);
         this.client = createClient({
             username: "default",
-            password: secretData.REDIS_PASSWORD,
+            password: '4ijX6KOTVR6biLMpMIOu6H7qI40OIWcg', //secretData.REDIS_PASSWORD,
             socket: {
-                host: secretData.REDIS_HOST,
-                port: parseInt(secretData.REDIS_PORT || '6379', 10),
+                host: 'redis-11619.c114.us-east-1-4.ec2.redns.redis-cloud.com', // secretData.REDIS_HOST,
+                port: 11619, //parseInt(secretData.REDIS_PORT || '6379', 10),
             }
         });
 
