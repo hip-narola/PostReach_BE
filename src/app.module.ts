@@ -52,17 +52,13 @@ import { SubscriptionService } from './services/subscription/subscription.servic
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      envFilePath: `.env.${process.env.NODE_ENV}` || '.env',
     }),
     ThrottlerModule.forRoot([
-      // {
-      //   name: 'twitetrMe',
-      //   ttl: 86400000,
-      //   limit: 24,
-      // },
       {
         ttl: 10, // Time to live in seconds
         limit: 1000, // Maximum number of requests
-      }
+      },
     ]),
     DatabaseModule,
     CalenderModule,
@@ -121,8 +117,8 @@ import { SubscriptionService } from './services/subscription/subscription.servic
     DashboardInsightsService,
     SocialMediaInsightsService,
     SubscriptionService,
-    GeneratePostService
+    GeneratePostService,
   ],
   exports: [AwsSecretsService],
 })
-export class AppModule { }
+export class AppModule {}

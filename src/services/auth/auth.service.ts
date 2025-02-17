@@ -48,7 +48,7 @@ export class AuthService {
     private readonly notificationService: NotificationService,
   ) {
     this.identityClient = new CognitoIdentityClient({
-      region: this.configService.get<string>('REGION'),
+      region: this.configService.get<string>('AWS_REGION'),
     });
     this.cognitoBaseUrl = `https://cognito-idp.us-east-1.amazonaws.com`;
     this.initialize();

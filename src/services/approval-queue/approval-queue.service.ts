@@ -79,11 +79,11 @@ export class ApprovalQueueService {
                 }
                 // if approved false then else if block executed.
                 else if (updateStatusParam.isApproved == false) {
-                    record.status = POST_TASK_STATUS.REJECTED;
                     const rejectReasonList = await this.RejectReasonList();
                     const rejectReason = rejectReasonList.find(x => x.id == updateStatusParam.rejectreasonId);
-
                     record.RejectReason = (!rejectReason) ? new RejectReasonResponseDTO() : rejectReason;
+                    record.status = POST_TASK_STATUS.REJECTED;
+                    record.rejectReason = rejectReason.reason;
                     await this.approvalQueueRepository.update(id, record);
                 }
             }
@@ -102,7 +102,7 @@ export class ApprovalQueueService {
     }
 
     RejectReasonList(): Promise<RejectReasonResponseDTO[]> {
-        return this.rejectReasonRepository.getAllRejectReasons();
+        return this.rejectReasonRepository.findAll();
     }
 
     // update the status for post execution success or failure.
@@ -123,7 +123,7 @@ export class ApprovalQueueService {
             await this.emailService.sendEmail(record.user.email, 'Post Posted', 'post_success');
 
         } catch (error) {
-          
+
             this.logger.error(
                 `Error` +
                 error.stack || error.message,

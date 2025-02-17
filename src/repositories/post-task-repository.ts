@@ -14,65 +14,40 @@ export class PostTaskRepository extends GenericRepository<PostTask> {
         super(repository);
     }
 
-    async fetchPostsofUser(user_id: number): Promise<PostTask[]> {
-        return await this.repository
+    async fetchPostsofUser(id: string, user_id: number): Promise<PostTask[]> {
+        const data = await this.repository
             .createQueryBuilder('postTask')
             .leftJoinAndSelect('postTask.post', 'post')
-            .leftJoinAndSelect(
-                'postTask.socialMediaAccount',
-                'socialMediaAccount',
-            )
+            .leftJoinAndSelect('postTask.socialMediaAccount', 'socialMediaAccount')
             .leftJoinAndSelect('socialMediaAccount.user', 'user')
+            .leftJoinAndSelect('user.userSubscriptions', 'userSubscription')
             .where('postTask.user_id = :user_id', { user_id })
             .andWhere('postTask.status = :status', {
                 status: POST_TASK_STATUS.SCHEDULED,
             })
+            .andWhere('userSubscription.id = :id', { id })
+            // .andWhere('userSubscription.status IN (:...statuses)', { statuses: [UserSubscriptionStatusType.ACTIVE, UserSubscriptionStatusType.TRIAL] })
             .getMany();
+        
+        if (data.length) {
+            const userSubscription = data[0].socialMediaAccount.user.userSubscriptions[0];
+            const today = new Date();
+
+            const startDate = new Date(userSubscription.start_Date); // Create a Date object from the start date
+            startDate.setDate(startDate.getDate() + 14); // Add 14 days
+            if (userSubscription.cycle == 1 && today > startDate) {
+                // Filter tasks if conditions are met
+                // const filteredTasks = data.filter(postTask => postTask.created_at > startDate);
+                const filteredTasks = data.filter(postTask => postTask.scheduled_at > today && postTask.created_at >= startDate);
+                return filteredTasks;
+            }
+            else {
+                const filteredTasks = data.filter(postTask => postTask.scheduled_at > today);
+                return filteredTasks;
+            }
+        }
+        return [];
     }
-
-    // async removeExpiredScheduledPosts(
-    //     expiredSubscriptions: { userId: number; endDate: Date; subscription: string; cycle: number }[]
-    // )
-    // : Promise<{ userId: number; endDate: Date; subscription: string, cycle: number }[]>
-
-    // async fetchPostTaskOfSocialMedia(social_media_ids:[]): Promise<PostTask[]> {
-    //     const statuses = [POST_TASK_STATUS.PENDING, POST_TASK_STATUS.SCHEDULED];
-
-    //     const posts = await this.repository
-    //     .createQueryBuilder('postTask')
-    //     .leftJoinAndSelect('postTask.post', 'post')
-    //     .leftJoinAndSelect('post.assets', 'assets')
-    //     .leftJoinAndSelect('postTask.socialMediaAccount', 'socialMediaAccount')
-    //     .leftJoinAndSelect('socialMediaAccount.user', 'user')
-    //     .andWhere('postTask.status IN (:...statuses)', { statuses })
-    //     .andWhere('socialMediaAccount.id IN (:...socialMediaIds)', { socialMediaIds })
-    //     .groupBy('socialMediaAccount.id')  // Group by social media account
-    //     .addSelect('COUNT(postTask.id)', 'postTaskCount')  // Count the number of PostTasks
-    //     .orderBy('postTaskCount', 'DESC')  // Order by the count of PostTasks
-    //     .limit(1)  // Only get the social media account with the most PostTasks
-    //     .getRawOne();  // Use `getRawOne` to get the aggregated result
-
-    // // If no posts are found, return an empty array
-    // if (!posts) return [];
-
-
-    //     const posts = await this.repository
-    //         .createQueryBuilder('postTask')
-    //         .leftJoinAndSelect('postTask.post', 'post')
-    //         .leftJoinAndSelect('post.assets', 'assets')
-    //         .leftJoinAndSelect('postTask.socialMediaAccount', 'socialMediaAccount')
-    //         .leftJoinAndSelect('socialMediaAccount.user', 'user')
-    //         .andWhere('postTask.status IN (:...statuses)', { statuses: [POST_TASK_STATUS.PENDING, POST_TASK_STATUS.SCHEDULED] })
-    //         .andWhere('postTask.socialMediaAccount IN (:...ids)', {
-    //             ids: social_media_ids,
-    //         })
-    //         .groupBy('socialMediaAccount.id')
-    //         .getMany();
-
-    //     return posts;
-
-
-    // }
 
     async fetchPostTaskOfSocialMedia(social_media_ids: number[]): Promise<PostTask[]> {
         const statuses = [POST_TASK_STATUS.PENDING, POST_TASK_STATUS.SCHEDULED];

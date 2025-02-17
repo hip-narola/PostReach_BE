@@ -20,7 +20,7 @@ export class CognitoIdentityService {
 
     constructor(private readonly configService: ConfigService, private readonly secretService: AwsSecretsService,private readonly logger: Logger) {
         this.cognitoClient = new CognitoIdentityProviderClient({
-            region: this.configService.get<string>('REGION'),
+            region: this.configService.get<string>('AWS_REGION'),
         });
         this.initialize();
     }

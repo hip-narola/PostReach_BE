@@ -71,7 +71,7 @@ export class TwitterService {
 			`response_type=code&` +
 			`client_id=${clientId}&` +
 			`redirect_uri=${redirectUri}&` +
-			`scope=tweet.read tweet.write tweet.moderate.write users.read follows.read follows.write offline.access space.read mute.read mute.write like.read like.write list.read list.write block.read block.write bookmark.read bookmark.write&` +
+			`scope=tweet.read tweet.write tweet.moderate.write users.read follows.read follows.write offline.access space.read mute.read mute.write like.read like.write list.read list.write block.read block.write bookmark.read bookmark.write media.write&` +
 			`state=${state}&` +
 			`code_challenge=${codeChallenge}&` +
 			`code_challenge_method=S256`;
@@ -528,7 +528,7 @@ export class TwitterService {
 		} catch (error) {
 			this.logger.error(
 				`Error` +
-				error.stack || error.message,
+				error.response?.data || error.message,
 				'refreshToken'
 			);
 		}

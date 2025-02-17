@@ -102,7 +102,7 @@ export class UserSubscriptionRepository extends GenericRepository<UserSubscripti
 			relations: ['user', 'subscription'],
 			where: {
 				// UserSubscriptionStatusType.CANCELLED,
-				status: In([UserSubscriptionStatusType.ACTIVE, UserSubscriptionStatusType.TRIAL, UserSubscriptionStatusType.CANCELLED]),
+				status: In([UserSubscriptionStatusType.ACTIVE, UserSubscriptionStatusType.TRIAL]),
 				end_Date: Raw(
 					(alias) => `DATE(${alias}) + INTERVAL '3 days' = CURRENT_DATE`
 				),

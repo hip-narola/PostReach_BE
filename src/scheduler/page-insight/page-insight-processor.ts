@@ -52,7 +52,6 @@ export class PageInsightProcessor extends WorkerHost {
                 console.log("twitterAccount : ", twitterAccount);
                 this.twitterService.refreshToken(twitterAccount);
             });
-
         } catch (error) {
             console.log("ERROR IN page-insight processor for refresh twitter account: ", error);
         }

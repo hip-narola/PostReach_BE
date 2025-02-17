@@ -1,15 +1,14 @@
+import { ConfigService } from '@nestjs/config';
 import { HttpAdapterHost, NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import * as bodyParser from 'body-parser';
 import * as cookieParser from 'cookie-parser';
 import * as session from 'express-session';
+import helmet from 'helmet';
+import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './filters/all-exceptions.filter';
-import * as bodyParser from 'body-parser';
-import { ConfigService } from '@nestjs/config';
 import { Logger } from './services/logger/logger.service';
 import { GlobalExceptionFilter } from './shared/filters/global-exception/global-exception.filter';
-import helmet from 'helmet';
-import rateLimit from 'express-rate-limit';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -28,7 +27,9 @@ async function bootstrap() {
   // Configure sessions with more secure options
   app.use(
     session({
-      secret: configService.get('SESSION_SECRET') || '0716f5f0-4c0d-41d5-9564-a93f38b5a931',
+      secret:
+        configService.get('SESSION_SECRET') ||
+        '0716f5f0-4c0d-41d5-9564-a93f38b5a931',
       resave: false,
       saveUninitialized: false,
       cookie: {
@@ -38,7 +39,7 @@ async function bootstrap() {
         sameSite: 'none',
         maxAge: 24 * 60 * 60 * 1000,
       }
-    })
+    }),
   );
 
   // Middleware for handling raw body for Stripe webhook
@@ -49,7 +50,11 @@ async function bootstrap() {
 
   // CORS configuration
   app.enableCors({
-    origin: ['https://postreachfe-production.up.railway.app', 'https://postreachbe-production.up.railway.app', 'http://localhost:3001'],
+    origin: [
+      'https://postreachfe-production.up.railway.app',
+      'https://postreachbe-production.up.railway.app',
+      'http://localhost:3001',
+    ],
     credentials: true,
     methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Accept', 'Authorization'],

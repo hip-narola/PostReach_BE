@@ -673,20 +673,20 @@ export class SubscriptionService {
 				break;
 
 			case 'customer.subscription.updated': // Handle subscription updates
-				const updatedSubscription = event.data.object as Stripe.Subscription;
-				if (updatedSubscription.cancel_at_period_end) {
-					const userRepository = this.unitOfWork.getRepository(
-						UserRepository,
-						User,
-						false,
-					);
-					const customerId = updatedSubscription.customer;
+				// const updatedSubscription = event.data.object as Stripe.Subscription;
+				// if (updatedSubscription.cancel_at_period_end) {
+				// 	const userRepository = this.unitOfWork.getRepository(
+				// 		UserRepository,
+				// 		User,
+				// 		false,
+				// 	);
+				// 	const customerId = updatedSubscription.customer;
 
-					const existingUser = await userRepository.findByField('stripeCustomerId', customerId);
+				// 	const existingUser = await userRepository.findByField('stripeCustomerId', customerId);
 
-					// The subscription is set to cancel at the end of the billing period
-					await this.cancelUserSubscription(existingUser.id, updatedSubscription);
-				}
+				// 	// The subscription is set to cancel at the end of the billing period
+				// 	await this.cancelUserSubscription(existingUser.id, updatedSubscription);
+				// }
 				break;
 
 			case 'invoice.payment_succeeded':
@@ -762,8 +762,7 @@ export class SubscriptionService {
 		}
 	}
 
-
-	async checkAndExpireSubscriptions(): Promise<{ userId: number; endDate: Date; subscription: string, cycle: number }[]> {
+	async checkAndExpireSubscriptions(): Promise<{ id:string, userId: number; endDate: Date; subscription: string, cycle: number }[]> {
 		try {
 			await this.unitOfWork.startTransaction();
 
@@ -781,7 +780,7 @@ export class SubscriptionService {
 
 			const userSubscriptions = await userSubscriptionRepository.getAllExpiringSubscription();
 			// const expiredUserIds: number[] = []; // Array to store user IDs
-			const expiredSubscriptions: { userId: number; endDate: Date; subscription: any, cycle: number }[] = []; // Array to store user details
+			const expiredSubscriptions: { id: string, userId: number; endDate: Date; subscription: any, cycle: number }[] = []; // Array to store user details
 			//expire subscription of users
 			for (const userSubscription of userSubscriptions) {
 				userSubscription.status = UserSubscriptionStatusType.EXPIRED;
@@ -797,6 +796,7 @@ export class SubscriptionService {
 				await this.notificationService.saveData(userSubscription.user.id, NotificationType.SUBSCRIPTION_CANCELLED, NotificationMessage[NotificationType.SUBSCRIPTION_CANCELLED]);
 
 				expiredSubscriptions.push({
+					id: userSubscription.id,
 					userId: userSubscription.user.id,
 					endDate: userSubscription.end_Date,
 					subscription: userSubscription.id,

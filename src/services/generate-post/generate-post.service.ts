@@ -218,7 +218,7 @@ export class GeneratePostService {
                         postTask.scheduled_at = new Date(post.post_time);
                         postTask.status = POST_TASK_STATUS.PENDING;
                         postTask.created_By = user.id;
-                        postTask.created_at = new Date(post.created_at);
+                        postTask.created_at = new Date();
                         postTask.user = user;
                         postTask.modified_date = null;
                         postTask.socialMediaAccount = sm.social_media;
@@ -233,7 +233,7 @@ export class GeneratePostService {
                         createPost.content = post.text;
                         createPost.hashtags = post.hashtags.join(', ');
                         createPost.created_By = user.id;
-                        createPost.created_at = new Date(post.created_at);
+                        createPost.created_at = new Date();
                         createPost.no_of_likes = 0;
                         createPost.no_of_comments = 0;
                         createPost.no_of_views = 0;
@@ -248,7 +248,7 @@ export class GeneratePostService {
                             createAsset.url = post.image_url;
                             createAsset.type = ASSET_TYPE.IMAGE;
                             createAsset.created_By = user.id;
-                            createAsset.created_at = new Date(post.created_at);
+                            createAsset.created_at = new Date();
                             createAsset.modified_date = null;
                             createAsset.post = createPost;
                             await this.assetRepository.save([createAsset]);

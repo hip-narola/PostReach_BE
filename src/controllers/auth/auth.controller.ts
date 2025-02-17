@@ -15,7 +15,6 @@ import { LogoutParamDto } from 'src/dtos/params/logout-param.dto';
 import { GoogleSignupGuard } from 'src/shared/common/guards/google-signup/google-signup.guard';
 import { RefreshTokenParamDto } from 'src/dtos/params/refresh-token-param.dto';
 import { SkipThrottle } from '@nestjs/throttler';
-import { GoogleGuard } from 'src/shared/common/guards/google/google.guard';
 
 @Controller('auth')
 @SkipThrottle()
@@ -27,13 +26,13 @@ export class AuthController {
 
 	// Google Login
 	@Get('google')
-	@UseGuards(GoogleGuard)
+	@UseGuards(GoogleSignupGuard)
 	googleLogin() {
 	}
 
 	// Google Login Callback
 	@Get('google/callback')
-	@UseGuards(GoogleGuard)
+	@UseGuards(GoogleSignupGuard)
 	async googleLoginCallback(@Req() req, @Res() res: Response) {
 
 		const appUrl = this.configService.get<string>('APP_URL_FRONTEND');

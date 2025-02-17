@@ -4,8 +4,6 @@ import { Queue } from 'bullmq';
 import * as moment from 'moment';
 import { REJECT_REASONS } from 'src/shared/constants/reject-reason-constants';
 import { ApprovalQueueService } from 'src/services/approval-queue/approval-queue.service';
-import { UserCreditRepository } from 'src/repositories/user-credit-repository';
-import { UserCredit } from 'src/entities/user_credit.entity';
 import { UnitOfWork } from 'src/unitofwork/unitofwork';
 import { PostTaskRepository } from 'src/repositories/post-task-repository';
 import { UpdatePostTaskStatusDTO } from 'src/dtos/params/update-post-task-status.dto';
@@ -106,165 +104,52 @@ export class JobSchedulerService {
     }
 
     async removeExpiredScheduledPosts(
-        expiredSubscriptions: { userId: number; endDate: Date; subscription: string; cycle: number }[]
+        expiredSubscriptions: { id: string, userId: number; endDate: Date; subscription: string; cycle: number }[]
     ) {
         try {
-            console.log('removeExpiredScheduledPosts: expiredSubscriptions', expiredSubscriptions);
-
             const ids: number[] = [];
 
             for (let i = 0; i < expiredSubscriptions.length; i++) {
                 const element = expiredSubscriptions[i];
-                const posts = await this.postTaskRepository.fetchPostsofUser(element.userId);
-                console.log('removeExpiredScheduledPosts posts: ', posts)
+                const posts = await this.postTaskRepository.fetchPostsofUser(element.id, element.userId);
+
                 for (let i = 0; i < posts.length; i++) {
                     const data = posts[i];
                     ids.push(data.id); // Collect valid job IDs                
                 }
             }
-            console.log('removeExpiredScheduledPosts: ids', ids);
             if (ids.length > 0) {
-                const postTaskStatusData : UpdatePostTaskStatusDTO = {
+                const jobs = await this.postQueue.getJobs(['delayed', 'waiting', 'active']);
+                // console.log('post queue jobs: ', jobs);
+                // Filter jobs to find the ones to be removed
+                const filteredJobs = jobs.filter((job) => {
+                    if (job && job.data) {
+                        return ids.includes(job.data.Id); // Capture the filtered jobs
+                    }
+                });
+
+                // Loop through each job and remove it from the queue
+                for (const job of filteredJobs) {
+                    try {
+                        job.remove(); // Remove the job from the queue
+                        console.log(`Job with ID ${job.id} removed from the queue.`);
+                    } catch (error) {
+                        console.error(`Failed to remove job with ID ${job.id}:`, error);
+                    }
+                }
+                const postTaskStatusData: UpdatePostTaskStatusDTO = {
                     id: ids,
                     isApproved: false,
                     rejectreasonId: 7, // Subscription cancelled or expired
                     rejectReason: REJECT_REASONS[7],
                     userId: null
                 };
-                console.log('removeExpiredScheduledPosts postTaskStatusData:', postTaskStatusData)
+
                 await this.approvalQueueService.updateStatus(postTaskStatusData);
             }
-
-            // // Fetch all jobs from the post queue
-            // const jobs = await this.postQueue.getJobs(['delayed', 'waiting', 'active']);
-            // console.log('post queue jobs: ', jobs); 
-            // const now = moment(); // Current date
-            // // Filter jobs to find the ones to be removed
-
-            // jobs.filter(async (job) => {
-            //     return ids.includes(job.data.id)
-            // });
-            // console.log('filtered post queue jobs: ', jobs);
-
-            // const jobsToRemove = await this.getJobsToRemove(jobs, expiredSubscriptions, now);
-            // // Remove jobs and collect IDs
-            // if (jobsToRemove.length > 0) {
-            //     const ids = await this.removeJobs(jobsToRemove);
-            //     // Update status for removed jobs
-            //     const postTaskStatusData = {
-            //         id: ids,
-            //         isApproved: false,
-            //         rejectreasonId: 7, // Subscription cancelled or expired
-            //         rejectReason: REJECT_REASONS[7],
-            //     };
-
-            //     await this.approvalQueueService.updateStatus(postTaskStatusData);
-            // }
         } catch (error) {
-            console.log('removeExpiredScheduledPosts error in update status of rejected post:', error)
+            console.log('remove scheduler error::', error)
         }
-    }
-
-    private async getJobsToRemove(
-        jobs: any[],
-        expiredSubscriptions: { userId: number; endDate: Date; subscription: string; cycle: number }[],
-        now: moment.Moment
-    ): Promise<any[]> {
-        return await Promise.all(
-            jobs.filter(async (job) => {
-                const expiredSubscription = expiredSubscriptions.find(
-                    (sub) => sub.userId === (job?.data?.userId ?? null)
-                );
-
-                if (expiredSubscription) {
-                    const scheduleTime = moment(job.data.scheduleTime);
-                    const postCreatedAt = moment(job.data.post_created_at);
-                    const endDate = moment(expiredSubscription.endDate);
-
-                    if (expiredSubscription.cycle == 1) {
-                        // Handle first cycle: check if the post is created before cancellation
-                        if (scheduleTime.isSameOrAfter(now, 'day') && scheduleTime.isBefore(endDate, 'day')) {
-                            if (postCreatedAt.isBefore(endDate, 'day')) {
-                                const isValid = await this.validateJobWithinCredits(
-                                    expiredSubscription.userId,
-                                    postCreatedAt,
-                                    scheduleTime,
-                                    endDate
-                                );
-                                return isValid;
-                            }
-                            // else {
-                            //     // Post created after end date in the first cycle - remove
-                            //     return true;
-                            // }
-                        }
-                    } else {
-                        // Handle subsequent cycles: remove posts scheduled after cancellation
-                        if (scheduleTime.isSameOrAfter(now, 'day') && scheduleTime.isSameOrAfter(endDate, 'day')) {
-                            return true;
-                        }
-                    }
-                }
-                return false;
-            })
-        );
-    }
-
-    private async validateJobWithinCredits(
-        userId: number,
-        postCreatedAt: moment.Moment,
-        scheduleTime: moment.Moment,
-        endDate: moment.Moment
-    ): Promise<boolean> {
-        const userCreditRepository = this.unitOfWork.getRepository(
-            UserCreditRepository,
-            UserCredit,
-            false
-        );
-
-        const userCredits = await userCreditRepository.getUserCredits(userId);
-        if (userCredits) {
-            const lastTriggerDate = moment(userCredits.last_trigger_date);
-            const cancelDate = moment(userCredits.cancel_Date);
-
-            // Validate job within credits: must be after the last trigger date and before the cancellation date
-            return (
-                postCreatedAt.isAfter(lastTriggerDate, 'day') &&
-                scheduleTime.isBefore(cancelDate, 'day')
-            );
-        }
-        return false;
-    }
-
-    private async removeJobs(jobsToRemove: any[]): Promise<number[]> {
-        const ids: number[] = [];
-
-        await Promise.all(
-            jobsToRemove.map(async (job) => {
-
-                // Check if job exists and has the remove method
-                if (job && typeof job.remove === 'function') {
-                    try {
-                        const jobId = job?.data?.Id ?? null; // Safely access job.data.Id
-                        // Attempt to remove the job
-                        if (jobId !== null) {
-                            ids.push(jobId); // Collect valid job IDs
-                        } else {
-                        }
-                        await job.remove();
-
-
-                    } catch (error) {
-                        // Handle any error during job removal
-                    }
-                } else {
-                    // Warn if job is undefined or doesn't have a remove method
-                    // console.warn('Job is undefined or does not have remove method:', job);
-                }
-            })
-        );
-
-        return ids;
     }
 
     private async scheduleDailyJob() {
