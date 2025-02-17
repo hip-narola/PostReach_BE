@@ -24,7 +24,7 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
       callbackURL: googleStrategy,
       scope: ['email', 'profile'],
       state: true,
-      prompt: 'login',
+      prompt: 'select_account', // Change from 'login' to 'select_account'
       accessType: 'offline',
       include_granted_scopes: false,
     });
