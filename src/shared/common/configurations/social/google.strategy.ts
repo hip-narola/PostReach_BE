@@ -24,10 +24,10 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
       callbackURL: googleStrategy,
       scope: ['email', 'profile'],
       state: true,
-      prompt: 'select_account', // Change from 'login' to 'select_account'
+      prompt: 'consent', // Forces Google to ask for login
       accessType: 'offline',
-      include_granted_scopes: false,
-    });
+      auth_type: 'reauthenticate', // Forces reauthentication
+    });    
   }
 
   async validate(

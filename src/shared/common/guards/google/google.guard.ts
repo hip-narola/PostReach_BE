@@ -8,8 +8,8 @@ export class GoogleGuard extends AuthGuard('google') {
 
     // Ensure the `prompt` parameter is set correctly
     request.query = { ...request.query,
-                        prompt: 'select_account',
-                        auth_type: 'reauthenticate'
+                        prompt: 'consent', 
+                        auth_type: 'reauthenticate' 
                     };
 
     return (await super.canActivate(context)) as boolean;
