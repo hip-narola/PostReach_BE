@@ -41,7 +41,6 @@ export class PaymentController {
     //     );
     // }
 
-	@UseGuards(JwtAuthGuard)
     @Post('webhook')
     async handleWebhook(
         @Req() req: Request,
