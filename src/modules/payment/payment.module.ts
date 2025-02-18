@@ -13,6 +13,7 @@ import { GeneratePostModule } from '../generate-post/generate-post.module';
 import { UserSubscription } from 'src/entities/user_subscription.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserCredit } from 'src/entities/user_credit.entity';
+import { Logger } from 'src/services/logger/logger.service';
 
 @Module({
     imports: [
@@ -27,7 +28,7 @@ import { UserCredit } from 'src/entities/user_credit.entity';
     controllers: [PaymentController],
     providers: [
         SubscriptionService,
-        EmailService, UserSubscriptionRepository, UserCreditRepository
+        EmailService, UserSubscriptionRepository, UserCreditRepository, Logger
     ],
     exports: [UserCreditRepository, UserSubscriptionRepository]
 })

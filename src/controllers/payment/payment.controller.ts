@@ -7,10 +7,12 @@ import {
     Post,
     Req,
     Res,
+    UseGuards,
 } from '@nestjs/common';
 import { SkipThrottle } from '@nestjs/throttler';
 import { Request, Response } from 'express';
 import { SubscriptionService } from 'src/services/subscription/subscription.service';
+import { JwtAuthGuard } from 'src/shared/common/guards/jwt/jwt.guard';
 
 @SkipThrottle()
 @Controller('payment')
@@ -20,6 +22,7 @@ export class PaymentController {
     ) { }
 
     // test call
+    @UseGuards(JwtAuthGuard)
     @Get('save-user-trial-subscription/:userId')
     async saveUserTrialSubscription(
         @Param('userId') userId: number,
@@ -38,7 +41,7 @@ export class PaymentController {
     //     );
     // }
 
-
+	@UseGuards(JwtAuthGuard)
     @Post('webhook')
     async handleWebhook(
         @Req() req: Request,
@@ -52,6 +55,7 @@ export class PaymentController {
         }
     }
 
+	@UseGuards(JwtAuthGuard)
     @Post('get-coustomer-payment-link')
     async getCoustomerPaymentLink(@Body() body: { userId: number }, @Res() res: Response) {
         const portal = await this.subscriptionService.generateCustomerPortalLink(

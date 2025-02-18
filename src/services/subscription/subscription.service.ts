@@ -26,6 +26,7 @@ import { AWS_SECRET } from 'src/shared/constants/aws-secret-name-constants';
 import { ConfigService } from '@nestjs/config';
 import { GeneratePostService } from '../generate-post/generate-post.service';
 import { UserService } from '../user/user.service';
+import { Logger } from '../logger/logger.service';
 
 // import { CreatePostDto } from 'src/dtos/params/post-dto';
 // import { CreatePostTaskDto } from 'src/dtos/params/post-task-dto';
@@ -46,8 +47,8 @@ export class SubscriptionService {
 		private readonly userService: UserService,
 		private generatePostService: GeneratePostService,
 		private userCreditRepository: UserCreditRepository,
-		private userSubscriptionRepository: UserSubscriptionRepository
-
+		private userSubscriptionRepository: UserSubscriptionRepository,
+		private readonly logger: Logger,
 
 		// private readonly checkSubscriptionSchedulerService: CheckSubscriptionSchedulerService,
 	) {
@@ -93,7 +94,8 @@ export class SubscriptionService {
 		}
 		catch (error) {
 			// await this.unitOfWork.rollbackTransaction();
-			throw error;
+
+			this.logger.error(`Error ${error.stack || error.message}`, 'GeneratePostOnTrialPeriod');
 		}
 	}
 
@@ -121,7 +123,8 @@ export class SubscriptionService {
 
 
 		} catch (error) {
-			throw error;
+
+			this.logger.error(`Error ${error.stack || error.message}`, 'GeneratePostSubscriptionWiseOnFirstCycle');
 		}
 	}
 
@@ -157,12 +160,15 @@ export class SubscriptionService {
 
 			}
 			else {
+
 				await this.unitOfWork.rollbackTransaction();
 				throw ('User doen not have any active subscription.')
 			}
 
 		}
 		catch (error) {
+
+			this.logger.error(`Error ${error.stack || error.message}`, 'cancelUserSubscription');
 			await this.unitOfWork.rollbackTransaction();
 			throw error;
 		}
@@ -256,6 +262,8 @@ export class SubscriptionService {
 			);
 			await this.unitOfWork.completeTransaction();
 		} catch (error) {
+
+			this.logger.error(`Error ${error.stack || error.message}`, 'UpdateUserSubscription');
 			await this.unitOfWork.rollbackTransaction();
 			throw error;
 		}
@@ -498,6 +506,8 @@ export class SubscriptionService {
 			await this.unitOfWork.completeTransaction();
 
 		} catch (error) {
+
+			this.logger.error(`Error ${error.stack || error.message}`, 'saveUserTrialSubscription');
 			await this.unitOfWork.rollbackTransaction();
 			throw error;
 		}
@@ -545,6 +555,8 @@ export class SubscriptionService {
 			await this.unitOfWork.completeTransaction();
 
 		} catch (error) {
+
+			this.logger.error(`Error ${error.stack || error.message}`, 'saveSubAndCredit');
 			await this.unitOfWork.rollbackTransaction();
 			throw error;
 		}
@@ -598,7 +610,7 @@ export class SubscriptionService {
 			);
 
 			await this.userSubscriptionRepository.create(userSubscriptionCreate);
-			
+
 			await this.notificationService.saveData(user.id, NotificationType.SUBSCRIPTION_STARTED, NotificationMessage[NotificationType.SUBSCRIPTION_STARTED]);
 
 			await this.createUserCredit(
@@ -609,6 +621,8 @@ export class SubscriptionService {
 
 			await this.unitOfWork.completeTransaction();
 		} catch (error) {
+
+			this.logger.error(`Error ${error.stack || error.message}`, 'saveUserSubscription');
 			await this.unitOfWork.rollbackTransaction();
 			throw error;
 		}
@@ -754,6 +768,8 @@ export class SubscriptionService {
 					// invoicePaid.total != 0 && 
 
 				} catch (error) {
+					this.logger.error(`Error ${error.stack || error.message}`, 'processWebhook');
+
 					throw error;
 				}
 				break;
@@ -806,6 +822,8 @@ export class SubscriptionService {
 			await this.unitOfWork.completeTransaction();
 			return expiredSubscriptions;
 		} catch (error) {
+			this.logger.error(`Error ${error.stack || error.message}`, 'checkAndExpireSubscriptions');
+
 			await this.unitOfWork.rollbackTransaction();
 			throw error;
 		}
@@ -875,16 +893,18 @@ export class SubscriptionService {
 			}
 
 		} catch (error) {
+			this.logger.error(`Error ${error.stack || error.message}`, 'findByUserAndPlatformAndSaveCredit');
+
 			await this.unitOfWork.rollbackTransaction();
 			throw error;
 		}
 	}
 
 	async isUserSubscriptionExpire(userId: number): Promise<boolean> {
-        const usersubscription = await this.userSubscriptionRepository.findUserActiveSubscriptionWithoutSubscriptionId(userId);
-        if (usersubscription == null) {
-            return true;
-        }
-        return false;
-    }
+		const usersubscription = await this.userSubscriptionRepository.findUserActiveSubscriptionWithoutSubscriptionId(userId);
+		if (usersubscription == null) {
+			return true;
+		}
+		return false;
+	}
 }

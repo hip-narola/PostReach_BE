@@ -10,6 +10,7 @@ import { map } from 'rxjs/operators';
 interface ResponseData {
   message?: string;
   data?: unknown;
+  isSuccess?: boolean;
 }
 
 interface StandardResponse {
@@ -26,7 +27,7 @@ export class ResponseInterceptor implements NestInterceptor {
     next: CallHandler,
   ): Observable<StandardResponse> | Observable<void> {
     const response = context.switchToHttp().getResponse();
-    
+
     // Check if it's a redirect response
     if (response.statusCode >= 300 && response.statusCode < 400) {
       return next.handle();
@@ -35,7 +36,7 @@ export class ResponseInterceptor implements NestInterceptor {
     return next.handle().pipe(
       map((data: unknown) => {
         const statusCode = response.statusCode || 200;
-        
+
         // Handle case when API returns nothing
         if (data === undefined || data === null) {
           return {
@@ -56,7 +57,7 @@ export class ResponseInterceptor implements NestInterceptor {
           return {
             StatusCode: 200,
             Message: responseData.message || 'Success',
-            IsSuccess: true,
+            IsSuccess: responseData.isSuccess !== undefined ? responseData.isSuccess : true,
             Data: responseData.data || null
           };
         }

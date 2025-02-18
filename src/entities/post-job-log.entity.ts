@@ -12,8 +12,8 @@ export class PostJobLog {
     @JoinColumn({ name: 'post_task_id' })
     postTask: PostTask;
 
-    @Column()
-    job_id: number;
+    @Column({ nullable: true })
+    job_id: string;
 
     @Column({ nullable: true })
     status: string;

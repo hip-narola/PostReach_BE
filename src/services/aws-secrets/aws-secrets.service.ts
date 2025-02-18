@@ -13,6 +13,7 @@ export class AwsSecretsService {
     const region = this.configService.get<string>('AWS_REGION');
     const endpoint = this.configService.get<string>('AWS_ENDPOINT');
     const nodeEnv = this.configService.get<string>('NODE_ENV');
+    console.log('AWS Configuration:', region, endpoint, nodeEnv);
     this.secretsManagerClient = new SecretsManagerClient({
       region,
       ...(nodeEnv === 'local' && endpoint ? { endpoint } : {}),

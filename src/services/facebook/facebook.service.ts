@@ -144,7 +144,7 @@ export class FacebookService {
                     }
                 );
             } else {
-                throw new Error("Invalid input: Either message or imageUrl must be provided.");
+
             }
             // Update the database with the post ID
             await this.unitOfWork.startTransaction();
@@ -162,7 +162,7 @@ export class FacebookService {
                 'PostToFacebook'
             );
             await this.unitOfWork.rollbackTransaction();
-            throw new Error(`Failed to post to Facebook: ${error.response?.data?.error?.message || error.message}`);
+
         }
     }
 
@@ -212,7 +212,6 @@ export class FacebookService {
                     await postRepository.update(post.id, record);
                 } catch (error) {
                     await this.unitOfWork.rollbackTransaction();
-                    throw error;
                 }
             }
 
@@ -225,7 +224,6 @@ export class FacebookService {
                 'fetchAndUpdatePostData'
             );
             await this.unitOfWork.rollbackTransaction();
-            throw error;
         }
     }
 

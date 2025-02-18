@@ -32,6 +32,7 @@ import { ConfigService } from '@nestjs/config';
 import { LinkedInTokenParamDto } from 'src/dtos/params/linkedin-token-data.dto';
 import { FacebookConnectProfileParamDto } from 'src/dtos/params/facebook-connect-profile-param.dto';
 import { SkipThrottle } from '@nestjs/throttler';
+import { JwtAuthGuard } from 'src/shared/common/guards/jwt/jwt.guard';
 
 @Controller('link-page')
 @SkipThrottle()
@@ -274,8 +275,10 @@ export class LinkPageController {
         }
         res.redirect(redirectUrl);
     }
-    
+
     // connect to the instagram
+
+    @UseGuards(JwtAuthGuard)
     @Post('connect-instagram')
     async connectInstagram(
         @Body() body: { pageId: string; accessToken: string },
@@ -289,6 +292,7 @@ export class LinkPageController {
     }
     /* Instagram | Finished */
 
+    @UseGuards(JwtAuthGuard)
     @Get('pages/:userId/:platform')
     async getLinkedInPages(
         @Param('userId') userId: number,
@@ -427,6 +431,8 @@ export class LinkPageController {
         }
     }
 
+
+    @UseGuards(JwtAuthGuard)
     @Post('connect-profile')
     @ApiBody({ type: ConnectedLinkedInPageParamDto })
     async connectedLinkedinPage(
@@ -513,6 +519,7 @@ export class LinkPageController {
     }
 
 
+    @UseGuards(JwtAuthGuard)
     @Post('disconnectProfile')
     @ApiBody({
         description: 'User profile details to disconnect',

@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
 import { ApiBody } from '@nestjs/swagger';
 import { PaginationParamDto } from 'src/dtos/params/pagination-param.dto';
 import { PaginatedResponseDto } from 'src/dtos/response/pagination-response.dto';
@@ -6,6 +6,7 @@ import { ApprovalQueueService } from 'src/services/approval-queue/approval-queue
 import { UpdatePostTaskStatusDTO } from 'src/dtos/params/update-post-task-status.dto';
 import { SubscriptionService } from 'src/services/subscription/subscription.service';
 import { SkipThrottle } from '@nestjs/throttler';
+import { JwtAuthGuard } from 'src/shared/common/guards/jwt/jwt.guard';
 
 @Controller('approval-queue')
 @SkipThrottle()
@@ -13,7 +14,7 @@ export class ApprovalQueueController {
     constructor(private readonly approvalQueueService: ApprovalQueueService,
         private readonly subscriptionService: SubscriptionService
     ) { }
-
+    @UseGuards(JwtAuthGuard)
     @Post('getList')
     @ApiBody({ type: PaginationParamDto })
     async getApprovalQueueList(
@@ -28,7 +29,7 @@ export class ApprovalQueueController {
             PaginationParamDto,
         );
     }
-
+    @UseGuards(JwtAuthGuard)
     @Post('updateStatus')
     @ApiBody({ type: UpdatePostTaskStatusDTO })
     async updateStatus(
@@ -54,7 +55,7 @@ export class ApprovalQueueController {
             };
         }
     }
-
+    @UseGuards(JwtAuthGuard)
     @Get('RejectReasonList')
     async RejectReasonList(): Promise<any> {
         return await this.approvalQueueService.RejectReasonList();

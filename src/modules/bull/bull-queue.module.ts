@@ -35,6 +35,7 @@ import { PostTaskRepository } from 'src/repositories/post-task-repository';
 import { PostTask } from 'src/entities/post-task.entity';
 import { RejectReason } from 'src/entities/reject-reason.entity';
 import { RejectReasonRepository } from 'src/repositories/reject-reason-repository';
+import { PostJobLogService } from 'src/services/post-job-log/post-job-log.service';
 
 async function getRedisConfig() {
     const configService = new ConfigService();
@@ -101,7 +102,8 @@ async function getRedisConfig() {
         Logger,
         ApprovalQueueRepository,
         PostTaskRepository,
-        RejectReasonRepository
+        RejectReasonRepository,
+        PostJobLogService
     ],
     exports: [
         BullModule,

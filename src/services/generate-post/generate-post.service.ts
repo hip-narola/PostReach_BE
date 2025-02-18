@@ -27,6 +27,7 @@ import { PostRetry } from 'src/entities/post-retry.entity';
 import { generateId, IdType } from 'src/shared/utils/generate-id.util';
 import { PostRetryRepository } from 'src/repositories/post-retry-repository';
 import { POST_RETRY_COUNT } from 'src/shared/constants/post-retry-count-constants';
+import { Logger } from '../logger/logger.service';
 
 @Injectable()
 export class GeneratePostService {
@@ -39,7 +40,8 @@ export class GeneratePostService {
         private readonly assetRepository: AssetRepository,
         private readonly userCreditRepository: UserCreditRepository,
         private readonly socialMediaAccountRepository: SocialMediaAccountRepository,
-        private readonly postRetryRepository: PostRetryRepository
+        private readonly postRetryRepository: PostRetryRepository,
+        private readonly logger: Logger,
     ) { }
 
     async generatePostByAIAPI(userCredit: UserCredit[]): Promise<void> {
@@ -195,7 +197,8 @@ export class GeneratePostService {
             }
         }
         catch (error) {
-            throw error;
+
+            this.logger.error(`Error ${error.stack || error.message}`, 'generatePostByAIAPI');
         }
     }
 
@@ -252,10 +255,10 @@ export class GeneratePostService {
                             createAsset.modified_date = null;
                             createAsset.post = createPost;
                             await this.assetRepository.save([createAsset]);
-            
+
                         }
                         // Create asset || End
-                    }    
+                    }
                 }
 
                 for (let i = 0; i < userCredit.length; i++) {
@@ -281,13 +284,13 @@ export class GeneratePostService {
 
                     userCreditEntity.current_credit_amount = userCreditEntity.current_credit_amount - count;
                     userCreditEntity.last_trigger_date = new Date();
-    
+
                     await this.userCreditRepository.update(userCreditEntity.id, userCreditEntity);
                 }
             }
         }
         catch (error) {
-            throw error;
+            this.logger.error(`Error ${error.stack || error.message}`, 'savePostDetails');
         }
     }
 
@@ -313,7 +316,7 @@ export class GeneratePostService {
         if (post.retry_count <= 0) {
             return; // Stop retrying when retry count reaches 0
         }
-        
+
         setTimeout(() => {
             this.reGeneratePost(post); // Ensuring full function execution
         }, POST_RETRY_COUNT[post.retry_count]);
@@ -346,7 +349,7 @@ export class GeneratePostService {
                     await this.savePostDetails(userCredit, newResponse);
                 }
                 catch (error) {
-    
+
                 }
                 post.status = POST_RESPONSE.COMPLETED;
 

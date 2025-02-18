@@ -46,7 +46,7 @@ export class ApprovalQueueService {
                 }
 
                 if (updateStatusParam.isApproved == true) {
-                    
+
                     const data = await this.approvalQueueRepository.getScheduledPostByPostTaskID(id);
                     if (data != null) {
 
@@ -55,7 +55,7 @@ export class ApprovalQueueService {
                         if (delay <= 0) {
                             continue;
                         }
-                        
+
                         record.status = POST_TASK_STATUS.SCHEDULED;
                         await this.approvalQueueRepository.update(id, record);
 
@@ -129,7 +129,6 @@ export class ApprovalQueueService {
                 error.stack || error.message,
                 'updateStatusAfterPostExecution'
             );
-            throw error;
         }
     }
 }

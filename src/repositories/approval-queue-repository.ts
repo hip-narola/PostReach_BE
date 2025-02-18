@@ -66,7 +66,7 @@ export class ApprovalQueueRepository extends GenericRepository<PostTask> {
             const offset = (paginatedParams.pageNumber - 1) * paginatedParams.limit;
             const paginatedTasks = data.slice(offset, offset + paginatedParams.limit);
             const totalPages = paginatedParams.limit > 0 ? Math.ceil(totalCount / paginatedParams.limit) : 0;
-    
+
             return new PaginatedResponseDto(
                 paginatedTasks,
                 totalCount,
@@ -77,7 +77,7 @@ export class ApprovalQueueRepository extends GenericRepository<PostTask> {
             throw error;
         }
     }
-    
+
     async getScheduledPostByPostTaskID(id: number): Promise<any> {
         try {
             const queryResult = await this.repository
@@ -139,7 +139,7 @@ export class ApprovalQueueRepository extends GenericRepository<PostTask> {
                     ],
 
                 };
-                
+
                 return data;
             }
             return null;

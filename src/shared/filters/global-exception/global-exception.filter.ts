@@ -17,10 +17,10 @@ export class GlobalExceptionFilter implements ExceptionFilter {
 
         if (exception instanceof HttpException) {
             status = exception.getStatus();
-        
+
             if (status === HttpStatus.UNAUTHORIZED) {
                 message = 'Unauthorized';
-            } 
+            }
             // // Extract status and response message from HttpException
             // status = exception.getStatus();
             // const exceptionResponse = exception.getResponse();

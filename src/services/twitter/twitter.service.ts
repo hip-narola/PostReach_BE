@@ -428,7 +428,6 @@ export class TwitterService {
 			);
 			// Ensure rollback only happens if a transaction was started
 			const errorMessage = error.response?.data || error.message || 'An unexpected error occurred.';
-			throw new Error(`Failed to post tweet: ${error}`);
 		}
 	}
 
@@ -494,7 +493,6 @@ export class TwitterService {
 				error.stack || error.message,
 				'fetchTweetMetrics'
 			);
-			throw new Error(`Failed to fetch tweet metrics: ${error.response?.data || error.message}`);
 		}
 	}
 

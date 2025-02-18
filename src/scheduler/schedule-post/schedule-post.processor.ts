@@ -11,6 +11,10 @@ import { UserService } from '../../services/user/user.service';
 import { EMAIL_SEND, EMAIL_SEND_FILE } from 'src/shared/constants/email-notification-constants';
 import { POST_TASK_STATUS } from 'src/shared/constants/post-task-status-constants';
 import { Logger } from 'src/services/logger/logger.service';
+import { PostJobLogService } from 'src/services/post-job-log/post-job-log.service';
+import { PostJobLog } from 'src/entities/post-job-log.entity';
+import axios from 'axios';
+import { POST_JOB_LOG_STATUS } from 'src/shared/constants/post-job-log-constants';
 
 @Processor('post-queue')
 export class SchedulePostProcessor extends WorkerHost {
@@ -21,7 +25,8 @@ export class SchedulePostProcessor extends WorkerHost {
 		private readonly twitterService: TwitterService,
 		private readonly emailService: EmailService,
 		private readonly userService: UserService,
-		private readonly logger: Logger
+		private readonly logger: Logger,
+		private readonly postJobLogService: PostJobLogService
 	) {
 		super();
 	}
@@ -51,7 +56,6 @@ export class SchedulePostProcessor extends WorkerHost {
 					console.log("post-queue updateStatusAfterPostExecution ", Id, POST_TASK_STATUS.EXECUTE_SUCCESS);
 					await this.approvalQueueService.updateStatusAfterPostExecution(
 						Id, POST_TASK_STATUS.EXECUTE_SUCCESS, userId);
-						
 					break;
 
 				case `${SocialMediaPlatformNames[SocialMediaPlatform['TWITTER']]}`:
@@ -61,12 +65,59 @@ export class SchedulePostProcessor extends WorkerHost {
 			}
 		}
 		catch (error) {
+
 			console.log("post-queue error: ", error, job.attemptsMade);
-			this.logger.error(
-				`Error processing scheduled post for PostId: ${PostId}` +
-				error.stack || error.message,
-				'SchedulePostProcessor'
-			);
+			let message;
+			if (axios.isAxiosError(error)) {
+				message = error.response?.data.error.message;
+				this.logger.error(
+					`Error processing scheduled post for PostId: ${PostId}` +
+					message,
+					'SchedulePostProcessor'
+				);
+			}
+			else {
+				message = error.message;
+				this.logger.error(
+					`Error processing scheduled post for PostId: ${PostId}` +
+					message,
+					'SchedulePostProcessor'
+				);
+			}
+
+			let status;
+			if (job.attemptsMade <= 3) {
+				status = POST_JOB_LOG_STATUS.RETRY;
+			}
+			else {
+				status = POST_JOB_LOG_STATUS.FAIL;
+			}
+
+
+			const details = await this.postJobLogService.findPostJobLogByPostTaskId(Id);
+
+			if (!details) {
+				const postJobLog = new PostJobLog();
+				postJobLog.error_message = message;
+				postJobLog.created_at = new Date();
+				postJobLog.created_By = userId;
+				postJobLog.modified_date = null;
+				postJobLog.retry_count = job.attemptsMade + 1;
+				postJobLog.postTask = Id;
+				postJobLog.status = status;
+				postJobLog.job_id = job.id;
+				await this.postJobLogService.createPostJobLog(postJobLog);
+			}
+			else {
+				details.error_message = message;
+				details.modified_By = userId;
+				details.modified_date = new Date();
+				details.retry_count = job.attemptsMade + 1;
+				details.job_id = job.id;
+				details.status = status;
+				await this.postJobLogService.updatePostJobLog(details);
+			}
+
 			if (job.attemptsMade >= 4) {
 				await this.approvalQueueService.updateStatusAfterPostExecution(Id, POST_TASK_STATUS.FAIL, userId);
 				const user = await this.userService.findOne(userId);

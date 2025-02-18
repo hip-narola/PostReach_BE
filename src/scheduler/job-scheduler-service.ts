@@ -153,7 +153,6 @@ export class JobSchedulerService {
     }
 
     private async scheduleDailyJob() {
-
         console.log("generatePostQueue : strated")
         const existingJobs = await this.generatePostQueue.getRepeatableJobs();
         const jobName = 'call-subscription-scheduler-service';
@@ -228,28 +227,4 @@ export class JobSchedulerService {
             }
         );
     }
-
-    // private async subscriptionSchedulerJob(): Promise<void> {
-    //     const jobId = 'check-subscriptions';
-    //     // const existingJobs = await this.subscriptionQueue.getJobs(['waiting', 'active', 'delayed', 'paused']);
-    //     // for (const job of existingJobs) {
-    //     //     if (job.id === jobId) {
-    //     //         await job.remove();
-    //     //     }
-    //     // }
-    //     await this.subscriptionQueue.add(
-    //         jobId,
-    //         {}, // Job data, if needed
-    //         {
-    //             // repeat: {
-    //             //     every: 5 * 60 * 1000, // Run every 5 minute
-    //             // },
-    //             repeat: {
-    //                 every: 24 * 60 * 60 * 1000, // Every 24 hours
-    //                 startDate: new Date().setHours(0, 1, 0, 0), // Start at 12:01 AM
-    //             }
-    //         },
-    //     );
-
-    // }
 }

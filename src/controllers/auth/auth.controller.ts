@@ -112,6 +112,7 @@ export class AuthController {
 
 
 	// User Sign-Up
+
 	@Post('signup')
 	@ApiBody({ type: SignUpDto })
 	async signUp(@Body() signUpDto: { username: string; email: string; password: string }) {
@@ -141,14 +142,14 @@ export class AuthController {
 
 			//this.setCookie(res, data.accessToken);
 
-			if (signInDto.rememberMe === true) {
-				res.cookie('refreshToken', data.refreshToken, {
-					httpOnly: true,
-					secure: true,
-					sameSite: 'none',
-					domain: this.configService.get('COOKIE_DOMAIN')
-				});
-			}
+			// if (signInDto.rememberMe === true) {
+			// 	res.cookie('refreshToken', data.refreshToken, {
+			// 		httpOnly: true,
+			// 		secure: true,
+			// 		sameSite: 'none',
+			// 		domain: this.configService.get('COOKIE_DOMAIN')
+			// 	});
+			// }
 
 			return res.status(HttpStatus.OK).json({
 				StatusCode: 200,

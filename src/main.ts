@@ -48,13 +48,21 @@ async function bootstrap() {
   // Other middlewares
   app.use(cookieParser());
 
+  const corsOrigin = configService.get('CORS_ORIGIN');
+  const fixedOrigins = [
+    'https://postreachfe-production.up.railway.app',
+    'https://postreachbe-production.up.railway.app',
+    'http://localhost:3001',
+  ];
+
+  const combinedOrigins = [
+    ...fixedOrigins,
+    ...corsOrigin.split(',').map((origin) => origin.trim()),
+  ];
+  console.log('combinedOrigins', combinedOrigins);
   // CORS configuration
   app.enableCors({
-    origin: [
-      'https://postreachfe-production.up.railway.app',
-      'https://postreachbe-production.up.railway.app',
-      'http://localhost:3001',
-    ],
+    origin: combinedOrigins,
     credentials: true,
     methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Accept', 'Authorization'],

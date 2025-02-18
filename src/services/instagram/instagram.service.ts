@@ -135,13 +135,24 @@ export class InstagramService {
       await this.unitOfWork.completeTransaction();
 
     } catch (error) {
-      this.logger.error(
-        `Error` +
-        error.stack || error.message,
-        'PostToInstagram'
-      );
+      // await this.unitOfWork.rollbackTransaction();
+      if (axios.isAxiosError(error)) {
 
-      throw error;
+        this.logger.error(
+          `Error` +
+          error.stack || error.message,
+          'PostToFacebook'
+        );
+      
+      } else {
+      
+        this.logger.error(
+          `Error` +
+          error.stack || error.message,
+          'PostToFacebook'
+        );
+
+      }
     }
   }
 
@@ -173,15 +184,18 @@ export class InstagramService {
             'fetchAndUpdateInstagramPostData'
           );
           await this.unitOfWork.rollbackTransaction();
-          throw error;
         }
       }
 
       await this.unitOfWork.completeTransaction();
     }
     catch (error) {
+      this.logger.error(
+        `Error` +
+        error.stack || error.message,
+        'fetchAndUpdateInstagramPostData'
+      );
       await this.unitOfWork.rollbackTransaction();
-      throw error;
     }
   }
 
@@ -225,7 +239,7 @@ export class InstagramService {
         error.stack || error.message,
         'PostMetrics'
       );
-      throw new Error(error.response?.data?.error?.message || 'Failed to fetch metrics');
+
     }
   }
 

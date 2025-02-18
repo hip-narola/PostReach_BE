@@ -193,7 +193,7 @@ export class LinkedinService {
 				likesSummary: response.data?.likesSummary?.aggregatedTotalLikes || 0,
 			}
 		} catch (error) {
-			throw new Error(`Failed to fetch post insights., ${error.response?.data || error.message}`);
+			// throw new Error(`Failed to fetch post insights., ${error.response?.data || error.message}`);
 		}
 	}
 
@@ -364,7 +364,6 @@ export class LinkedinService {
 			// Rollback transaction on failure
 			await this.unitOfWork.rollbackTransaction();
 			// Throw detailed error for debugging
-			throw new Error(`Failed to post to LinkedIn: ${error.response?.data?.message || error.message}`);
 		}
 	}
 

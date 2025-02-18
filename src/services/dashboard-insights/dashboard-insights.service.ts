@@ -60,7 +60,6 @@ export class DashboardInsightsService {
                 'getFacebookInsights'
             );
 
-            throw error;
         }
     }
 
@@ -93,7 +92,6 @@ export class DashboardInsightsService {
                 error.stack || error.message,
                 'fetchPageInsights'
             );
-            throw error;
         }
     }
 
@@ -119,7 +117,6 @@ export class DashboardInsightsService {
                 error.stack || error.message,
                 'getinstagramInsights'
             );
-            throw error;
         }
     }
 
@@ -190,7 +187,6 @@ export class DashboardInsightsService {
                 error.stack || error.message,
                 'fetchInstagramInsights'
             );
-            throw new Error(`Error fetching Instagram insights: ${error.message}`);
         }
     }
 
@@ -223,7 +219,6 @@ export class DashboardInsightsService {
                 error.stack || error.message,
                 'gelinkedInInsights'
             );
-            throw new Error(`Error fetching LinkedIn insight: ${error}`);
         }
     }
 
@@ -256,9 +251,6 @@ export class DashboardInsightsService {
                 'fetchLinkedInPageInsights'
             );
             // Provide a meaningful error message
-            throw new Error(
-                `Failed to fetch LinkedIn insights: ${error.response?.data?.message || error.message}`
-            );
         }
     }
 
@@ -305,7 +297,6 @@ export class DashboardInsightsService {
                 error.stack || error.message,
                 'fetchLinkedinOrganizationFollowers'
             );
-            throw new Error(`Failed to fetch organization followers: ${error.response?.data || error.message}`);
         }
     }
 
@@ -421,7 +412,6 @@ export class DashboardInsightsService {
                 error.stack || error.message,
                 'fetchUserInsights'
             );
-            throw new Error('Failed to fetch LinkedIn insights for user: ' + error.message);
         }
     }
 
@@ -463,7 +453,6 @@ export class DashboardInsightsService {
                 error.stack || error.message,
                 'fetchTwitterfollowersMetrics'
             );
-            throw new Error(`Error fetching Twitter data: ${error.response?.data || error.message}`);
         }
     }
 
@@ -498,7 +487,6 @@ export class DashboardInsightsService {
                 error.stack || error.message,
                 'fetchTweetMetrics'
             );
-            throw new Error(`Failed to fetch tweet metrics: ${error.response?.data || error.message}`);
         }
     }
 
@@ -540,7 +528,6 @@ export class DashboardInsightsService {
                 error.stack || error.message,
                 'fetchTwitterInsights'
             );
-            throw new Error(`Error fetching Twitter user statssadas sadasd: ${error.message}`);
         }
     }
 
@@ -563,7 +550,6 @@ export class DashboardInsightsService {
                 error.stack || error.message,
                 'getUserTweets'
             );
-            throw error;
         }
     }
 }
